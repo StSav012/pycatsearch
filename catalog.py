@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
-import math
 import gzip
 import json
+import math
 import os.path
-from typing import Union, Tuple, List, Dict, Any
+import sys
+from typing import Any, Dict, List, Tuple, Union
+
+if sys.version_info < (3, 6):
+    raise ImportError('Compatible only with Python 3.6 and newer')
 
 
 def within(x: float, limits: Tuple[float, float]):
@@ -55,7 +59,7 @@ class Catalog:
                any_formula: str = '',
                any_name_or_formula: str = '',
                species_tag: int = 0,
-               inchi: str = '',  # https://iupac.org/who-we-are/divisions/division-details/inchi/
+               inchi: str = '',
                trivial_name: str = '',
                structural_formula: str = '',
                name: str = '',
@@ -64,11 +68,35 @@ class Catalog:
                state: str = '',
                degrees_of_freedom: Union[None, int] = None
                ) -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]:
+        """
+        Extract only the entries that match all the specified conditions
+
+        :param float min_frequency: the lower frequency [MHz] to take.
+        :param float max_frequency: the upper frequency [MHz] to take.
+        :param float min_intensity: the minimal intensity [log10(nm²×MHz)] to take.
+        :param float max_intensity: the maximal intensity [log10(nm²×MHz)] to take, use to avoid meta-stable substances.
+        :param str any_name: a string to match the ``trivialname`` or the ``name`` field.
+        :param str any_formula: a string to match the ``structuralformula``, ``moleculesymbol``,
+                                ``stoichiometricformula``, or ``isotopolog`` field.
+        :param str any_name_or_formula: a string to match any field used by :param:any_name and :param:any_formula.
+        :param str species_tag: a string to match the ``speciestag`` field.
+        :param str inchi: a string to match the ``inchikey`` field.
+                          See https://iupac.org/who-we-are/divisions/division-details/inchi/ for more.
+        :param str trivial_name: a string to match the ``trivialname`` field.
+        :param str structural_formula: a string to match the ``structuralformula`` field.
+        :param str name: a string to match the ``name`` field.
+        :param str stoichiometric_formula: a string to match the ``stoichiometricformula`` field.
+        :param str isotopolog: a string to match the ``isotopolog`` field.
+        :param str state: a string to match the ``isotopolog`` or the ``state_html`` field.
+        :param int degrees_of_freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
+        :raises: :class:`ValueError`: Invalid frequency range
+                 if the specified frequency range does not intersect with the catalog one.
+        :return: a list of substances with non-empty lists of absorption lines that match all the conditions.
+        """
         if (min_frequency > max_frequency
                 or min_frequency > max(self.frequency_limits)
                 or max_frequency < min(self.frequency_limits)):
-            print('invalid frequency range')
-            return []
+            raise ValueError('Invalid frequency range')
         if (species_tag or inchi or trivial_name or structural_formula or name or stoichiometric_formula
                 or isotopolog or state or degrees_of_freedom):
             selected_entries = []
@@ -106,6 +134,12 @@ class Catalog:
         return selected_entries
 
     def print(self, **kwargs):
+        """
+        Print a table of the filtered catalog entries
+
+        :param kwargs: all arguments that are valid for :func:`filter <catalog.Catalog.filter>`
+        :return: nothing
+        """
         entries: List[Dict[str, Union[int, str, List[Dict[str, float]]]]] = self.filter(**kwargs)
         names: List[str] = []
         frequencies: List[float] = []

@@ -2,12 +2,17 @@
 import gzip
 import json
 import math
+import sys
 from typing import Dict, List, Tuple, Union
 from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from catalog_entry import CatalogEntry
+
+
+if sys.version_info < (3, 6):
+    raise ImportError('Compatible only with Python 3.6 and newer')
 
 
 def within(x: float, limits: Tuple[float, float]):
