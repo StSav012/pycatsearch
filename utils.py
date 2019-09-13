@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
-
 import math
+from typing import Tuple, Union
+
+__all__ = ['M_LOG10E',
+           'T0', 'c', 'h', 'k',
+           'cm_per_molecule2sq_nm_mhz',
+           'ghz2_mhz', 'ghz2nm', 'ghz2rev_cm',
+           'mhz2_ghz', 'mhz2nm', 'mhz2rev_cm',
+           'nm2_ghz', 'nm2_mhz', 'nm2rev_cm',
+           'rev_cm2ghz', 'rev_cm2mhz', 'rev_cm2nm',
+           'sq_nm_mhz2cm_per_molecule',
+           'sum', 'within']
 
 M_LOG10E = math.log10(math.e)
 
@@ -8,6 +18,27 @@ T0 = 300.00
 k = 1.380649e-23
 h = 6.62607015e-34
 c = 299792458.
+
+
+def within(x: float, limits: Union[Tuple[float, float], Tuple[Tuple[float, float], ...]]) -> bool:
+    if len(limits) < 2:
+        raise ValueError('Invalid limits')
+    if isinstance(limits[0], float):
+        return min(limits) <= x <= max(limits)
+    elif isinstance(limits[0], tuple):
+        return any(min(limit) <= x <= max(limit) for limit in limits)
+    else:
+        raise TypeError('Invalid limits type')
+
+
+def sum(iterable, start=None):
+    s = start
+    for i in iterable:
+        if s is None:
+            s = i
+        else:
+            s += i
+    return s
 
 
 def mhz2_ghz(frequency_mhz: float) -> float:
