@@ -46,10 +46,8 @@ def get_substance_catalog(species_entry: Dict[str, Union[int, str]],
     if species_tag % 1000 > 500:
         fn = 'https://cdms.astro.uni-koeln.de/classic/entries/' + fn
     else:
-        if fn == 'c044009.cat':  # 404 on spec.jpl.nasa.gov
-            fn = 'https://cdms.astro.uni-koeln.de/cdms/portal//getfile/2923/'
-        elif fn == 'c044012.cat':  # 404 on spec.jpl.nasa.gov
-            fn = 'https://cdms.astro.uni-koeln.de/cdms/portal//getfile/2926/'
+        if fn in ('c044009.cat', 'c044012.cat'):  # merged with c044004.cat — Brian J. Drouin
+            return dict()
         else:
             fn = 'https://spec.jpl.nasa.gov/ftp/pub/catalog/' + fn
     try:

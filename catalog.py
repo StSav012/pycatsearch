@@ -57,7 +57,6 @@ class Catalog:
 
         for filename in catalog_file_names:
             if os.path.exists(filename) and os.path.isfile(filename):
-                # print(filename)
                 with gzip.GzipFile(filename, 'rb') if filename.endswith('.json.gz') else open(filename, 'r') as fin:
                     content = fin.read()
                     if isinstance(content, bytes):

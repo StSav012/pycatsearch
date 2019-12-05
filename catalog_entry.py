@@ -5,7 +5,7 @@ from utils import *
 
 
 class CatalogEntry:
-    def __init__(self, catalog_line: str = '', *, frequency: float = math.nan, intensity: float = math.nan,
+    def __init__(self, spcat_line: str = '', *, frequency: float = math.nan, intensity: float = math.nan,
                  degrees_of_freedom: int = -1, lower_state_energy: float = math.nan):
         self.FREQ: float  # frequency, MHz, mandatory
         self.INT: float  # intensity, log10(nm²×MHz), mandatory
@@ -15,15 +15,15 @@ class CatalogEntry:
         self.INT = intensity
         self.DR = degrees_of_freedom
         self.ELO = lower_state_energy
-        if catalog_line:
+        if spcat_line:
             # FREQ         ERR     LGINT   DR ELO      GUP TAG   QNFMT QN'       QN"
             # F13     .4   F8 .4   F8 .4   I2F10  .4,  I3 I7     I4  6I2         6I2
             # FFFFFFFF.FFFFEEE.EEEE-II.IIIIDDEEEEE.EEEEGGG+TTTTTTQQQQ112233445566112233445566
             #      262.0870  0.0011-19.2529 2 5174.7303  4  180011335 1-132 2 2   1 132 2 3
-            self.FREQ = float(catalog_line[:13])
-            self.INT = float(catalog_line[21:29])
-            self.DR = int(catalog_line[29:31])
-            self.ELO = float(catalog_line[31:41])
+            self.FREQ = float(spcat_line[:13])
+            self.INT = float(spcat_line[21:29])
+            self.DR = int(spcat_line[29:31])
+            self.ELO = float(spcat_line[31:41])
 
     @property
     def frequency(self) -> float:
