@@ -15,9 +15,9 @@ __all__ = ['M_LOG10E',
 M_LOG10E = math.log10(math.e)
 
 T0 = 300.00
-k = 1.380649e-23
-h = 6.62607015e-34
-c = 299792458.
+k = 1.38064900e-23  # https://physics.nist.gov/cgi-bin/cuu/Value?k
+h = 6.62607015e-34  # https://physics.nist.gov/cgi-bin/cuu/Value?h
+c = 299792458.0000  # https://physics.nist.gov/cgi-bin/cuu/Value?c
 
 
 def within(x: float, limits: Union[Tuple[float, float], Tuple[Tuple[float, float], ...]]) -> bool:

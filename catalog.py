@@ -13,8 +13,19 @@ if sys.version_info < (3, 6):
 
 
 _CATALOG: str = 'catalog'
+_LINES: str = 'lines'
 _FREQUENCY: str = 'frequency'
 _INTENSITY: str = 'intensity'
+_STRUCTURAL_FORMULA: str = 'structuralformula'
+_STOICHIOMETRIC_FORMULA: str = 'stoichiometricformula'
+_MOLECULE_SYMBOL: str = 'moleculesymbol'
+_SPECIES_TAG: str = 'speciestag'
+_NAME: str = 'name'
+_TRIVIAL_NAME: str = 'trivialname'
+_ISOTOPOLOG: str = 'isotopolog'
+_STATE: str = 'state'
+_STATE_HTML: str = 'state_html'
+_INCHI_KEY: str = 'inchikey'
 _DEGREES_OF_FREEDOM: str = 'degreesoffreedom'
 _LOWER_STATE_ENERGY: str = 'lowerstateenergy'
 
@@ -62,19 +73,20 @@ class Catalog:
                     if isinstance(content, bytes):
                         content = content.decode()
                     try:
-                        json_data = json.loads(content)
+                        json_data: Dict = json.loads(content)
                     except json.decoder.JSONDecodeError:
-                        json_data = None
-                    if json_data is not None and self._data is None:
-                        self._data = {
-                            _CATALOG: json_data[_CATALOG],
-                            _FREQUENCY: (json_data[_FREQUENCY],)
-                        }
+                        pass
                     else:
-                        self._data = {
-                            _CATALOG: merge_catalogs(self._data[_CATALOG], json_data[_CATALOG]),
-                            _FREQUENCY: merge_frequency_tuples(*self._data[_FREQUENCY], json_data[_FREQUENCY])
-                        }
+                        if self._data is None:
+                            self._data = {
+                                _CATALOG: json_data[_CATALOG],
+                                _FREQUENCY: (json_data[_FREQUENCY],)
+                            }
+                        else:
+                            self._data = {
+                                _CATALOG: merge_catalogs(self._data[_CATALOG], json_data[_CATALOG]),
+                                _FREQUENCY: merge_frequency_tuples(*self._data[_FREQUENCY], json_data[_FREQUENCY])
+                            }
 
     @property
     def catalog(self) -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]:
@@ -94,20 +106,20 @@ class Catalog:
             -> Dict[str, Union[int, str, List[Dict[str, float]]]]:
         def intensity(entry) -> float:
             if catalog_entry[_DEGREES_OF_FREEDOM] >= 0 and temperature > 0. and temperature != T0:
-                return entry[_INTENSITY] \
-                       + ((0.5 * catalog_entry[_DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
-                          - ((1 / temperature - 1 / T0) * entry[_LOWER_STATE_ENERGY] * 100. * h * c / k)) / M_LOG10E
+                return (entry[_INTENSITY]
+                        + ((0.5 * catalog_entry[_DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
+                           - ((1 / temperature - 1 / T0) * entry[_LOWER_STATE_ENERGY] * 100. * h * c / k)) / M_LOG10E)
             else:
                 return entry[_INTENSITY]
 
-        new_catalog_entry = catalog_entry.copy()
-        if _CATALOG in new_catalog_entry:
-            new_catalog_entry[_CATALOG] = \
+        new_catalog_entry: Dict[str, Union[int, str, List[Dict[str, float]]]] = catalog_entry.copy()
+        if _LINES in new_catalog_entry:
+            new_catalog_entry[_LINES] = \
                 list(filter(lambda e: (min_frequency <= e[_FREQUENCY] <= max_frequency
                                        and min_intensity <= intensity(e) <= max_intensity),
-                            catalog_entry[_CATALOG]))
+                            catalog_entry[_LINES]))
         else:
-            new_catalog_entry[_CATALOG] = []
+            new_catalog_entry[_LINES] = []
         return new_catalog_entry
 
     def filter(self, *,
@@ -142,7 +154,7 @@ class Catalog:
         :param str any_formula: a string to match the ``structuralformula``, ``moleculesymbol``,
                                 ``stoichiometricformula``, or ``isotopolog`` field.
         :param str any_name_or_formula: a string to match any field used by :param:any_name and :param:any_formula.
-        :param str species_tag: a string to match the ``speciestag`` field.
+        :param str species_tag: a number to match the ``speciestag`` field.
         :param str inchi: a string to match the ``inchikey`` field.
                           See https://iupac.org/who-we-are/divisions/division-details/inchi/ for more.
         :param str trivial_name: a string to match the ``trivialname`` field.
@@ -164,9 +176,9 @@ class Catalog:
             for key, value in entry_1.items():
                 if key not in entry_2:
                     return False
-                if key != _CATALOG and value != entry_2[key]:
+                if key != _LINES and value != entry_2[key]:
                     return False
-                if key == _CATALOG and len(value) != len(entry_2[key]):
+                if key == _LINES and len(value) != len(entry_2[key]):
                     return False
             return True
 
@@ -178,33 +190,41 @@ class Catalog:
                 or isotopolog or state or degrees_of_freedom):
             selected_entries = []
             for e in self.catalog:
-                if ((not species_tag or e['speciestag'] == species_tag)
-                        and (not inchi or e['inchikey'] == inchi)
-                        and (not trivial_name or e['trivialname'] == trivial_name)
-                        and (not structural_formula or e['structuralformula'] == structural_formula)
-                        and (not name or e['name'] == name)
-                        and (not stoichiometric_formula or e['stoichiometricformula'] == stoichiometric_formula)
-                        and (not isotopolog or e['isotopolog'] == isotopolog)
-                        and (not state or e['state'] == state or e['state_html'] == state)
-                        and (degrees_of_freedom is None or e[_DEGREES_OF_FREEDOM] == degrees_of_freedom)
-                        and (not any_name or e['trivialname'] == any_name or e['name'] == any_name)
+                if ((not species_tag or (_SPECIES_TAG in e and e[_SPECIES_TAG] == species_tag))
+                        and (not inchi or (_INCHI_KEY in e and e[_INCHI_KEY] == inchi))
+                        and (not trivial_name
+                             or (_TRIVIAL_NAME in e and e[_TRIVIAL_NAME] == trivial_name))
+                        and (not structural_formula
+                             or (_STRUCTURAL_FORMULA in e and e[_STRUCTURAL_FORMULA] == structural_formula))
+                        and (not name or (_NAME in e and e[_NAME] == name))
+                        and (not stoichiometric_formula
+                             or (_STOICHIOMETRIC_FORMULA in e and e[_STOICHIOMETRIC_FORMULA] == stoichiometric_formula))
+                        and (not isotopolog or (_ISOTOPOLOG in e and e[_ISOTOPOLOG] == isotopolog))
+                        and (not state
+                             or (_STATE in e and e[_STATE] == state)
+                             or (_STATE_HTML in e and e[_STATE_HTML] == state))
+                        and (degrees_of_freedom is None
+                             or (_DEGREES_OF_FREEDOM in e and e[_DEGREES_OF_FREEDOM] == degrees_of_freedom))
+                        and (not any_name
+                             or (_TRIVIAL_NAME in e and e[_TRIVIAL_NAME] == any_name)
+                             or (_NAME in e and e[_NAME] == any_name))
                         and (not any_formula
-                             or e['structuralformula'] == any_formula
-                             or e['moleculesymbol'] == any_formula
-                             or e['stoichiometricformula'] == any_formula
-                             or e['isotopolog'] == any_formula)
+                             or (_STRUCTURAL_FORMULA in e and e[_STRUCTURAL_FORMULA] == any_formula)
+                             or (_MOLECULE_SYMBOL in e and e[_MOLECULE_SYMBOL] == any_formula)
+                             or (_STOICHIOMETRIC_FORMULA in e and e[_STOICHIOMETRIC_FORMULA] == any_formula)
+                             or (_ISOTOPOLOG in e and e[_ISOTOPOLOG] == any_formula))
                         and (not any_name_or_formula
-                             or e['trivialname'] == any_name_or_formula
-                             or e['name'] == any_name_or_formula
-                             or e['structuralformula'] == any_name_or_formula
-                             or e['moleculesymbol'] == any_name_or_formula
-                             or e['stoichiometricformula'] == any_name_or_formula
-                             or e['isotopolog'] == any_name_or_formula)):
+                             or (_TRIVIAL_NAME in e and e[_TRIVIAL_NAME] == any_name_or_formula)
+                             or (_NAME in e and e[_NAME] == any_name_or_formula)
+                             or (_STRUCTURAL_FORMULA in e and e[_STRUCTURAL_FORMULA] == any_name_or_formula)
+                             or (_MOLECULE_SYMBOL in e and e[_MOLECULE_SYMBOL] == any_name_or_formula)
+                             or (_STOICHIOMETRIC_FORMULA in e and e[_STOICHIOMETRIC_FORMULA] == any_name_or_formula)
+                             or (_ISOTOPOLOG in e and e[_ISOTOPOLOG] == any_name_or_formula))):
                     filtered_entry = self._filter_by_frequency_and_intensity(e,
                                                                              min_frequency, max_frequency,
                                                                              min_intensity, max_intensity,
                                                                              temperature=temperature)
-                    if filtered_entry[_CATALOG]:
+                    if filtered_entry[_LINES]:
                         selected_entries.append(filtered_entry)
         else:
             filtered_entries = [self._filter_by_frequency_and_intensity(e,
@@ -212,7 +232,7 @@ class Catalog:
                                                                         min_intensity, max_intensity,
                                                                         temperature=temperature)
                                 for e in self._data[_CATALOG]]
-            selected_entries = [e for e in filtered_entries if e[_CATALOG]]
+            selected_entries = [e for e in filtered_entries if e[_LINES]]
         unique_entries = selected_entries
         all_unique: bool = True  # unless the opposite is proven
         for i in range(len(selected_entries)):
@@ -239,8 +259,8 @@ class Catalog:
         frequencies: List[float] = []
         intensities: List[float] = []
         for e in entries:
-            for line in e[_CATALOG]:
-                names.append(e['name'])
+            for line in e[_LINES]:
+                names.append(e[_NAME])
                 frequencies.append(line[_FREQUENCY])
                 intensities.append(line[_INTENSITY])
 
