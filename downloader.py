@@ -126,4 +126,4 @@ def save_catalog(filename: str,
 
 
 if __name__ == '__main__':
-    save_catalog('/tmp/c2', (115000, 178000), qt_json_filename='/tmp/c2.qbjsz')
+    save_catalog('catalog.json.gz', (115000, 178000))
