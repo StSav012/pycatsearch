@@ -98,3 +98,47 @@ The code is developed under `python 3.7.5`. It should work under `python 3.6` bu
 
 If you want to save the catalog as a [Qt JSON Document](https://doc.qt.io/qt-5/qjsondocument.html),
 then `PyQt5` is needed. Otherwise, only the built-ins are used.
+
+## File Format
+
+The JSON file contains an array of substances called `catalog`.
+Each substance is described like the following:
+
+```json
+{
+    "id": 4,
+    "molecule": 3,
+    "structuralformula": "H2",
+    "stoichiometricformula": "H2",
+    "moleculesymbol": "H<sub>2</sub>",
+    "speciestag": 3501,
+    "name": "HD,v=0,1",
+    "trivialname": "Hydrogen molecule",
+    "isotopolog": "HD",
+    "state": "$v=0,1$",
+    "state_html": "v=0,1",
+    "inchikey": "UFHFLCQGNIYNRP-OUBTZVSYSA-N",
+    "contributor": "H. S. P. M\u00fcller",
+    "version": "2*",
+    "dateofentry": "2011-12-01",
+    "degreesoffreedom": 2,
+    "lines": []
+}
+```
+
+`lines` is an array of the substance absorption lines records.
+For now, it includes only the _frequency_ \[MHz\], the _intensity_ \[log10(nm²×MHz)\],
+and the _lower state energy_ relative to the ground state \[1/cm\] of a line:
+
+```json
+{
+    "frequency": 143285.9808,
+    "intensity": -6.4978,
+    "lowerstateenergy": 581.4862
+}
+```
+
+Besides `catalog`, the JSON file contains `frequency` array that holds the frequency limits of the catalog.
+Just in case.
+
+For physical meaning of the values, check out [catdoc.pdf](https://spec.jpl.nasa.gov//ftp//pub/catalog/doc/catdoc.pdf).
