@@ -53,7 +53,7 @@ LOWER_STATE_ENERGY: Final[str] = 'lowerstateenergy'
 def within(x: float, limits: Union[Tuple[float, float], Tuple[Tuple[float, float], ...]]) -> bool:
     if len(limits) < 2:
         raise ValueError('Invalid limits')
-    if isinstance(limits[0], float):
+    if isinstance(limits[0], (int, float)):
         return min(limits) <= x <= max(limits)
     elif isinstance(limits[0], tuple):
         return any(min(limit) <= x <= max(limit) for limit in limits)
