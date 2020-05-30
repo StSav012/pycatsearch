@@ -88,6 +88,14 @@ class Catalog:
     def frequency_limits(self) -> Tuple[Tuple[float, float], ...]:
         return self._data[FREQUENCY] if self._data else (-math.inf, math.inf)
 
+    @property
+    def min_frequency(self) -> float:
+        return min(min(f) for f in self._data[FREQUENCY]) if self._data else -math.inf
+
+    @property
+    def max_frequency(self) -> float:
+        return max(max(f) for f in self._data[FREQUENCY]) if self._data else math.inf
+
     def filter(self, *,
                min_frequency: float = -math.inf,
                max_frequency: float = math.inf,
@@ -174,7 +182,7 @@ class Catalog:
                 or max_frequency < self._min_frequency):
             raise ValueError('Invalid frequency range')
         if (species_tag or inchi or trivial_name or structural_formula or name or stoichiometric_formula
-                or isotopolog or state or degrees_of_freedom):
+                or isotopolog or state or degrees_of_freedom or any_name or any_formula or any_name_or_formula):
             selected_entries = []
             for e in self.catalog:
                 if ((not species_tag or (SPECIES_TAG in e and e[SPECIES_TAG] == species_tag))
