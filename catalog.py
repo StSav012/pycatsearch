@@ -12,24 +12,6 @@ if sys.version_info < (3, 6):
     raise ImportError('Compatible only with Python 3.6 and newer')
 
 
-_CATALOG: str = 'catalog'
-_LINES: str = 'lines'
-_FREQUENCY: str = 'frequency'
-_INTENSITY: str = 'intensity'
-_STRUCTURAL_FORMULA: str = 'structuralformula'
-_STOICHIOMETRIC_FORMULA: str = 'stoichiometricformula'
-_MOLECULE_SYMBOL: str = 'moleculesymbol'
-_SPECIES_TAG: str = 'speciestag'
-_NAME: str = 'name'
-_TRIVIAL_NAME: str = 'trivialname'
-_ISOTOPOLOG: str = 'isotopolog'
-_STATE: str = 'state'
-_STATE_HTML: str = 'state_html'
-_INCHI_KEY: str = 'inchikey'
-_DEGREES_OF_FREEDOM: str = 'degreesoffreedom'
-_LOWER_STATE_ENERGY: str = 'lowerstateenergy'
-
-
 class Catalog:
     def __init__(self, *catalog_file_names: str):
         self._data: Union[None,
@@ -37,8 +19,9 @@ class Catalog:
                                           List[Dict[str, Union[int,
                                                                str,
                                                                List[Dict[str, float]]]]]]]] = None
-        self._min_frequency = math.nan
-        self._max_frequency = math.nan
+        self._min_frequency: float = math.nan
+        self._max_frequency: float = math.nan
+        self._sources: List[str] = []
 
         def merge_catalogs(*args: List[Dict[str, Union[int, str, List[Dict[str, float]]]]]):
             return sum(args)
@@ -79,48 +62,31 @@ class Catalog:
                     else:
                         if self._data is None:
                             self._data = {
-                                _CATALOG: json_data[_CATALOG],
-                                _FREQUENCY: (json_data[_FREQUENCY],)
+                                CATALOG: json_data[CATALOG],
+                                FREQUENCY: (json_data[FREQUENCY],)
                             }
                         else:
                             self._data = {
-                                _CATALOG: merge_catalogs(self._data[_CATALOG], json_data[_CATALOG]),
-                                _FREQUENCY: merge_frequency_tuples(*self._data[_FREQUENCY], json_data[_FREQUENCY])
+                                CATALOG: merge_catalogs(self._data[CATALOG], json_data[CATALOG]),
+                                FREQUENCY: merge_frequency_tuples(*self._data[FREQUENCY], json_data[FREQUENCY])
                             }
+                        self._sources.append(filename)
+
+    @property
+    def is_empty(self) -> bool:
+        return self._data is None
+
+    @property
+    def sources(self) -> List[str]:
+        return self._sources[:]
 
     @property
     def catalog(self) -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]:
-        return self._data[_CATALOG] if self._data else []
+        return self._data[CATALOG] if self._data else []
 
     @property
     def frequency_limits(self) -> Tuple[Tuple[float, float], ...]:
-        return self._data[_FREQUENCY] if self._data else (-math.inf, math.inf)
-
-    @staticmethod
-    def _filter_by_frequency_and_intensity(catalog_entry: Dict[str, Union[int, str, List[Dict[str, float]]]],
-                                           min_frequency: float = -math.inf,
-                                           max_frequency: float = math.inf,
-                                           min_intensity: float = -math.inf,
-                                           max_intensity: float = math.inf,
-                                           *, temperature: float = -math.inf) \
-            -> Dict[str, Union[int, str, List[Dict[str, float]]]]:
-        def intensity(entry) -> float:
-            if catalog_entry[_DEGREES_OF_FREEDOM] >= 0 and temperature > 0. and temperature != T0:
-                return (entry[_INTENSITY]
-                        + ((0.5 * catalog_entry[_DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
-                           - ((1 / temperature - 1 / T0) * entry[_LOWER_STATE_ENERGY] * 100. * h * c / k)) / M_LOG10E)
-            else:
-                return entry[_INTENSITY]
-
-        new_catalog_entry: Dict[str, Union[int, str, List[Dict[str, float]]]] = catalog_entry.copy()
-        if _LINES in new_catalog_entry:
-            new_catalog_entry[_LINES] = \
-                list(filter(lambda e: (min_frequency <= e[_FREQUENCY] <= max_frequency
-                                       and min_intensity <= intensity(e) <= max_intensity),
-                            catalog_entry[_LINES]))
-        else:
-            new_catalog_entry[_LINES] = []
-        return new_catalog_entry
+        return self._data[FREQUENCY] if self._data else (-math.inf, math.inf)
 
     def filter(self, *,
                min_frequency: float = -math.inf,
@@ -176,11 +142,32 @@ class Catalog:
             for key, value in entry_1.items():
                 if key not in entry_2:
                     return False
-                if key != _LINES and value != entry_2[key]:
+                if key != LINES and value != entry_2[key]:
                     return False
-                if key == _LINES and len(value) != len(entry_2[key]):
+                if key == LINES and len(value) != len(entry_2[key]):
                     return False
             return True
+
+        def filter_by_frequency_and_intensity(catalog_entry: Dict[str, Union[int, str, List[Dict[str, float]]]]) \
+                -> Dict[str, Union[int, str, List[Dict[str, float]]]]:
+            def intensity(entry) -> float:
+                if catalog_entry[DEGREES_OF_FREEDOM] >= 0 and temperature > 0. and temperature != T0:
+                    return (entry[INTENSITY]
+                            + ((0.5 * catalog_entry[DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
+                               - ((1 / temperature - 1 / T0) * entry[
+                                        LOWER_STATE_ENERGY] * 100. * h * c / k)) / M_LOG10E)
+                else:
+                    return entry[INTENSITY]
+
+            new_catalog_entry: Dict[str, Union[int, str, List[Dict[str, float]]]] = catalog_entry.copy()
+            if LINES in new_catalog_entry:
+                new_catalog_entry[LINES] = \
+                    list(filter(lambda _e: (min_frequency <= _e[FREQUENCY] <= max_frequency
+                                            and min_intensity <= intensity(_e) <= max_intensity),
+                                catalog_entry[LINES]))
+            else:
+                new_catalog_entry[LINES] = []
+            return new_catalog_entry
 
         if (min_frequency > max_frequency
                 or min_frequency > self._max_frequency
@@ -190,49 +177,43 @@ class Catalog:
                 or isotopolog or state or degrees_of_freedom):
             selected_entries = []
             for e in self.catalog:
-                if ((not species_tag or (_SPECIES_TAG in e and e[_SPECIES_TAG] == species_tag))
-                        and (not inchi or (_INCHI_KEY in e and e[_INCHI_KEY] == inchi))
+                if ((not species_tag or (SPECIES_TAG in e and e[SPECIES_TAG] == species_tag))
+                        and (not inchi or (INCHI_KEY in e and e[INCHI_KEY] == inchi))
                         and (not trivial_name
-                             or (_TRIVIAL_NAME in e and e[_TRIVIAL_NAME] == trivial_name))
+                             or (TRIVIAL_NAME in e and e[TRIVIAL_NAME] == trivial_name))
                         and (not structural_formula
-                             or (_STRUCTURAL_FORMULA in e and e[_STRUCTURAL_FORMULA] == structural_formula))
-                        and (not name or (_NAME in e and e[_NAME] == name))
+                             or (STRUCTURAL_FORMULA in e and e[STRUCTURAL_FORMULA] == structural_formula))
+                        and (not name or (NAME in e and e[NAME] == name))
                         and (not stoichiometric_formula
-                             or (_STOICHIOMETRIC_FORMULA in e and e[_STOICHIOMETRIC_FORMULA] == stoichiometric_formula))
-                        and (not isotopolog or (_ISOTOPOLOG in e and e[_ISOTOPOLOG] == isotopolog))
+                             or (STOICHIOMETRIC_FORMULA in e and e[STOICHIOMETRIC_FORMULA] == stoichiometric_formula))
+                        and (not isotopolog or (ISOTOPOLOG in e and e[ISOTOPOLOG] == isotopolog))
                         and (not state
-                             or (_STATE in e and e[_STATE] == state)
-                             or (_STATE_HTML in e and e[_STATE_HTML] == state))
+                             or (STATE in e and e[STATE] == state)
+                             or (STATE_HTML in e and e[STATE_HTML] == state))
                         and (degrees_of_freedom is None
-                             or (_DEGREES_OF_FREEDOM in e and e[_DEGREES_OF_FREEDOM] == degrees_of_freedom))
+                             or (DEGREES_OF_FREEDOM in e and e[DEGREES_OF_FREEDOM] == degrees_of_freedom))
                         and (not any_name
-                             or (_TRIVIAL_NAME in e and e[_TRIVIAL_NAME] == any_name)
-                             or (_NAME in e and e[_NAME] == any_name))
+                             or (TRIVIAL_NAME in e and e[TRIVIAL_NAME] == any_name)
+                             or (NAME in e and e[NAME] == any_name))
                         and (not any_formula
-                             or (_STRUCTURAL_FORMULA in e and e[_STRUCTURAL_FORMULA] == any_formula)
-                             or (_MOLECULE_SYMBOL in e and e[_MOLECULE_SYMBOL] == any_formula)
-                             or (_STOICHIOMETRIC_FORMULA in e and e[_STOICHIOMETRIC_FORMULA] == any_formula)
-                             or (_ISOTOPOLOG in e and e[_ISOTOPOLOG] == any_formula))
+                             or (STRUCTURAL_FORMULA in e and e[STRUCTURAL_FORMULA] == any_formula)
+                             or (MOLECULE_SYMBOL in e and e[MOLECULE_SYMBOL] == any_formula)
+                             or (STOICHIOMETRIC_FORMULA in e and e[STOICHIOMETRIC_FORMULA] == any_formula)
+                             or (ISOTOPOLOG in e and e[ISOTOPOLOG] == any_formula))
                         and (not any_name_or_formula
-                             or (_TRIVIAL_NAME in e and e[_TRIVIAL_NAME] == any_name_or_formula)
-                             or (_NAME in e and e[_NAME] == any_name_or_formula)
-                             or (_STRUCTURAL_FORMULA in e and e[_STRUCTURAL_FORMULA] == any_name_or_formula)
-                             or (_MOLECULE_SYMBOL in e and e[_MOLECULE_SYMBOL] == any_name_or_formula)
-                             or (_STOICHIOMETRIC_FORMULA in e and e[_STOICHIOMETRIC_FORMULA] == any_name_or_formula)
-                             or (_ISOTOPOLOG in e and e[_ISOTOPOLOG] == any_name_or_formula))):
-                    filtered_entry = self._filter_by_frequency_and_intensity(e,
-                                                                             min_frequency, max_frequency,
-                                                                             min_intensity, max_intensity,
-                                                                             temperature=temperature)
-                    if filtered_entry[_LINES]:
+                             or (TRIVIAL_NAME in e and e[TRIVIAL_NAME] == any_name_or_formula)
+                             or (NAME in e and e[NAME] == any_name_or_formula)
+                             or (STRUCTURAL_FORMULA in e and e[STRUCTURAL_FORMULA] == any_name_or_formula)
+                             or (MOLECULE_SYMBOL in e and e[MOLECULE_SYMBOL] == any_name_or_formula)
+                             or (STOICHIOMETRIC_FORMULA in e and e[STOICHIOMETRIC_FORMULA] == any_name_or_formula)
+                             or (ISOTOPOLOG in e and e[ISOTOPOLOG] == any_name_or_formula))):
+                    filtered_entry = filter_by_frequency_and_intensity(e)
+                    if filtered_entry[LINES]:
                         selected_entries.append(filtered_entry)
         else:
-            filtered_entries = [self._filter_by_frequency_and_intensity(e,
-                                                                        min_frequency, max_frequency,
-                                                                        min_intensity, max_intensity,
-                                                                        temperature=temperature)
-                                for e in self._data[_CATALOG]]
-            selected_entries = [e for e in filtered_entries if e[_LINES]]
+            filtered_entries = [filter_by_frequency_and_intensity(e)
+                                for e in self._data[CATALOG]]
+            selected_entries = [e for e in filtered_entries if e[LINES]]
         unique_entries = selected_entries
         all_unique: bool = True  # unless the opposite is proven
         for i in range(len(selected_entries)):
@@ -259,10 +240,10 @@ class Catalog:
         frequencies: List[float] = []
         intensities: List[float] = []
         for e in entries:
-            for line in e[_LINES]:
-                names.append(e[_NAME])
-                frequencies.append(line[_FREQUENCY])
-                intensities.append(line[_INTENSITY])
+            for line in e[LINES]:
+                names.append(e[NAME])
+                frequencies.append(line[FREQUENCY])
+                intensities.append(line[INTENSITY])
 
         def max_width(items: List[Any]) -> int:
             w: int = 0

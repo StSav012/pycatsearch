@@ -9,15 +9,10 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from catalog_entry import CatalogEntry
+from utils import *
 
 if sys.version_info < (3, 6):
     raise ImportError('Compatible only with Python 3.6 and newer')
-
-_CATALOG: str = 'catalog'
-_LINES: str = 'lines'
-_FREQUENCY: str = 'frequency'
-_SPECIES_TAG: str = 'speciestag'
-_DEGREES_OF_FREEDOM: str = 'degreesoffreedom'
 
 
 def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -> \
@@ -28,9 +23,6 @@ def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -
     :param tuple frequency_limits: the frequency range of the catalog entries to keep.
     :return: a list of the spectral lines catalog entries.
     """
-
-    def within(x: float, limits: Tuple[float, float]):
-        return min(limits) <= x <= max(limits)
 
     def get(url: str) -> str:
         response = urlopen(url)
@@ -55,10 +47,10 @@ def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -
 
     def get_substance_catalog(species_entry: Dict[str, Union[int, str]]) \
             -> Dict[str, Union[int, str, List[Dict[str, float]]]]:
-        if _SPECIES_TAG not in species_entry:
+        if SPECIES_TAG not in species_entry:
             # nothing to go on with
             return dict()
-        species_tag: int = species_entry[_SPECIES_TAG]
+        species_tag: int = species_entry[SPECIES_TAG]
         fn: str = f'c{species_tag:06}.cat'
         if species_tag % 1000 > 500:
             fn = 'https://cdms.astro.uni-koeln.de/classic/entries/' + fn
@@ -75,16 +67,16 @@ def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -
         catalog_entries = [CatalogEntry(line) for line in lines]
         return {
             **species_entry,
-            _DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
-            _LINES: [catalog_entry.to_dict()
-                     for catalog_entry in catalog_entries
-                     if within(catalog_entry.frequency, frequency_limits)]
+            DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
+            LINES: [catalog_entry.to_dict()
+                    for catalog_entry in catalog_entries
+                    if within(catalog_entry.frequency, frequency_limits)]
         }
 
     catalog: List[Dict[str, Union[int, str, List[Dict[str, float]]]]] \
         = [get_substance_catalog(e) for e in get_species()]
     return [catalog_entry for catalog_entry in catalog
-            if catalog_entry and _LINES in catalog_entry and catalog_entry[_LINES]]
+            if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]]
 
 
 def save_catalog(filename: str,
@@ -108,22 +100,22 @@ def save_catalog(filename: str,
     if catalog:
         with gzip.open(filename, 'wb') as f:
             f.write(json.dumps({
-                _CATALOG: catalog,
-                _FREQUENCY: frequency_limits
+                CATALOG: catalog,
+                FREQUENCY: frequency_limits
             }, indent=4).encode())
         if qt_json_filename:
             from PyQt5.QtCore import qCompress, QJsonDocument
             if qt_json_zipped:
                 with open(qt_json_filename, 'wb') as f:
                     f.write(qCompress(QJsonDocument({
-                        _CATALOG: catalog,
-                        _FREQUENCY: frequency_limits
+                        CATALOG: catalog,
+                        FREQUENCY: frequency_limits
                     }).toBinaryData()).data())
             else:
                 with open(qt_json_filename, 'wb') as f:
                     f.write(QJsonDocument({
-                        _CATALOG: catalog,
-                        _FREQUENCY: frequency_limits
+                        CATALOG: catalog,
+                        FREQUENCY: frequency_limits
                     }).toBinaryData().data())
 
 

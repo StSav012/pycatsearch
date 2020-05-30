@@ -17,6 +17,8 @@ c.print(min_frequency=140141, max_frequency=140142)
 - `catalog` is a list of the catalog entries loaded by `__init__`.
 - `frequency_limits` is a tuple of the minimal and the maximal frequencies of the lines
   the loaded catalogs contain.
+- `is_empty` indicates whether nothing has been loaded by `__init__`.
+- `sources` contains a list of files that have been loaded successfully by `__init__`.
 
 ###### Functions:
 - `__init__(self, *catalog_file_names: str)` accepts names of JSON or GZipped JSON files.
@@ -94,4 +96,5 @@ downloader.save_catalog('catalog.json.gz', (115000, 178000), qt_json_filename='c
 
 The code is developed under `python 3.7.5`. It should work under `python 3.6` but not tested.
 
-If you want to save the catalog as a [Qt JSON Document](https://doc.qt.io/qt-5/qjsondocument.html), then `PyQt5` is needed. Otherwise, only the built-ins are used.
+If you want to save the catalog as a [Qt JSON Document](https://doc.qt.io/qt-5/qjsondocument.html),
+then `PyQt5` is needed. Otherwise, only the built-ins are used.
