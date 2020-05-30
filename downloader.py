@@ -39,9 +39,15 @@ def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -
                     del entry[key]
             return entry
 
+        def trim_strings(entry: Dict[str, Union[None, int, str]]) -> Dict[str, Union[int, str]]:
+            for key, value in entry.items():
+                if isinstance(value, str):
+                    entry[key] = entry[key].strip()
+            return entry
+
         data = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1}))
         if 'species' in data:
-            return [purge_null_data(s) for s in data['species']]
+            return [purge_null_data(trim_strings(s)) for s in data['species']]
         else:
             return []
 
