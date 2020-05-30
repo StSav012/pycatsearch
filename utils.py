@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
-from typing import Tuple, Union, Type
+from typing import Tuple, Union, Type, List, Dict
 
 try:
     from typing import Final
@@ -23,7 +23,7 @@ __all__ = ['M_LOG10E',
            'nm_to_ghz', 'nm_to_mhz', 'nm_to_rev_cm',
            'rev_cm_to_ghz', 'rev_cm_to_mhz', 'rev_cm_to_nm',
            'sq_nm_mhz_to_cm_per_molecule',
-           'within']
+           'within', 'chem_html', 'best_name']
 
 M_LOG10E: Final[float] = math.log10(math.e)
 
@@ -115,3 +115,106 @@ def sq_nm_mhz_to_cm_per_molecule(intensity_sq_nm_mhz: float) -> float:
 
 def cm_per_molecule_to_sq_nm_mhz(intensity_cm_per_molecule: float) -> float:
     return intensity_cm_per_molecule + 10. + math.log(c) / M_LOG10E
+
+
+def chem_html(formula: str) -> str:
+    """ converts plain text chemical formula into html markup """
+
+    if '<' in formula or '>' in formula:
+        return formula
+
+    def subscript(s: str) -> str:
+        number_start: int = -1
+        number_started: bool = False
+        cap_alpha_started: bool = False
+        low_alpha_started: bool = False
+        _i: int = 0
+        while _i < len(s):
+            _c: str = s[_i]
+            if number_started and not _c.isdigit():
+                number_started = False
+                s = s[:number_start] + '<sub>' + s[number_start:_i] + '</sub>' + s[_i:]
+                _i += 11
+            if (cap_alpha_started or low_alpha_started) and _c.isdigit() and not number_started:
+                number_start = _i
+                number_started = True
+            if low_alpha_started:
+                cap_alpha_started = False
+                low_alpha_started = False
+            if cap_alpha_started and _c.islower() or _c == ')':
+                low_alpha_started = True
+            cap_alpha_started = _c.isupper()
+            _i += 1
+        if number_started:
+            s = s[:number_start] + '<sub>' + s[number_start:] + '</sub>'
+        return s
+
+    def prefix(s: str):
+        no_digits: bool = False
+        _i: int = len(s)
+        while not no_digits:
+            _i = s.rfind('-', 0, _i)
+            if _i == -1:
+                break
+            if s[:_i].isalpha() and s[:_i].isupper():
+                break
+            no_digits = True
+            _c: str
+            for _c in s[:_i]:
+                if _c.isdigit() or _c == '<':
+                    no_digits = False
+                    break
+            if no_digits:
+                return '<i>' + s[:_i] + '</i>' + s[_i:]
+        return s
+
+    def charge(s: str):
+        if s[-1] in '+-':
+            return s[:-1] + '<sup>' + s[-1] + '</sup>'
+        return s
+
+    def v(s: str) -> str:
+        if '=' not in s:
+            return s[0] + ' = ' + s[1:]
+        ss: List[str] = list(map(str.strip, s.split('=')))
+        for _i in range(len(ss)):
+            if ss[_i].startswith('v'):
+                ss[_i] = ss[_i][0] + '<sub>' + ss[_i][1:] + '</sub>'
+        return ' = '.join(ss)
+
+    html_formula: str = formula
+    html_formula_pieces: List[str] = list(map(str.strip, html_formula.split(',')))
+    for i in range(len(html_formula_pieces)):
+        if html_formula_pieces[i].startswith('v'):
+            html_formula_pieces = html_formula_pieces[:i] + [', '.join(html_formula_pieces[i:])]
+            break
+    for i in range(len(html_formula_pieces)):
+        if html_formula_pieces[i].startswith('v'):
+            html_formula_pieces[i] = v(html_formula_pieces[i])
+            break
+        for e in (subscript, prefix, charge):
+            html_formula_pieces[i] = e(html_formula_pieces[i])
+    html_formula = ', '.join(html_formula_pieces)
+    return html_formula
+
+
+def best_name(entry: Dict[str, Union[int, str, List[Dict[str, float]]]]) -> str:
+    if ISOTOPOLOG in entry:
+        if ((STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == entry[ISOTOPOLOG])
+                or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == entry[ISOTOPOLOG])):
+            if STATE_HTML in entry and entry[STATE_HTML]:
+                # span tags are needed when the molecule symbol is malformed
+                return f'<span>{entry[MOLECULE_SYMBOL]}</span>, {chem_html(entry[STATE_HTML])}'
+            return entry[MOLECULE_SYMBOL]
+        else:
+            if STATE_HTML in entry and entry[STATE_HTML]:
+                return f'{chem_html(entry[ISOTOPOLOG])}, {chem_html(entry[STATE_HTML])}'
+            return chem_html(entry[ISOTOPOLOG])
+
+    for key in (NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA):
+        if key in entry:
+            return chem_html(entry[key])
+    for key in (TRIVIAL_NAME, SPECIES_TAG):
+        if key in entry:
+            return str(entry[key])
+    return 'no name'
