@@ -14,9 +14,10 @@ except ImportError:
 
 __all__ = ['M_LOG10E',
            'T0', 'c', 'h', 'k',
-           'CATALOG', 'LINES', 'FREQUENCY', 'INTENSITY', 'STRUCTURAL_FORMULA', 'STOICHIOMETRIC_FORMULA',
-           'MOLECULE_SYMBOL', 'SPECIES_TAG', 'NAME', 'TRIVIAL_NAME', 'ISOTOPOLOG', 'STATE', 'STATE_HTML',
-           'INCHI_KEY', 'DEGREES_OF_FREEDOM', 'LOWER_STATE_ENERGY',
+           'CATALOG', 'LINES', 'FREQUENCY', 'INTENSITY', 'ID', 'STRUCTURAL_FORMULA', 'STOICHIOMETRIC_FORMULA',
+           'MOLECULE', 'MOLECULE_SYMBOL', 'SPECIES_TAG', 'NAME', 'TRIVIAL_NAME', 'ISOTOPOLOG', 'STATE', 'STATE_HTML',
+           'INCHI_KEY', 'DEGREES_OF_FREEDOM', 'LOWER_STATE_ENERGY', 'CONTRIBUTOR', 'VERSION', 'DATE_OF_ENTRY',
+           'HUMAN_READABLE',
            'cm_per_molecule_to_sq_nm_mhz',
            'ghz_to_mhz', 'ghz_to_nm', 'ghz_to_rev_cm',
            'mhz_to_ghz', 'mhz_to_nm', 'mhz_to_rev_cm',
@@ -36,6 +37,8 @@ CATALOG: Final[str] = 'catalog'
 LINES: Final[str] = 'lines'
 FREQUENCY: Final[str] = 'frequency'
 INTENSITY: Final[str] = 'intensity'
+ID: Final[str] = 'id'
+MOLECULE: Final[str] = 'molecule'
 STRUCTURAL_FORMULA: Final[str] = 'structuralformula'
 STOICHIOMETRIC_FORMULA: Final[str] = 'stoichiometricformula'
 MOLECULE_SYMBOL: Final[str] = 'moleculesymbol'
@@ -46,8 +49,35 @@ ISOTOPOLOG: Final[str] = 'isotopolog'
 STATE: Final[str] = 'state'
 STATE_HTML: Final[str] = 'state_html'
 INCHI_KEY: Final[str] = 'inchikey'
+CONTRIBUTOR: Final[str] = 'contributor'
+VERSION: Final[str] = 'version'
+DATE_OF_ENTRY: Final[str] = 'dateofentry'
 DEGREES_OF_FREEDOM: Final[str] = 'degreesoffreedom'
 LOWER_STATE_ENERGY: Final[str] = 'lowerstateenergy'
+
+HUMAN_READABLE: Final[Dict[str, str]] = {
+    CATALOG: 'Catalog',
+    LINES: 'Lines',
+    FREQUENCY: 'Frequency',
+    INTENSITY: 'Intensity',
+    ID: 'ID',
+    MOLECULE: 'Molecule',
+    STRUCTURAL_FORMULA: 'Structural formula',
+    STOICHIOMETRIC_FORMULA: 'Stoichiometric formula',
+    MOLECULE_SYMBOL: 'Molecule symbol',
+    SPECIES_TAG: 'Species tag',
+    NAME: 'Name',
+    TRIVIAL_NAME: 'Trivial name',
+    ISOTOPOLOG: 'Isotopolog',
+    STATE: 'State (TeX)',
+    STATE_HTML: 'State (HTML)',
+    INCHI_KEY: 'InChI key',
+    CONTRIBUTOR: 'Contributor',
+    VERSION: 'Version',
+    DATE_OF_ENTRY: 'Date of entry',
+    DEGREES_OF_FREEDOM: 'Degrees of freedom',
+    LOWER_STATE_ENERGY: 'Lower state energy',
+}
 
 
 def within(x: float, limits: Union[Tuple[float, float], Tuple[Tuple[float, float], ...]]) -> bool:
