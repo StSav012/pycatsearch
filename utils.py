@@ -150,8 +150,10 @@ def cm_per_molecule_to_sq_nm_mhz(intensity_cm_per_molecule: float) -> float:
 
 def chem_html(formula: str) -> str:
     """ converts plain text chemical formula into html markup """
+    import html
 
     if '<' in formula or '>' in formula:
+        # we can not tell whether it's a tag or a mathematical sign
         return formula
 
     def subscript(s: str) -> str:
@@ -191,11 +193,12 @@ def chem_html(formula: str) -> str:
                 break
             no_digits = True
             _c: str
-            for _c in s[:_i]:
+            unescaped_prefix: str = html.unescape(s[:_i])
+            for _c in unescaped_prefix:
                 if _c.isdigit() or _c == '<':
                     no_digits = False
                     break
-            if no_digits:
+            if no_digits and (unescaped_prefix[0].islower() or unescaped_prefix[0] == '('):
                 return '<i>' + s[:_i] + '</i>' + s[_i:]
         return s
 
@@ -213,7 +216,7 @@ def chem_html(formula: str) -> str:
                 ss[_i] = ss[_i][0] + '<sub>' + ss[_i][1:] + '</sub>'
         return ' = '.join(ss)
 
-    html_formula: str = formula
+    html_formula: str = html.escape(formula)
     html_formula_pieces: List[str] = list(map(str.strip, html_formula.split(',')))
     for i in range(len(html_formula_pieces)):
         if html_formula_pieces[i].startswith('v'):
@@ -229,10 +232,17 @@ def chem_html(formula: str) -> str:
     return html_formula
 
 
+def is_good_html(text: str) -> bool:
+    """ Basic check that all tags are sound """
+    _1, _2, _3 = text.count('<'), text.count('>'), 2 * text.count('</')
+    return _1 == _2 and _1 == _3
+
+
 def best_name(entry: Dict[str, Union[int, str, List[Dict[str, float]]]]) -> str:
     if ISOTOPOLOG in entry:
-        if ((STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == entry[ISOTOPOLOG])
-                or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == entry[ISOTOPOLOG])):
+        if (is_good_html(entry[MOLECULE_SYMBOL])
+                and ((STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == entry[ISOTOPOLOG])
+                     or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == entry[ISOTOPOLOG]))):
             if STATE_HTML in entry and entry[STATE_HTML]:
                 # span tags are needed when the molecule symbol is malformed
                 return f'<span>{entry[MOLECULE_SYMBOL]}</span>, {chem_html(entry[STATE_HTML])}'
@@ -255,7 +265,7 @@ def remove_html(line: str) -> str:
     """ removes HTML tags and decodes HTML entities """
     import html
 
-    if line.count('<') != line.count('>') or line.count('<') != 2 * line.count('</'):
+    if not is_good_html(line):
         raise ValueError('Corrupted HTML', line)
 
     new_line: str = line
