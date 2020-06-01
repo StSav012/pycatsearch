@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
+import os
 from typing import Tuple, Union, Type, List, Dict
 
 try:
@@ -24,7 +25,7 @@ __all__ = ['M_LOG10E',
            'nm_to_ghz', 'nm_to_mhz', 'nm_to_rev_cm',
            'rev_cm_to_ghz', 'rev_cm_to_mhz', 'rev_cm_to_nm',
            'sq_nm_mhz_to_cm_per_molecule',
-           'within', 'chem_html', 'best_name', 'remove_html']
+           'within', 'chem_html', 'best_name', 'remove_html', 'wrap_in_html']
 
 M_LOG10E: Final[float] = math.log10(math.e)
 
@@ -265,3 +266,20 @@ def remove_html(line: str) -> str:
         tag_start: int = new_line.find('<')
         tag_end: int = new_line.find('>', tag_start)
     return html.unescape(new_line)
+
+
+def wrap_in_html(text: str, line_end: str = os.linesep) -> str:
+    new_text: List[str] = [
+        '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">',
+        '<html lang="en" xml:lang="en">',
+        '<head>',
+        '<meta http-equiv="content-type" content="text/html; charset=utf-8">',
+        '</head>',
+        '</html>',
+        '<body>',
+        text,
+        '</body>',
+        '</html>'
+    ]
+
+    return line_end.join(new_text)
