@@ -269,6 +269,7 @@ def remove_html(line: str) -> str:
 
 
 def wrap_in_html(text: str, line_end: str = os.linesep) -> str:
+    """ Make a full HTML document out of a piece of the markup """
     new_text: List[str] = [
         '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">',
         '<html lang="en" xml:lang="en">',
