@@ -143,6 +143,9 @@ class Catalog:
         :return: a list of substances with non-empty lists of absorption lines that match all the conditions.
         """
 
+        if self.is_empty:
+            return []
+
         def same_entry(entry_1: Dict[str, Union[int, str, List[Dict[str, float]]]],
                        entry_2: Dict[str, Union[int, str, List[Dict[str, float]]]]) -> bool:
             if len(entry_1) != len(entry_2):
