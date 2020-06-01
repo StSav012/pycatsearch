@@ -3,7 +3,7 @@ import math
 import os
 import sys
 from base64 import b64encode
-from typing import List, Union, Dict, Set, Type
+from typing import Callable, List, Union, Dict, Set, Type
 
 from PyQt5.QtCore import Qt, QByteArray, QPoint, QSettings, QMimeData
 from PyQt5.QtGui import QIcon, QPixmap, QCloseEvent, QClipboard
@@ -70,14 +70,14 @@ class Settings(QSettings):
         }
     }
 
-    TO_MHZ: Final[List] = [lambda x: x, ghz_to_mhz, rev_cm_to_mhz, nm_to_mhz]
-    FROM_MHZ: Final[List] = [lambda x: x, mhz_to_ghz, mhz_to_rev_cm, mhz_to_nm]
+    TO_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, ghz_to_mhz, rev_cm_to_mhz, nm_to_mhz]
+    FROM_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, mhz_to_ghz, mhz_to_rev_cm, mhz_to_nm]
 
-    TO_SQ_NM_MHZ: Final[List] = [lambda x: x, cm_per_molecule_to_sq_nm_mhz]
-    FROM_SQ_NM_MHZ: Final[List] = [lambda x: x, sq_nm_mhz_to_cm_per_molecule]
+    TO_SQ_NM_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, cm_per_molecule_to_sq_nm_mhz]
+    FROM_SQ_NM_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, sq_nm_mhz_to_cm_per_molecule]
 
-    TO_K: Final[List] = [lambda x: x, lambda x: x + 273.15]
-    FROM_K: Final[List] = [lambda x: x, lambda x: x - 273.15]
+    TO_K: Final[List[Callable[[float], float]]] = [lambda x: x, lambda x: x + 273.15]
+    FROM_K: Final[List[Callable[[float], float]]] = [lambda x: x, lambda x: x - 273.15]
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -105,14 +105,14 @@ class Settings(QSettings):
         return self.FREQUENCY_UNITS[v]
 
     @property
-    def to_mhz(self):
+    def to_mhz(self) -> Callable[[float], float]:
         self.beginGroup('frequency')
         v: int = self.value('unit', 0, int)
         self.endGroup()
         return self.TO_MHZ[v]
 
     @property
-    def from_mhz(self):
+    def from_mhz(self) -> Callable[[float], float]:
         self.beginGroup('frequency')
         v: int = self.value('unit', 0, int)
         self.endGroup()
@@ -141,14 +141,14 @@ class Settings(QSettings):
         return self.INTENSITY_UNITS[v]
 
     @property
-    def to_sq_nm_mhz(self):
+    def to_sq_nm_mhz(self) -> Callable[[float], float]:
         self.beginGroup('intensity')
         v: int = self.value('unit', 0, int)
         self.endGroup()
         return self.TO_SQ_NM_MHZ[v]
 
     @property
-    def from_sq_nm_mhz(self):
+    def from_sq_nm_mhz(self) -> Callable[[float], float]:
         self.beginGroup('intensity')
         v: int = self.value('unit', 0, int)
         self.endGroup()
@@ -177,14 +177,14 @@ class Settings(QSettings):
         return self.TEMPERATURE_UNITS[v]
 
     @property
-    def to_k(self):
+    def to_k(self) -> Callable[[float], float]:
         self.beginGroup('temperature')
         v: int = self.value('unit', 0, int)
         self.endGroup()
         return self.TO_K[v]
 
     @property
-    def from_k(self):
+    def from_k(self) -> Callable[[float], float]:
         self.beginGroup('temperature')
         v: int = self.value('unit', 0, int)
         self.endGroup()
