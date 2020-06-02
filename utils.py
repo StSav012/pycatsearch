@@ -173,7 +173,7 @@ def tex_to_html_entity(s: str) -> str:
                 _i += 2
             elif s[word_start:_i] in fixes:
                 s = s[:word_start - 1] + '&' + fixes[s[word_start:_i]] + ';' + s[_i:]
-                _i += 2 + len(fixes[s[word_start:_i]]) - (_i - word_start)
+                _i += 2
         if backslash_found and _c.isalpha() and not word_started:
             word_start = _i
             word_started = True
@@ -185,7 +185,7 @@ def tex_to_html_entity(s: str) -> str:
             _i += 2
         elif s[word_start:_i] in fixes:
             s = s[:word_start - 1] + '&' + fixes[s[word_start:_i]] + ';' + s[_i:]
-            _i += 2 + len(fixes[s[word_start:_i]]) - (_i - word_start)
+            _i += 2
     return s
 
 
