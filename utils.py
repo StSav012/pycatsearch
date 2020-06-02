@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import html
 import math
 import os
 from typing import Tuple, Union, Type, List, Dict
@@ -148,10 +149,48 @@ def cm_per_molecule_to_sq_nm_mhz(intensity_cm_per_molecule: float) -> float:
     return intensity_cm_per_molecule + 10. + math.log(c) / M_LOG10E
 
 
+def tex_to_html_entity(s: str) -> str:
+    r"""
+    Change LaTeX entities syntax to HTML one.
+    Get ‘\alpha’ to be ‘&alpha;’ and so on. Unknown LaTeX entities do not get replaced.
+
+    :param s: a line to convert
+    :return: a line with all LaTeX entities renamed
+    """
+    word_start: int = -1
+    word_started: bool = False
+    backslash_found: bool = False
+    _i: int = 0
+    fixes: Dict[str, str] = {
+        'neq': '#8800',
+    }
+    while _i < len(s):
+        _c: str = s[_i]
+        if word_started and not _c.isalpha():
+            word_started = False
+            if s[word_start:_i] + ';' in html.entities.entitydefs:
+                s = s[:word_start - 1] + '&' + s[word_start:_i] + ';' + s[_i:]
+                _i += 2
+            elif s[word_start:_i] in fixes:
+                s = s[:word_start - 1] + '&' + fixes[s[word_start:_i]] + ';' + s[_i:]
+                _i += 2 + len(fixes[s[word_start:_i]]) - (_i - word_start)
+        if backslash_found and _c.isalpha() and not word_started:
+            word_start = _i
+            word_started = True
+        backslash_found = (_c == '\\')
+        _i += 1
+    if word_started:
+        if s[word_start:_i] + ';' in html.entities.entitydefs:
+            s = s[:word_start - 1] + '&' + s[word_start:_i] + ';' + s[_i:]
+            _i += 2
+        elif s[word_start:_i] in fixes:
+            s = s[:word_start - 1] + '&' + fixes[s[word_start:_i]] + ';' + s[_i:]
+            _i += 2 + len(fixes[s[word_start:_i]]) - (_i - word_start)
+    return s
+
+
 def chem_html(formula: str) -> str:
     """ converts plain text chemical formula into html markup """
-    import html
-
     if '<' in formula or '>' in formula:
         # we can not tell whether it's a tag or a mathematical sign
         return formula
@@ -245,11 +284,11 @@ def best_name(entry: Dict[str, Union[int, str, List[Dict[str, float]]]]) -> str:
                      or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == entry[ISOTOPOLOG]))):
             if STATE_HTML in entry and entry[STATE_HTML]:
                 # span tags are needed when the molecule symbol is malformed
-                return f'<span>{entry[MOLECULE_SYMBOL]}</span>, {chem_html(entry[STATE_HTML])}'
+                return f'<span>{entry[MOLECULE_SYMBOL]}</span>, {chem_html(tex_to_html_entity(entry[STATE_HTML]))}'
             return entry[MOLECULE_SYMBOL]
         else:
             if STATE_HTML in entry and entry[STATE_HTML]:
-                return f'{chem_html(entry[ISOTOPOLOG])}, {chem_html(entry[STATE_HTML])}'
+                return f'{chem_html(entry[ISOTOPOLOG])}, {chem_html(tex_to_html_entity(entry[STATE_HTML]))}'
             return chem_html(entry[ISOTOPOLOG])
 
     for key in (NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA):
@@ -263,8 +302,6 @@ def best_name(entry: Dict[str, Union[int, str, List[Dict[str, float]]]]) -> str:
 
 def remove_html(line: str) -> str:
     """ removes HTML tags and decodes HTML entities """
-    import html
-
     if not is_good_html(line):
         return html.unescape(line)
 
