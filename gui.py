@@ -36,7 +36,7 @@ def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.Plain
     clipboard: QClipboard = QApplication.clipboard()
     mime_data: QMimeData = QMimeData()
     if isinstance(text_type, str):
-        mime_data.setData(text_type, text)
+        mime_data.setData(text_type, text.encode())
     elif text_type == Qt.RichText:
         mime_data.setHtml(wrap_in_html(text))
         mime_data.setText(remove_html(text))
@@ -959,7 +959,7 @@ class UI(QMainWindow):
         if intensity_suffix == 0:  # nm²×MHz
             self.spin_intensity.setValue(self.minimal_intensity)
         elif intensity_suffix == 1:  # cm/molecule
-            self.spin_intensity.setValue(sq_nm_mhz_to_cm_per_molecule(self.minimal_intensity))
+            self.spin_intensity.setValue(self.settings.from_sq_nm_mhz(self.minimal_intensity))
         else:
             raise IndexError('Wrong intensity unit index', intensity_suffix)
 
@@ -971,7 +971,7 @@ class UI(QMainWindow):
             self.spin_temperature.setMinimum(0.0)
         elif temperature_suffix == 1:  # °C
             self.spin_temperature.setMinimum(-273.15)
-            self.spin_temperature.setValue(self.temperature - 273.15)
+            self.spin_temperature.setValue(self.settings.from_k(self.temperature))
         else:
             raise IndexError('Wrong temperature unit index', temperature_suffix)
 
@@ -1002,6 +1002,7 @@ class UI(QMainWindow):
                                       min_intensity=self.minimal_intensity,
                                       temperature=self.temperature))
         frequency_suffix: int = self.settings.frequency_unit
+        precision: int = [4, 7, 8, 8][frequency_suffix]
         for e in entries:
             for line in e[LINES]:
                 last_row: int = self.results_table.rowCount()
@@ -1011,7 +1012,6 @@ class UI(QMainWindow):
                 setattr(label, ID, e[ID])
                 self.results_table.setCellWidget(last_row, 0, label)
                 frequency: float = self.settings.from_mhz(line[FREQUENCY])
-                precision: int = [4, 7, 8, 8][frequency_suffix]
                 item: QTableWidgetItem = QTableWidgetItem(f'{frequency:.{precision}f}')
                 item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                 self.results_table.setItem(last_row, 1, item)
@@ -1042,13 +1042,15 @@ class UI(QMainWindow):
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                 for e in self.catalog.catalog:
-                    if name_key in e and e[name_key].startswith(filter_text) and not e[name_key] in list_items:
-                        list_items.append(e[name_key])
+                    plain_text_name: str = remove_html(e[name_key])
+                    if name_key in e and plain_text_name.startswith(filter_text) and plain_text_name not in list_items:
+                        list_items.append(plain_text_name)
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                 for e in self.catalog.catalog:
-                    if name_key in e and filter_text in e[name_key] and not e[name_key] in list_items:
-                        list_items.append(e[name_key])
+                    plain_text_name: str = remove_html(e[name_key])
+                    if name_key in e and filter_text in plain_text_name and plain_text_name not in list_items:
+                        list_items.append(plain_text_name)
             if filter_text.isdecimal():
                 for e in self.catalog.catalog:
                     if SPECIES_TAG in e and str(e[SPECIES_TAG]).startswith(filter_text):
@@ -1057,7 +1059,9 @@ class UI(QMainWindow):
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                 for e in self.catalog.catalog:
-                    list_items.append(e[name_key])
+                    plain_text_name: str = remove_html(e[name_key])
+                    if plain_text_name not in list_items:
+                        list_items.append(plain_text_name)
             list_items = sorted(list_items)
         return list_items
 
@@ -1067,7 +1071,7 @@ class UI(QMainWindow):
 
         for text in self.filter_substances_list(filter_text):
             new_item: QListWidgetItem = QListWidgetItem(text, self.list_substance)
-            new_item.setFlags(new_item.flags() | Qt.ItemIsUserCheckable)
+            new_item.setFlags(int(new_item.flags()) | Qt.ItemIsUserCheckable)
             new_item.setCheckState(Qt.Checked if text in self.selected_substances else Qt.Unchecked)
             self.list_substance.addItem(new_item)
 
