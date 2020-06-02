@@ -3,19 +3,15 @@ import math
 import os
 import sys
 from base64 import b64encode
-from typing import Callable, List, Union, Dict, Set, Type
+from typing import Callable, Dict, List, Set, Type, Union
 
-from PyQt5.QtCore import Qt, QByteArray, QPoint, QSettings, QMimeData
-from PyQt5.QtGui import QIcon, QPixmap, QCloseEvent, QClipboard
-from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QAction, QCheckBox, QDoubleSpinBox, \
-    QGridLayout, \
-    QGroupBox, \
-    QLineEdit, \
-    QListWidget, QMainWindow, \
-    QMenu, QMenuBar, QPushButton, QStatusBar, QTableWidget, \
-    QWidget, QApplication, QTabWidget, QFormLayout, QStyle, QFileDialog, QTableWidgetSelectionRange, QMessageBox, \
-    QDesktopWidget, QTableWidgetItem, QListWidgetItem, QLabel, QHeaderView, QDialog, QVBoxLayout, QComboBox, \
-    QDialogButtonBox
+from PyQt5.QtCore import QByteArray, QMimeData, QPoint, QSettings, Qt
+from PyQt5.QtGui import QClipboard, QCloseEvent, QIcon, QPixmap
+from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QAction, QApplication, QCheckBox, QComboBox, \
+    QDesktopWidget, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QGroupBox, \
+    QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMainWindow, QMenu, QMenuBar, QMessageBox, \
+    QPushButton, QStatusBar, QStyle, QTabWidget, QTableWidget, QTableWidgetItem, QTableWidgetSelectionRange, \
+    QVBoxLayout, QWidget
 
 from catalog import Catalog
 from utils import *
@@ -1013,11 +1009,11 @@ class UI(QMainWindow):
                 self.results_table.setCellWidget(last_row, 0, label)
                 frequency: float = self.settings.from_mhz(line[FREQUENCY])
                 item: QTableWidgetItem = QTableWidgetItem(f'{frequency:.{precision}f}')
-                item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                item.setTextAlignment(int(Qt.AlignRight | Qt.AlignVCenter))
                 self.results_table.setItem(last_row, 1, item)
                 intensity: float = self.settings.from_sq_nm_mhz(line[INTENSITY])
                 item: QTableWidgetItem = QTableWidgetItem(f'{intensity:.4f}')
-                item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                item.setTextAlignment(int(Qt.AlignRight | Qt.AlignVCenter))
                 self.results_table.setItem(last_row, 2, item)
 
         self.results_table.setSortingEnabled(True)
