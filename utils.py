@@ -266,7 +266,7 @@ def remove_html(line: str) -> str:
     import html
 
     if not is_good_html(line):
-        raise ValueError('Corrupted HTML', line)
+        return html.unescape(line)
 
     new_line: str = line
     tag_start: int = new_line.find('<')
