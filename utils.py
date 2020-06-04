@@ -323,7 +323,6 @@ def wrap_in_html(text: str, line_end: str = os.linesep) -> str:
         '<head>',
         '<meta http-equiv="content-type" content="text/html; charset=utf-8">',
         '</head>',
-        '</html>',
         '<body>',
         text,
         '</body>',
