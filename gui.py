@@ -652,6 +652,13 @@ class UI(QMainWindow):
     def on_table_item_selection_changed(self):
         self.action_copy.setEnabled(bool(self.results_table.selectedItems()))
         self.action_substance_info.setEnabled(bool(self.results_table.selectedItems()))
+        for r in range(self.results_table.rowCount()):
+            # noinspection PyTypeChecker
+            label: QLabel = self.results_table.cellWidget(r, 0)
+            if self.results_table.item(r, 1).isSelected():
+                label.setSelection(0, len(remove_html(label.text())))
+            else:
+                label.setSelection(0, 0)
 
     def on_menu_load_triggered(self):
         self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
