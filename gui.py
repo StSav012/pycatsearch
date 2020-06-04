@@ -331,6 +331,8 @@ class SubstanceInfo(QDialog):
 
 
 class UI(QMainWindow):
+    MAX_ENTRIES_COUNT: Final[int] = 64
+
     def __init__(self, catalog: Catalog):
         super().__init__()
         self.central_widget: QWidget = QWidget(self)
@@ -999,6 +1001,12 @@ class UI(QMainWindow):
                                       temperature=self.temperature))
         frequency_suffix: int = self.settings.frequency_unit
         precision: int = [4, 7, 8, 8][frequency_suffix]
+        if len(entries) > self.MAX_ENTRIES_COUNT:
+            entries = entries[:self.MAX_ENTRIES_COUNT]
+            QMessageBox.warning(self,
+                                self.tr('Too many results'),
+                                self.tr('There are too many lines that meet your criteria. '
+                                        'Not all of them are displayed.'))
         for e in entries:
             for line in e[LINES]:
                 last_row: int = self.results_table.rowCount()
