@@ -591,6 +591,8 @@ class UI(QMainWindow):
         self.settings: Settings = Settings('SavSoft', 'CatSearch', self)
         self.preferences_dialog: Preferences = Preferences(self.settings, self)
 
+        self.results_shown: bool = False
+
         self.preset_table()
 
         self.load_settings()
@@ -631,7 +633,7 @@ class UI(QMainWindow):
 
     def on_spin_intensity_changed(self, arg1: float):
         self.minimal_intensity = self.settings.to_sq_nm_mhz(arg1)
-        if self.results_table.rowCount():
+        if self.results_shown:
             self.fill_table()
 
     def on_check_save_selection_toggled(self, new_state):
@@ -899,6 +901,7 @@ class UI(QMainWindow):
         self.settings.sync()
 
     def preset_table(self):
+        self.results_shown = False
         self.results_table.clearContents()
         self.results_table.clearSelection()
         self.action_copy.setDisabled(True)
@@ -1028,6 +1031,7 @@ class UI(QMainWindow):
         self.action_select_all.setEnabled(bool(entries))
         self.action_clear.setEnabled(bool(entries))
         self.menu_copy_only.setEnabled(bool(entries))
+        self.results_shown = True
 
     def update_selected_substances(self):
         if self.box_substance.isChecked():
