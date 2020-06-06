@@ -277,26 +277,35 @@ def is_good_html(text: str) -> bool:
     return _1 == _2 and _1 == _3
 
 
-def best_name(entry: Dict[str, Union[int, str, List[Dict[str, float]]]]) -> str:
-    if ISOTOPOLOG in entry:
-        if (is_good_html(entry[MOLECULE_SYMBOL])
-                and ((STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == entry[ISOTOPOLOG])
-                     or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == entry[ISOTOPOLOG]))):
-            if STATE_HTML in entry and entry[STATE_HTML]:
-                # span tags are needed when the molecule symbol is malformed
-                return f'<span>{entry[MOLECULE_SYMBOL]}</span>, {chem_html(tex_to_html_entity(entry[STATE_HTML]))}'
-            return entry[MOLECULE_SYMBOL]
+def best_name(entry: Dict[str, Union[int, str, List[Dict[str, float]]]],
+              allow_html: bool = True) -> str:
+    if allow_html and ISOTOPOLOG in entry and entry[ISOTOPOLOG]:
+        if allow_html:
+            if (is_good_html(entry[MOLECULE_SYMBOL])
+                    and ((STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == entry[ISOTOPOLOG])
+                         or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == entry[ISOTOPOLOG]))):
+                if STATE_HTML in entry and entry[STATE_HTML]:
+                    # span tags are needed when the molecule symbol is malformed
+                    return f'<span>{entry[MOLECULE_SYMBOL]}</span>, {chem_html(tex_to_html_entity(entry[STATE_HTML]))}'
+                return entry[MOLECULE_SYMBOL]
+            else:
+                if STATE_HTML in entry and entry[STATE_HTML]:
+                    return f'{chem_html(entry[ISOTOPOLOG])}, {chem_html(tex_to_html_entity(entry[STATE_HTML]))}'
+                return chem_html(entry[ISOTOPOLOG])
         else:
             if STATE_HTML in entry and entry[STATE_HTML]:
-                return f'{chem_html(entry[ISOTOPOLOG])}, {chem_html(tex_to_html_entity(entry[STATE_HTML]))}'
-            return chem_html(entry[ISOTOPOLOG])
+                return f'{entry[ISOTOPOLOG]}, {remove_html(tex_to_html_entity(entry[STATE_HTML]))}'
+            if STATE in entry and entry[STATE]:
+                return f'{entry[ISOTOPOLOG]}, {remove_html(tex_to_html_entity(entry[STATE].strip("$")))}'
+            return entry[ISOTOPOLOG]
 
     for key in (NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA):
-        if key in entry:
-            return chem_html(entry[key])
-    for key in (TRIVIAL_NAME, SPECIES_TAG):
-        if key in entry:
-            return str(entry[key])
+        if key in entry and entry[key]:
+            return chem_html(entry[key]) if allow_html else entry[key]
+    if TRIVIAL_NAME in entry and entry[TRIVIAL_NAME]:
+        return entry[TRIVIAL_NAME]
+    if SPECIES_TAG in entry and entry[SPECIES_TAG]:
+        return str(entry[SPECIES_TAG])
     return 'no name'
 
 

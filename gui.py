@@ -51,13 +51,16 @@ class Settings(QSettings):
     _CSV_SEPARATORS: Final[List[str]] = [',', '\t', ';', ' ']
 
     DIALOG = {
+        'Start': {
+            'Load catalogs when the program starts': ('load_last_catalogs',),
+        },
+        'Display': {
+            'Allow rich text in formulas': ('rich_text_in_formulas',),
+        },
         'Units': {
             'Frequency:': (FREQUENCY_UNITS, 'frequency_unit'),
             'Intensity:': (INTENSITY_UNITS, 'intensity_unit'),
             'Temperature:': (TEMPERATURE_UNITS, 'temperature_unit'),
-        },
-        'Start': {
-            'Load catalogs when the program starts': ('load_last_catalogs',),
         },
         'Export': {
             'With units': ('with_units',),
@@ -197,6 +200,19 @@ class Settings(QSettings):
     def load_last_catalogs(self, new_value: bool):
         self.beginGroup('start')
         self.setValue('loadLastCatalogs', new_value)
+        self.endGroup()
+
+    @property
+    def rich_text_in_formulas(self) -> bool:
+        self.beginGroup('display')
+        v: bool = self.value('richTextInFormulas', True, bool)
+        self.endGroup()
+        return v
+
+    @rich_text_in_formulas.setter
+    def rich_text_in_formulas(self, new_value: bool):
+        self.beginGroup('display')
+        self.setValue('richTextInFormulas', new_value)
         self.endGroup()
 
     @property
@@ -654,11 +670,12 @@ class UI(QMainWindow):
         self.action_substance_info.setEnabled(bool(self.results_table.selectedItems()))
         for r in range(self.results_table.rowCount()):
             # noinspection PyTypeChecker
-            label: QLabel = self.results_table.cellWidget(r, 0)
-            if self.results_table.item(r, 1).isSelected():
-                label.setSelection(0, len(remove_html(label.text())))
-            else:
-                label.setSelection(0, 0)
+            label: Union[None, QLabel] = self.results_table.cellWidget(r, 0)
+            if label is not None:
+                if self.results_table.item(r, 1).isSelected():
+                    label.setSelection(0, len(remove_html(label.text())))
+                else:
+                    label.setSelection(0, 0)
 
     def on_menu_load_triggered(self):
         self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
@@ -1021,7 +1038,7 @@ class UI(QMainWindow):
             for line in e[LINES]:
                 last_row: int = self.results_table.rowCount()
                 self.results_table.setRowCount(last_row + 1)
-                label: QLabel = QLabel(best_name(e), self.results_table)
+                label: QLabel = QLabel(best_name(e, self.settings.rich_text_in_formulas), self.results_table)
                 label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
                 setattr(label, ID, e[ID])
                 p: QPalette = QPalette(self.results_table.palette())
