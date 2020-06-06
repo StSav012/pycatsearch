@@ -6,7 +6,7 @@ from base64 import b64encode
 from typing import Callable, Dict, List, Set, Type, Union
 
 from PyQt5.QtCore import QByteArray, QMimeData, QPoint, QSettings, Qt
-from PyQt5.QtGui import QClipboard, QCloseEvent, QIcon, QPixmap
+from PyQt5.QtGui import QClipboard, QCloseEvent, QIcon, QPixmap, QPalette
 from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QAction, QApplication, QCheckBox, QComboBox, \
     QDesktopWidget, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QGroupBox, \
     QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMainWindow, QMenu, QMenuBar, QMessageBox, \
@@ -1024,6 +1024,10 @@ class UI(QMainWindow):
                 label: QLabel = QLabel(best_name(e), self.results_table)
                 label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
                 setattr(label, ID, e[ID])
+                p: QPalette = QPalette(self.results_table.palette())
+                p.setBrush(QPalette.Inactive, QPalette.Highlight, p.highlight())
+                p.setBrush(QPalette.Inactive, QPalette.HighlightedText, p.highlightedText())
+                label.setPalette(p)
                 self.results_table.setCellWidget(last_row, 0, label)
                 frequency: float = self.settings.from_mhz(line[FREQUENCY])
                 item: QTableWidgetItem = QTableWidgetItem(f'{frequency:.{precision}f}')
