@@ -3,7 +3,7 @@ import math
 import os
 import sys
 from base64 import b64encode
-from typing import Callable, Dict, List, Set, Type, Union
+from typing import Callable, Dict, List, Optional, Set, Type, Union
 
 from PyQt5.QtCore import QByteArray, QMimeData, QPoint, QSettings, Qt
 from PyQt5.QtGui import QClipboard, QCloseEvent, QIcon, QPixmap, QPalette
@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QAction, QAppli
     QVBoxLayout, QWidget
 
 from catalog import Catalog
+from floatspinbox import FloatSpinBox
 from utils import *
 
 try:
@@ -43,7 +44,7 @@ def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.Plain
 
 class Settings(QSettings):
     FREQUENCY_UNITS: Final[List[str]] = ['MHz', 'GHz', '1 / cm', 'nm']
-    INTENSITY_UNITS: Final[List[str]] = ['lg(nm² × MHz)', 'lg(cm / molecule)']
+    INTENSITY_UNITS: Final[List[str]] = ['lg(nm² × MHz)', 'nm² × MHz', 'lg(cm / molecule)', 'cm / molecule']
     TEMPERATURE_UNITS: Final[List[str]] = ['K', '°C']
     LINE_ENDS: Final[List[str]] = [r'Line Feed (\n)', r'Carriage Return (\r)', r'CR+LF (\r\n)', r'LF+CR (\n\r)']
     _LINE_ENDS: Final[List[str]] = ['\n', '\r', '\r\n', '\n\r']
@@ -72,8 +73,18 @@ class Settings(QSettings):
     TO_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, ghz_to_mhz, rev_cm_to_mhz, nm_to_mhz]
     FROM_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, mhz_to_ghz, mhz_to_rev_cm, mhz_to_nm]
 
-    TO_SQ_NM_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, cm_per_molecule_to_sq_nm_mhz]
-    FROM_SQ_NM_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, sq_nm_mhz_to_cm_per_molecule]
+    TO_LOG10_SQ_NM_MHZ: Final[List[Callable[[float], float]]] = [
+        lambda x: x,
+        sq_nm_mhz_to_log10_sq_nm_mhz,
+        log10_cm_per_molecule_to_log10_sq_nm_mhz,
+        cm_per_molecule_to_log10_sq_nm_mhz
+    ]
+    FROM_LOG10_SQ_NM_MHZ: Final[List[Callable[[float], float]]] = [
+        lambda x: x,
+        log10_sq_nm_mhz_to_sq_nm_mhz,
+        log10_sq_nm_mhz_to_log10_cm_per_molecule,
+        log10_sq_nm_mhz_to_cm_per_molecule
+    ]
 
     TO_K: Final[List[Callable[[float], float]]] = [lambda x: x, lambda x: x + 273.15]
     FROM_K: Final[List[Callable[[float], float]]] = [lambda x: x, lambda x: x - 273.15]
@@ -140,18 +151,18 @@ class Settings(QSettings):
         return self.INTENSITY_UNITS[v]
 
     @property
-    def to_sq_nm_mhz(self) -> Callable[[float], float]:
+    def to_log10_sq_nm_mhz(self) -> Callable[[float], float]:
         self.beginGroup('intensity')
         v: int = self.value('unit', 0, int)
         self.endGroup()
-        return self.TO_SQ_NM_MHZ[v]
+        return self.TO_LOG10_SQ_NM_MHZ[v]
 
     @property
-    def from_sq_nm_mhz(self) -> Callable[[float], float]:
+    def from_log10_sq_nm_mhz(self) -> Callable[[float], float]:
         self.beginGroup('intensity')
         v: int = self.value('unit', 0, int)
         self.endGroup()
-        return self.FROM_SQ_NM_MHZ[v]
+        return self.FROM_LOG10_SQ_NM_MHZ[v]
 
     @property
     def temperature_unit(self) -> int:
@@ -349,8 +360,8 @@ class SubstanceInfo(QDialog):
 class UI(QMainWindow):
     MAX_ENTRIES_COUNT: Final[int] = 64
 
-    def __init__(self, catalog: Catalog):
-        super().__init__()
+    def __init__(self, catalog: Catalog, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.central_widget: QWidget = QWidget(self)
         self.layout_main: QGridLayout = QGridLayout(self.central_widget)
         self.results_table: QTableWidget = QTableWidget(self.central_widget)
@@ -361,7 +372,7 @@ class UI(QMainWindow):
         self.check_keep_selection: QCheckBox = QCheckBox(self.box_substance)
         self.button_select_none: QPushButton = QPushButton(self.box_substance)
         self.layout_options: QFormLayout = QFormLayout()
-        self.spin_intensity: QDoubleSpinBox = QDoubleSpinBox(self.central_widget)
+        self.spin_intensity: FloatSpinBox = FloatSpinBox(self.central_widget)
         self.spin_temperature: QDoubleSpinBox = QDoubleSpinBox(self.central_widget)
         self.button_search: QPushButton = QPushButton(self.central_widget)
         self.tabs_frequency: QTabWidget = QTabWidget(self.central_widget)
@@ -438,9 +449,6 @@ class UI(QMainWindow):
             self.results_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
             self.results_table.verticalHeader().setVisible(False)
             self.results_table.verticalHeader().setHighlightSections(False)
-            self.results_table.customContextMenuRequested.connect(self.on_table_context_menu_requested)
-            self.results_table.itemSelectionChanged.connect(self.on_table_item_selection_changed)
-            self.results_table.cellDoubleClicked.connect(self.on_menu_substance_info_triggered)
             self.layout_main.addWidget(self.results_table, 4, 0, 1, 3)
 
             # substance selection
@@ -448,7 +456,6 @@ class UI(QMainWindow):
             self.box_substance.setTitle(self.box_substance.tr('Search Only For…'))
             self.text_substance.setClearButtonEnabled(True)
             self.text_substance.setPlaceholderText(self.text_substance.tr('Filter'))
-            self.text_substance.textChanged.connect(self.text_substance_changed)
             self.layout_substance.addWidget(self.text_substance, 0, 0, 1, 1)
             self.list_substance.setEditTriggers(QAbstractItemView.NoEditTriggers)
             self.list_substance.setDropIndicatorShown(False)
@@ -460,23 +467,20 @@ class UI(QMainWindow):
             self.check_keep_selection.setStatusTip(
                 self.check_keep_selection.tr('Keep substances list selection through filter changes'))
             self.check_keep_selection.setText(self.check_keep_selection.tr('Persistent Selection'))
-            self.check_keep_selection.toggled.connect(self.on_check_save_selection_toggled)
             self.layout_substance.addWidget(self.check_keep_selection, 2, 0, 1, 1)
             self.button_select_none.setStatusTip(self.button_select_none.tr('Clear substances list selection'))
             self.button_select_none.setText(self.button_select_none.tr('Select None'))
-            self.button_select_none.clicked.connect(self.on_button_select_none_clicked)
             self.layout_substance.addWidget(self.button_select_none, 3, 0, 1, 1)
             self.layout_main.addWidget(self.box_substance, 0, 0, 4, 1)
 
             self.spin_intensity.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
             self.spin_intensity.setButtonSymbols(QAbstractSpinBox.NoButtons)
-            self.spin_intensity.setDecimals(4)
-            self.spin_intensity.setMinimum(-999.9999)
-            self.spin_intensity.setMaximum(23.0)
+            self.spin_intensity.setDecimals(2)
+            self.spin_intensity.setMinimum(-math.inf)
+            self.spin_intensity.setMaximum(math.inf)
             self.spin_intensity.setSingleStep(0.1)
             self.spin_intensity.setValue(-6.54)
             self.spin_intensity.setStatusTip(self.spin_intensity.tr('Limit shown spectral lines'))
-            self.spin_intensity.valueChanged.connect(self.on_spin_intensity_changed)
             self.layout_options.addRow(self.layout_options.tr('Minimal Intensity:'), self.spin_intensity)
             self.spin_temperature.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
             self.spin_temperature.setButtonSymbols(QAbstractSpinBox.NoButtons)
@@ -484,12 +488,10 @@ class UI(QMainWindow):
             self.spin_temperature.setValue(300.0)
             self.spin_temperature.setStatusTip(self.spin_temperature.tr('Temperature to calculate intensity'))
             self.spin_temperature.setSuffix(self.spin_temperature.tr(' K'))
-            self.spin_temperature.valueChanged.connect(self.on_spin_temperature_changed)
             self.layout_options.addRow(self.layout_options.tr('Temperature:'), self.spin_temperature)
             self.layout_main.addLayout(self.layout_options, 2, 1, 1, 1)
 
             self.button_search.setText(self.button_search.tr('Show'))
-            self.button_search.clicked.connect(self.on_button_search_clicked)
             self.layout_main.addWidget(self.button_search, 3, 1, 1, 1)
 
             self.layout_by_range.setLabelAlignment(Qt.AlignLeft)
@@ -500,7 +502,6 @@ class UI(QMainWindow):
             self.spin_frequency_from.setMaximum(9999999.9999)
             self.spin_frequency_from.setValue(118747.341)
             self.spin_frequency_from.setSuffix(self.spin_frequency_from.tr(' MHz'))
-            self.spin_frequency_from.editingFinished.connect(self.on_spin_frequency_from_edited)
             self.layout_by_range.addRow(self.layout_by_range.tr('From:'), self.spin_frequency_from)
             self.spin_frequency_to.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
             self.spin_frequency_to.setButtonSymbols(QAbstractSpinBox.NoButtons)
@@ -509,7 +510,6 @@ class UI(QMainWindow):
             self.spin_frequency_to.setMaximum(9999999.9999)
             self.spin_frequency_to.setValue(118753.341)
             self.spin_frequency_to.setSuffix(self.spin_frequency_to.tr(' MHz'))
-            self.spin_frequency_to.editingFinished.connect(self.on_spin_frequency_to_edited)
             self.layout_by_range.addRow(self.layout_by_range.tr('To:'), self.spin_frequency_to)
             self.tabs_frequency.addTab(self.page_by_range, self.tabs_frequency.tr('Range'))
 
@@ -520,7 +520,6 @@ class UI(QMainWindow):
             self.spin_frequency_center.setMaximum(9999999.9999)
             self.spin_frequency_center.setValue(118750.341)
             self.spin_frequency_center.setSuffix(self.spin_frequency_center.tr(' MHz'))
-            self.spin_frequency_center.editingFinished.connect(self.on_spin_frequency_center_edited)
             self.layout_by_center.addRow(self.layout_by_center.tr('Center:'), self.spin_frequency_center)
             self.spin_frequency_deviation.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
             self.spin_frequency_deviation.setButtonSymbols(QAbstractSpinBox.NoButtons)
@@ -529,7 +528,6 @@ class UI(QMainWindow):
             self.spin_frequency_deviation.setSingleStep(0.1)
             self.spin_frequency_deviation.setValue(0.4)
             self.spin_frequency_deviation.setSuffix(self.spin_frequency_deviation.tr(' MHz'))
-            self.spin_frequency_deviation.editingFinished.connect(self.on_spin_frequency_deviation_edited)
             self.layout_by_center.addRow(self.layout_by_center.tr('Deviation:'), self.spin_frequency_deviation)
             self.tabs_frequency.addTab(self.page_by_center, self.tabs_frequency.tr('Center'))
             self.layout_main.addWidget(self.tabs_frequency, 0, 1, 2, 1)
@@ -575,19 +573,6 @@ class UI(QMainWindow):
             self.action_copy_frequency.setShortcut('Ctrl+Shift+C, F')
             self.action_copy_intensity.setShortcut('Ctrl+Shift+C, I')
             self.action_substance_info.setShortcut('Ctrl+I')
-            self.action_load.triggered.connect(self.on_menu_load_triggered)
-            self.action_quit.triggered.connect(self.on_menu_quit_triggered)
-            self.action_about.triggered.connect(self.on_menu_about_triggered)
-            self.action_about_qt.triggered.connect(self.on_menu_about_qt_triggered)
-            self.action_preferences.triggered.connect(self.on_menu_preferences_triggered)
-            self.action_copy.triggered.connect(self.on_menu_copy_triggered)
-            self.action_select_all.triggered.connect(self.on_menu_select_all_triggered)
-            self.action_reload.triggered.connect(self.on_menu_reload_triggered)
-            self.action_copy_name.triggered.connect(self.on_menu_copy_name_triggered)
-            self.action_copy_frequency.triggered.connect(self.on_menu_copy_frequency_triggered)
-            self.action_copy_intensity.triggered.connect(self.on_menu_copy_intensity_triggered)
-            self.action_substance_info.triggered.connect(self.on_menu_substance_info_triggered)
-            self.action_clear.triggered.connect(self.on_menu_clear_triggered)
 
             self.adjustSize()
 
@@ -612,6 +597,33 @@ class UI(QMainWindow):
         self.preset_table()
 
         self.load_settings()
+
+        self.results_table.customContextMenuRequested.connect(self.on_table_context_menu_requested)
+        self.results_table.itemSelectionChanged.connect(self.on_table_item_selection_changed)
+        self.results_table.cellDoubleClicked.connect(self.on_menu_substance_info_triggered)
+        self.text_substance.textChanged.connect(self.text_substance_changed)
+        self.check_keep_selection.toggled.connect(self.on_check_save_selection_toggled)
+        self.button_select_none.clicked.connect(self.on_button_select_none_clicked)
+        self.spin_intensity.valueChanged.connect(self.on_spin_intensity_changed)
+        self.spin_temperature.valueChanged.connect(self.on_spin_temperature_changed)
+        self.button_search.clicked.connect(self.on_button_search_clicked)
+        self.spin_frequency_from.editingFinished.connect(self.on_spin_frequency_from_edited)
+        self.spin_frequency_to.editingFinished.connect(self.on_spin_frequency_to_edited)
+        self.spin_frequency_center.editingFinished.connect(self.on_spin_frequency_center_edited)
+        self.spin_frequency_deviation.editingFinished.connect(self.on_spin_frequency_deviation_edited)
+        self.action_load.triggered.connect(self.on_menu_load_triggered)
+        self.action_quit.triggered.connect(self.on_menu_quit_triggered)
+        self.action_about.triggered.connect(self.on_menu_about_triggered)
+        self.action_about_qt.triggered.connect(self.on_menu_about_qt_triggered)
+        self.action_preferences.triggered.connect(self.on_menu_preferences_triggered)
+        self.action_copy.triggered.connect(self.on_menu_copy_triggered)
+        self.action_select_all.triggered.connect(self.on_menu_select_all_triggered)
+        self.action_reload.triggered.connect(self.on_menu_reload_triggered)
+        self.action_copy_name.triggered.connect(self.on_menu_copy_name_triggered)
+        self.action_copy_frequency.triggered.connect(self.on_menu_copy_frequency_triggered)
+        self.action_copy_intensity.triggered.connect(self.on_menu_copy_intensity_triggered)
+        self.action_substance_info.triggered.connect(self.on_menu_substance_info_triggered)
+        self.action_clear.triggered.connect(self.on_menu_clear_triggered)
 
         if not self.catalog.is_empty:
             frequency_spins: List[QDoubleSpinBox] = [self.spin_frequency_from, self.spin_frequency_to,
@@ -648,7 +660,7 @@ class UI(QMainWindow):
         self.fill_table()
 
     def on_spin_intensity_changed(self, arg1: float):
-        self.minimal_intensity = self.settings.to_sq_nm_mhz(arg1)
+        self.minimal_intensity = self.settings.to_log10_sq_nm_mhz(arg1)
         if self.results_shown:
             self.fill_table()
 
@@ -670,7 +682,7 @@ class UI(QMainWindow):
         self.action_substance_info.setEnabled(bool(self.results_table.selectedItems()))
         for r in range(self.results_table.rowCount()):
             # noinspection PyTypeChecker
-            label: Union[None, QLabel] = self.results_table.cellWidget(r, 0)
+            label: Optional[QLabel] = self.results_table.cellWidget(r, 0)
             if label is not None:
                 if self.results_table.item(r, 1).isSelected():
                     label.setSelection(0, len(remove_html(label.text())))
@@ -942,8 +954,6 @@ class UI(QMainWindow):
             ]
         )
         self.update()
-        self.results_table.horizontalHeaderItem(2).setStatusTip(
-            'The values are a base 10 logarithm of the integrated intensity.')
 
     def fill_parameters(self):
         # frequency
@@ -979,14 +989,8 @@ class UI(QMainWindow):
             spin.setSingleStep(step_factor * self.spin_frequency_deviation.value())
 
         # intensity
-        intensity_suffix: int = self.settings.intensity_unit
-        self.spin_intensity.setSuffix(' ' + self.settings.INTENSITY_UNITS[intensity_suffix])
-        if intensity_suffix == 0:  # nm²×MHz
-            self.spin_intensity.setValue(self.minimal_intensity)
-        elif intensity_suffix == 1:  # cm/molecule
-            self.spin_intensity.setValue(self.settings.from_sq_nm_mhz(self.minimal_intensity))
-        else:
-            raise IndexError('Wrong intensity unit index', intensity_suffix)
+        self.spin_intensity.setSuffix(' ' + self.settings.intensity_unit_str)
+        self.spin_intensity.setValue(self.settings.from_log10_sq_nm_mhz(self.minimal_intensity))
 
         # temperature
         temperature_suffix: int = self.settings.temperature_unit
@@ -1050,8 +1054,11 @@ class UI(QMainWindow):
                 item: QTableWidgetItem = QTableWidgetItem(f'{frequency:.{precision}f}')
                 item.setTextAlignment(int(Qt.AlignRight | Qt.AlignVCenter))
                 self.results_table.setItem(last_row, 1, item)
-                intensity: float = self.settings.from_sq_nm_mhz(line[INTENSITY])
-                item: QTableWidgetItem = QTableWidgetItem(f'{intensity:.4f}')
+                intensity: float = self.settings.from_log10_sq_nm_mhz(line[INTENSITY])
+                if abs(intensity) < 0.1:
+                    item: QTableWidgetItem = QTableWidgetItem(f'{intensity:.4e}')
+                else:
+                    item: QTableWidgetItem = QTableWidgetItem(f'{intensity:.4f}')
                 item.setTextAlignment(int(Qt.AlignRight | Qt.AlignVCenter))
                 self.results_table.setItem(last_row, 2, item)
 
