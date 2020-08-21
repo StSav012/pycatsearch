@@ -43,7 +43,7 @@ def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.Plain
 
 class Settings(QSettings):
     FREQUENCY_UNITS: Final[List[str]] = ['MHz', 'GHz', '1 / cm', 'nm']
-    INTENSITY_UNITS: Final[List[str]] = ['nm² × MHz', 'cm / molecule']
+    INTENSITY_UNITS: Final[List[str]] = ['lg(nm² × MHz)', 'lg(cm / molecule)']
     TEMPERATURE_UNITS: Final[List[str]] = ['K', '°C']
     LINE_ENDS: Final[List[str]] = [r'Line Feed (\n)', r'Carriage Return (\r)', r'CR+LF (\r\n)', r'LF+CR (\n\r)']
     _LINE_ENDS: Final[List[str]] = ['\n', '\r', '\r\n', '\n\r']
