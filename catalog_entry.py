@@ -31,8 +31,8 @@ class CatalogEntry:
 
     def intensity(self, temperature: float = -math.inf) -> float:
         if self.DR >= 0 and temperature > 0. and temperature != T0:
-            return self.INT + (0.5 * self.DR + 1.0) * math.log(T0 / temperature) / M_LOG10E + (
-                    -(1 / temperature - 1 / T0) * self.ELO * 100. * h * c / k) / M_LOG10E
+            return self.INT + (0.5 * self.DR + 1.0) * math.log10(T0 / temperature) + (
+                    -(1 / temperature - 1 / T0) * self.ELO * 100. * h * c / k) * M_LOG10E
         else:
             return self.INT
 
