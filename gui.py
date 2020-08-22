@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 import math
-import os
 import sys
 from base64 import b64encode
-from typing import Callable, Dict, List, Optional, Set, Type, Union
+from typing import Dict, List, Optional, Set, Type, Union
 
-from PyQt5.QtCore import QByteArray, QMimeData, QPoint, QSettings, Qt
-from PyQt5.QtGui import QClipboard, QCloseEvent, QIcon, QPixmap, QPalette
-from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QAction, QApplication, QCheckBox, QComboBox, \
-    QDesktopWidget, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QGroupBox, \
-    QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMainWindow, QMenu, QMenuBar, QMessageBox, \
-    QPushButton, QStatusBar, QStyle, QTabWidget, QTableWidget, QTableWidgetItem, QTableWidgetSelectionRange, \
-    QVBoxLayout, QWidget
+from PyQt5.QtCore import QByteArray, QPoint, Qt
+from PyQt5.QtGui import QCloseEvent, QIcon, QPixmap, QPalette
+from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QAction, QApplication, QCheckBox, QDesktopWidget, \
+    QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QGroupBox, QHeaderView, QLabel, QLineEdit, QListWidget, \
+    QListWidgetItem, QMainWindow, QMenu, QMenuBar, QMessageBox, QPushButton, QStatusBar, QStyle, QTabWidget, \
+    QTableWidget, QTableWidgetItem, QTableWidgetSelectionRange, QWidget
 
 from catalog import Catalog
 from floatspinbox import FloatSpinBox
+from preferences import Preferences
+from settings import Settings
+from substance_info import SubstanceInfo
 from utils import *
 
 try:
@@ -30,6 +31,9 @@ except ImportError:
 
 
 def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.PlainText):
+    from PyQt5.QtGui import QClipboard
+    from PyQt5.QtCore import QMimeData
+
     clipboard: QClipboard = QApplication.clipboard()
     mime_data: QMimeData = QMimeData()
     if isinstance(text_type, str):
@@ -40,321 +44,6 @@ def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.Plain
     else:
         mime_data.setText(text)
     clipboard.setMimeData(mime_data, QClipboard.Clipboard)
-
-
-class Settings(QSettings):
-    FREQUENCY_UNITS: Final[List[str]] = ['MHz', 'GHz', '1 / cm', 'nm']
-    INTENSITY_UNITS: Final[List[str]] = ['lg(nm² × MHz)', 'nm² × MHz', 'lg(cm / molecule)', 'cm / molecule']
-    TEMPERATURE_UNITS: Final[List[str]] = ['K', '°C']
-    LINE_ENDS: Final[List[str]] = [r'Line Feed (\n)', r'Carriage Return (\r)', r'CR+LF (\r\n)', r'LF+CR (\n\r)']
-    _LINE_ENDS: Final[List[str]] = ['\n', '\r', '\r\n', '\n\r']
-    CSV_SEPARATORS: Final[List[str]] = [r'comma (,)', r'tab (\t)', r'semicolon (;)', r'space ( )']
-    _CSV_SEPARATORS: Final[List[str]] = [',', '\t', ';', ' ']
-
-    DIALOG = {
-        'Start': {
-            'Load catalogs when the program starts': ('load_last_catalogs',),
-        },
-        'Display': {
-            'Allow rich text in formulas': ('rich_text_in_formulas',),
-        },
-        'Units': {
-            'Frequency:': (FREQUENCY_UNITS, 'frequency_unit'),
-            'Intensity:': (INTENSITY_UNITS, 'intensity_unit'),
-            'Temperature:': (TEMPERATURE_UNITS, 'temperature_unit'),
-        },
-        'Export': {
-            'With units': ('with_units',),
-            'Line ending:': (LINE_ENDS, _LINE_ENDS, 'line_end'),
-            'CSV separator:': (CSV_SEPARATORS, _CSV_SEPARATORS, 'csv_separator'),
-        }
-    }
-
-    TO_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, ghz_to_mhz, rev_cm_to_mhz, nm_to_mhz]
-    FROM_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, mhz_to_ghz, mhz_to_rev_cm, mhz_to_nm]
-
-    TO_LOG10_SQ_NM_MHZ: Final[List[Callable[[float], float]]] = [
-        lambda x: x,
-        sq_nm_mhz_to_log10_sq_nm_mhz,
-        log10_cm_per_molecule_to_log10_sq_nm_mhz,
-        cm_per_molecule_to_log10_sq_nm_mhz
-    ]
-    FROM_LOG10_SQ_NM_MHZ: Final[List[Callable[[float], float]]] = [
-        lambda x: x,
-        log10_sq_nm_mhz_to_sq_nm_mhz,
-        log10_sq_nm_mhz_to_log10_cm_per_molecule,
-        log10_sq_nm_mhz_to_cm_per_molecule
-    ]
-
-    TO_K: Final[List[Callable[[float], float]]] = [lambda x: x, lambda x: x + 273.15]
-    FROM_K: Final[List[Callable[[float], float]]] = [lambda x: x, lambda x: x - 273.15]
-
-    def __init__(self, *args):
-        super().__init__(*args)
-
-    @property
-    def frequency_unit(self) -> int:
-        self.beginGroup('frequency')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return v
-
-    @frequency_unit.setter
-    def frequency_unit(self, new_value: Union[int, str]):
-        self.beginGroup('frequency')
-        if isinstance(new_value, str):
-            new_value = self.FREQUENCY_UNITS.index(new_value)
-        self.setValue('unit', new_value)
-        self.endGroup()
-
-    @property
-    def frequency_unit_str(self) -> str:
-        self.beginGroup('frequency')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return self.FREQUENCY_UNITS[v]
-
-    @property
-    def to_mhz(self) -> Callable[[float], float]:
-        self.beginGroup('frequency')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return self.TO_MHZ[v]
-
-    @property
-    def from_mhz(self) -> Callable[[float], float]:
-        self.beginGroup('frequency')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return self.FROM_MHZ[v]
-
-    @property
-    def intensity_unit(self) -> int:
-        self.beginGroup('intensity')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return v
-
-    @intensity_unit.setter
-    def intensity_unit(self, new_value: Union[int, str]):
-        self.beginGroup('intensity')
-        if isinstance(new_value, str):
-            new_value = self.INTENSITY_UNITS.index(new_value)
-        self.setValue('unit', new_value)
-        self.endGroup()
-
-    @property
-    def intensity_unit_str(self) -> str:
-        self.beginGroup('intensity')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return self.INTENSITY_UNITS[v]
-
-    @property
-    def to_log10_sq_nm_mhz(self) -> Callable[[float], float]:
-        self.beginGroup('intensity')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return self.TO_LOG10_SQ_NM_MHZ[v]
-
-    @property
-    def from_log10_sq_nm_mhz(self) -> Callable[[float], float]:
-        self.beginGroup('intensity')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return self.FROM_LOG10_SQ_NM_MHZ[v]
-
-    @property
-    def temperature_unit(self) -> int:
-        self.beginGroup('temperature')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return v
-
-    @temperature_unit.setter
-    def temperature_unit(self, new_value: Union[int, str]):
-        self.beginGroup('temperature')
-        if isinstance(new_value, str):
-            new_value = self.TEMPERATURE_UNITS.index(new_value)
-        self.setValue('unit', new_value)
-        self.endGroup()
-
-    @property
-    def temperature_unit_str(self) -> str:
-        self.beginGroup('temperature')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return self.TEMPERATURE_UNITS[v]
-
-    @property
-    def to_k(self) -> Callable[[float], float]:
-        self.beginGroup('temperature')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return self.TO_K[v]
-
-    @property
-    def from_k(self) -> Callable[[float], float]:
-        self.beginGroup('temperature')
-        v: int = self.value('unit', 0, int)
-        self.endGroup()
-        return self.FROM_K[v]
-
-    @property
-    def load_last_catalogs(self) -> bool:
-        self.beginGroup('start')
-        v: bool = self.value('loadLastCatalogs', True, bool)
-        self.endGroup()
-        return v
-
-    @load_last_catalogs.setter
-    def load_last_catalogs(self, new_value: bool):
-        self.beginGroup('start')
-        self.setValue('loadLastCatalogs', new_value)
-        self.endGroup()
-
-    @property
-    def rich_text_in_formulas(self) -> bool:
-        self.beginGroup('display')
-        v: bool = self.value('richTextInFormulas', True, bool)
-        self.endGroup()
-        return v
-
-    @rich_text_in_formulas.setter
-    def rich_text_in_formulas(self, new_value: bool):
-        self.beginGroup('display')
-        self.setValue('richTextInFormulas', new_value)
-        self.endGroup()
-
-    @property
-    def line_end(self) -> str:
-        self.beginGroup('export')
-        v: int = self.value('lineEnd', self._LINE_ENDS.index(os.linesep), int)
-        self.endGroup()
-        return self._LINE_ENDS[v]
-
-    @line_end.setter
-    def line_end(self, new_value: str):
-        self.beginGroup('export')
-        self.setValue('lineEnd', self._LINE_ENDS.index(new_value))
-        self.endGroup()
-
-    @property
-    def csv_separator(self) -> str:
-        self.beginGroup('export')
-        v: int = self.value('csvSeparator', self._CSV_SEPARATORS.index('\t'), int)
-        self.endGroup()
-        return self._CSV_SEPARATORS[v]
-
-    @csv_separator.setter
-    def csv_separator(self, new_value: str):
-        self.beginGroup('export')
-        self.setValue('csvSeparator', self._CSV_SEPARATORS.index(new_value))
-        self.endGroup()
-
-    @property
-    def with_units(self) -> bool:
-        self.beginGroup('export')
-        v: bool = self.value('withUnits', True, bool)
-        self.endGroup()
-        return v
-
-    @with_units.setter
-    def with_units(self, new_value: bool):
-        self.beginGroup('export')
-        self.setValue('withUnits', new_value)
-        self.endGroup()
-        return
-
-
-class Preferences(QDialog):
-    def __init__(self, settings: Settings, parent: QWidget = None, *args):
-        super().__init__(parent, *args)
-
-        self.settings: Settings = settings
-        self.setModal(True)
-        self.setWindowTitle(self.tr('Preferences'))
-        if parent is not None:
-            self.setWindowIcon(parent.windowIcon())
-
-        layout: QVBoxLayout = QVBoxLayout(self)
-        for key, value in self.settings.DIALOG.items():
-            if isinstance(value, dict):
-                box: QGroupBox = QGroupBox(key, self)
-                box_layout: QFormLayout = QFormLayout(box)
-                for key2, value2 in value.items():
-                    if isinstance(value2, tuple):
-                        if len(value2) == 1:
-                            widget: QCheckBox = QCheckBox(self.tr(key2), box)
-                            setattr(widget, 'callback', value2[-1])
-                            widget.setChecked(getattr(self.settings, value2[-1]))
-                            widget.toggled.connect(
-                                lambda x: setattr(self.settings, getattr(self.sender(), 'callback'), x))
-                            box_layout.addWidget(widget)
-                        elif len(value2) == 2:
-                            value3 = value2[0]
-                            if isinstance(value3, (list, tuple)):
-                                widget: QComboBox = QComboBox(box)
-                                setattr(widget, 'callback', value2[-1])
-                                for item in value3:
-                                    widget.addItem(self.tr(item))
-                                widget.setCurrentIndex(getattr(self.settings, value2[-1]))
-                                widget.currentIndexChanged.connect(
-                                    lambda x: setattr(self.settings, getattr(self.sender(), 'callback'), x))
-                                box_layout.addRow(self.tr(key2), widget)
-                            # no else
-                        elif len(value2) == 3:
-                            value3 = value2[0]
-                            if isinstance(value3, (list, tuple)):
-                                widget: QComboBox = QComboBox(box)
-                                setattr(widget, 'callback', value2[-1])
-                                for index, item in enumerate(value3):
-                                    widget.addItem(self.tr(item), value2[1][index])
-                                widget.setCurrentIndex(value2[1].index(getattr(self.settings, value2[-1])))
-                                widget.currentIndexChanged.connect(
-                                    lambda _: setattr(self.settings, getattr(self.sender(), 'callback'),
-                                                      self.sender().currentData()))
-                                box_layout.addRow(self.tr(key2), widget)
-                            # no else
-                        # no else
-                    # no else
-                layout.addWidget(box)
-            # no else
-        buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.Close, self)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
-
-
-class SubstanceInfo(QDialog):
-    def __init__(self, catalog: Catalog, entry_id: int, parent: QWidget = None, *args):
-        super().__init__(parent, *args)
-        self.setModal(True)
-        self.setWindowTitle(self.tr('Substance Info'))
-        if parent is not None:
-            self.setWindowIcon(parent.windowIcon())
-        layout: QFormLayout = QFormLayout(self)
-        for e in catalog.catalog:
-            if e[ID] == entry_id:
-                for key in e:
-                    if key == LINES:
-                        continue
-                    elif key == STATE_HTML:
-                        label: QLabel = QLabel(chem_html(e[key]), self)
-                        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-                        layout.addRow(self.tr(HUMAN_READABLE[key]), label)
-                    elif key == INCHI_KEY:
-                        label: QLabel = \
-                            QLabel(f'<a href="https://pubchem.ncbi.nlm.nih.gov/#query={e[key]}">{e[key]}</a>', self)
-                        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-                        label.setOpenExternalLinks(True)
-                        layout.addRow(self.tr(HUMAN_READABLE[key]), label)
-                    else:
-                        label: QLabel = QLabel(str(e[key]), self)
-                        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-                        layout.addRow(self.tr(HUMAN_READABLE[key]), label)
-        buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.Close, self)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
 
 
 class UI(QMainWindow):
@@ -388,6 +77,7 @@ class UI(QMainWindow):
         self.menu_file: QMenu = QMenu(self.menu_bar.tr('&File'), self.menu_bar)
         self.menu_help: QMenu = QMenu(self.menu_bar.tr('&Help'), self.menu_bar)
         self.menu_edit: QMenu = QMenu(self.menu_bar.tr('&Edit'), self.menu_bar)
+        self.menu_columns: QMenu = QMenu(self.menu_bar.tr('&Columns'), self.menu_bar)
         self.menu_copy_only: QMenu = QMenu(self.menu_edit.tr('Copy &Only'), self.menu_edit)
         self.action_load: QAction = QAction(QIcon.fromTheme('document-open'), self.menu_file.tr('&Load Catalog...'),
                                             self.menu_file)
@@ -409,6 +99,12 @@ class UI(QMainWindow):
         self.action_copy_name: QAction = QAction(self.menu_copy_only.tr('&Substance Name'), self.menu_copy_only)
         self.action_copy_frequency: QAction = QAction(self.menu_copy_only.tr('&Frequency'), self.menu_copy_only)
         self.action_copy_intensity: QAction = QAction(self.menu_copy_only.tr('&Intensity'), self.menu_copy_only)
+        self.action_copy_lower_state_energy: QAction = QAction(self.menu_copy_only.tr('&Lower state energy'),
+                                                               self.menu_copy_only)
+        self.action_show_frequency: QAction = QAction(self.menu_columns.tr('&Frequency'), self.menu_columns)
+        self.action_show_intensity: QAction = QAction(self.menu_columns.tr('&Intensity'), self.menu_columns)
+        self.action_show_lower_state_energy: QAction = QAction(self.menu_columns.tr('&Lower state energy'),
+                                                               self.menu_columns)
         self.action_substance_info: QAction = QAction(self.menu_edit.tr('Substance &Info'), self.menu_edit)
         self.status_bar = QStatusBar(self)
 
@@ -438,7 +134,7 @@ class UI(QMainWindow):
             self.results_table.setDragDropOverwriteMode(False)
             self.results_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             self.results_table.setCornerButtonEnabled(False)
-            self.results_table.setColumnCount(3)
+            self.results_table.setColumnCount(4)
             self.results_table.setRowCount(0)
             self.results_table.setSortingEnabled(True)
             self.results_table.setAlternatingRowColors(True)
@@ -447,6 +143,7 @@ class UI(QMainWindow):
             self.results_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
             self.results_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
             self.results_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+            self.results_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
             self.results_table.verticalHeader().setVisible(False)
             self.results_table.verticalHeader().setHighlightSections(False)
             self.layout_main.addWidget(self.results_table, 4, 0, 1, 3)
@@ -548,6 +245,7 @@ class UI(QMainWindow):
             self.menu_copy_only.addAction(self.action_copy_name)
             self.menu_copy_only.addAction(self.action_copy_frequency)
             self.menu_copy_only.addAction(self.action_copy_intensity)
+            self.menu_copy_only.addAction(self.action_copy_lower_state_energy)
             self.menu_edit.addAction(self.action_clear)
             self.menu_edit.addSeparator()
             self.menu_edit.addAction(self.menu_copy_only.menuAction())
@@ -556,8 +254,12 @@ class UI(QMainWindow):
             self.menu_edit.addAction(self.action_select_all)
             self.menu_edit.addSeparator()
             self.menu_edit.addAction(self.action_substance_info)
+            self.menu_columns.addAction(self.action_show_frequency)
+            self.menu_columns.addAction(self.action_show_intensity)
+            self.menu_columns.addAction(self.action_show_lower_state_energy)
             self.menu_bar.addAction(self.menu_file.menuAction())
             self.menu_bar.addAction(self.menu_edit.menuAction())
+            self.menu_bar.addAction(self.menu_columns.menuAction())
             self.menu_bar.addAction(self.menu_help.menuAction())
             self.setStatusBar(self.status_bar)
 
@@ -572,7 +274,11 @@ class UI(QMainWindow):
             self.action_copy_name.setShortcut('Ctrl+Shift+C, N')
             self.action_copy_frequency.setShortcut('Ctrl+Shift+C, F')
             self.action_copy_intensity.setShortcut('Ctrl+Shift+C, I')
+            self.action_copy_lower_state_energy.setShortcut('Ctrl+Shift+C, E')
             self.action_substance_info.setShortcut('Ctrl+I')
+            self.action_show_frequency.setCheckable(True)
+            self.action_show_intensity.setCheckable(True)
+            self.action_show_lower_state_energy.setCheckable(True)
 
             self.adjustSize()
 
@@ -583,7 +289,7 @@ class UI(QMainWindow):
         self.frequency_center: float = 0  # [MHz]
         self.frequency_deviation: float = math.inf  # [MHz]
         self.temperature: float = 300.0  # [K]
-        self.minimal_intensity: float = -math.inf  # [nm²×MHz]
+        self.minimal_intensity: float = -math.inf  # [log10(nm²×MHz)]
 
         self.catalog: Catalog = catalog
         self.button_search.setDisabled(self.catalog.is_empty)
@@ -600,7 +306,7 @@ class UI(QMainWindow):
 
         self.results_table.customContextMenuRequested.connect(self.on_table_context_menu_requested)
         self.results_table.itemSelectionChanged.connect(self.on_table_item_selection_changed)
-        self.results_table.cellDoubleClicked.connect(self.on_menu_substance_info_triggered)
+        self.results_table.cellDoubleClicked.connect(self.on_action_substance_info_triggered)
         self.text_substance.textChanged.connect(self.text_substance_changed)
         self.check_keep_selection.toggled.connect(self.on_check_save_selection_toggled)
         self.button_select_none.clicked.connect(self.on_button_select_none_clicked)
@@ -611,19 +317,23 @@ class UI(QMainWindow):
         self.spin_frequency_to.editingFinished.connect(self.on_spin_frequency_to_edited)
         self.spin_frequency_center.editingFinished.connect(self.on_spin_frequency_center_edited)
         self.spin_frequency_deviation.editingFinished.connect(self.on_spin_frequency_deviation_edited)
-        self.action_load.triggered.connect(self.on_menu_load_triggered)
-        self.action_quit.triggered.connect(self.on_menu_quit_triggered)
-        self.action_about.triggered.connect(self.on_menu_about_triggered)
-        self.action_about_qt.triggered.connect(self.on_menu_about_qt_triggered)
-        self.action_preferences.triggered.connect(self.on_menu_preferences_triggered)
-        self.action_copy.triggered.connect(self.on_menu_copy_triggered)
-        self.action_select_all.triggered.connect(self.on_menu_select_all_triggered)
-        self.action_reload.triggered.connect(self.on_menu_reload_triggered)
-        self.action_copy_name.triggered.connect(self.on_menu_copy_name_triggered)
-        self.action_copy_frequency.triggered.connect(self.on_menu_copy_frequency_triggered)
-        self.action_copy_intensity.triggered.connect(self.on_menu_copy_intensity_triggered)
-        self.action_substance_info.triggered.connect(self.on_menu_substance_info_triggered)
-        self.action_clear.triggered.connect(self.on_menu_clear_triggered)
+        self.action_load.triggered.connect(self.on_action_load_triggered)
+        self.action_quit.triggered.connect(self.on_action_quit_triggered)
+        self.action_about.triggered.connect(self.on_action_about_triggered)
+        self.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
+        self.action_preferences.triggered.connect(self.on_action_preferences_triggered)
+        self.action_copy.triggered.connect(self.on_action_copy_triggered)
+        self.action_select_all.triggered.connect(self.on_action_select_all_triggered)
+        self.action_reload.triggered.connect(self.on_action_reload_triggered)
+        self.action_copy_name.triggered.connect(self.on_action_copy_name_triggered)
+        self.action_copy_frequency.triggered.connect(self.on_action_copy_frequency_triggered)
+        self.action_copy_intensity.triggered.connect(self.on_action_copy_intensity_triggered)
+        self.action_copy_lower_state_energy.triggered.connect(self.on_action_copy_lower_state_energy_triggered)
+        self.action_show_frequency.toggled.connect(self.on_action_show_frequency_toggled)
+        self.action_show_intensity.toggled.connect(self.on_action_show_intensity_toggled)
+        self.action_show_lower_state_energy.toggled.connect(self.on_action_show_lower_state_energy_toggled)
+        self.action_substance_info.triggered.connect(self.on_action_substance_info_triggered)
+        self.action_clear.triggered.connect(self.on_action_clear_triggered)
 
         if not self.catalog.is_empty:
             frequency_spins: List[QDoubleSpinBox] = [self.spin_frequency_from, self.spin_frequency_to,
@@ -689,7 +399,7 @@ class UI(QMainWindow):
                 else:
                     label.setSelection(0, 0)
 
-    def on_menu_load_triggered(self):
+    def on_action_load_triggered(self):
         self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
         new_catalog_file_names: List[str]
         new_catalog_file_names, _ = QFileDialog.getOpenFileNames(
@@ -717,7 +427,7 @@ class UI(QMainWindow):
         else:
             self.status_bar.clearMessage()
 
-    def on_menu_reload_triggered(self):
+    def on_action_reload_triggered(self):
         if self.catalog.sources:
             self.status_bar.showMessage(self.tr('Loading...'))
             self.catalog = Catalog(*self.catalog.sources)
@@ -753,7 +463,8 @@ class UI(QMainWindow):
                         f'</td>{self.settings.csv_separator}<td>'.join(
                             [self.results_table.cellWidget(r, 0).text()] +
                             [(self.results_table.item(r, _c).text() + (' ' + units[_c] if _c in units else ''))
-                             for _c in range(1, self.results_table.columnCount())]
+                             for _c, _a in zip(range(1, self.results_table.columnCount()), self.menu_columns.actions())
+                             if _a.isChecked()]
                         ) +
                         '</td></tr>' + self.settings.line_end
                     )
@@ -765,13 +476,14 @@ class UI(QMainWindow):
                         f'</td>{self.settings.csv_separator}<td>'.join(
                             [self.results_table.cellWidget(r, 0).text()] +
                             [self.results_table.item(r, _c).text()
-                             for _c in range(1, self.results_table.columnCount())]
+                             for _c, _a in zip(range(1, self.results_table.columnCount()), self.menu_columns.actions())
+                             if _a.isChecked()]
                         ) +
                         '</td></tr>' + self.settings.line_end
                     )
         return '<table>' + self.settings.line_end + ''.join(text) + '</table>'
 
-    def on_menu_preferences_triggered(self):
+    def on_action_preferences_triggered(self):
         self.preferences_dialog.exec()
         self.fill_parameters()
         if self.results_table.rowCount():
@@ -780,10 +492,10 @@ class UI(QMainWindow):
         else:
             self.preset_table()
 
-    def on_menu_quit_triggered(self):
+    def on_action_quit_triggered(self):
         self.close()
 
-    def on_menu_clear_triggered(self):
+    def on_action_clear_triggered(self):
         self.preset_table()
 
     def copy_selected_items(self, col: int):
@@ -791,7 +503,7 @@ class UI(QMainWindow):
             return
 
         def html_list(lines: List[str]) -> str:
-            return '<ul><li>' + f'</li>{self.settings.line_end}<li>'.join(lines) + '</ul></li>'
+            return '<ul><li>' + f'</li>{self.settings.line_end}<li>'.join(lines) + '</li></ul>'
 
         text_to_copy: List[str] = []
         selection: QTableWidgetSelectionRange
@@ -806,22 +518,25 @@ class UI(QMainWindow):
                     text_to_copy.append(self.results_table.item(row, col).text())
             copy_to_clipboard(self.settings.line_end.join(text_to_copy), Qt.PlainText)
 
-    def on_menu_copy_name_triggered(self):
+    def on_action_copy_name_triggered(self):
         self.copy_selected_items(0)
 
-    def on_menu_copy_frequency_triggered(self):
+    def on_action_copy_frequency_triggered(self):
         self.copy_selected_items(1)
 
-    def on_menu_copy_intensity_triggered(self):
+    def on_action_copy_intensity_triggered(self):
         self.copy_selected_items(2)
 
-    def on_menu_copy_triggered(self):
+    def on_action_copy_lower_state_energy_triggered(self):
+        self.copy_selected_items(3)
+
+    def on_action_copy_triggered(self):
         copy_to_clipboard(self.stringify_selection_html(), Qt.RichText)
 
-    def on_menu_select_all_triggered(self):
+    def on_action_select_all_triggered(self):
         self.results_table.selectAll()
 
-    def on_menu_substance_info_triggered(self):
+    def on_action_substance_info_triggered(self):
         if self.results_table.selectedRanges():
             syn: SubstanceInfo = SubstanceInfo(
                 self.catalog,
@@ -829,7 +544,22 @@ class UI(QMainWindow):
                 self)
             syn.exec()
 
-    def on_menu_about_triggered(self):
+    def toggle_results_table_column_visibility(self, column: int, is_visible: bool):
+        if is_visible:
+            self.results_table.showColumn(column)
+        else:
+            self.results_table.hideColumn(column)
+
+    def on_action_show_frequency_toggled(self, is_checked: bool):
+        self.toggle_results_table_column_visibility(1, is_checked)
+
+    def on_action_show_intensity_toggled(self, is_checked: bool):
+        self.toggle_results_table_column_visibility(2, is_checked)
+
+    def on_action_show_lower_state_energy_toggled(self, is_checked: bool):
+        self.toggle_results_table_column_visibility(3, is_checked)
+
+    def on_action_about_triggered(self):
         QMessageBox.about(self,
                           self.tr("About CatSearch"),
                           "<html><p>"
@@ -857,7 +587,7 @@ class UI(QMainWindow):
                               "<a href='https://github.com/StSav012/pycatsearch'>GitHub</a>")
                           + "</p></html>")
 
-    def on_menu_about_qt_triggered(self):
+    def on_action_about_qt_triggered(self):
         QMessageBox.aboutQt(self)
 
     def load_settings(self):
@@ -884,6 +614,14 @@ class UI(QMainWindow):
         self.frequency_center = self.settings.value('center', self.spin_frequency_center.value(), float)
         self.frequency_deviation = self.settings.value('deviation', self.spin_frequency_deviation.value(), float)
         self.settings.endGroup()
+        self.settings.endGroup()
+        self.settings.beginGroup('displayedColumns')
+        self.action_show_frequency.setChecked(self.settings.value('frequency', True, bool))
+        self.toggle_results_table_column_visibility(1, self.action_show_frequency.isChecked())
+        self.action_show_intensity.setChecked(self.settings.value('intensity', True, bool))
+        self.toggle_results_table_column_visibility(2, self.action_show_intensity.isChecked())
+        self.action_show_lower_state_energy.setChecked(self.settings.value('lowerStateEnergy', False, bool))
+        self.toggle_results_table_column_visibility(3, self.action_show_lower_state_energy.isChecked())
         self.settings.endGroup()
         self.settings.beginGroup('window')
         desktop: QDesktopWidget = QApplication.desktop()
@@ -930,6 +668,11 @@ class UI(QMainWindow):
         self.settings.setValue('deviation', self.frequency_deviation)
         self.settings.endGroup()
         self.settings.endGroup()
+        self.settings.beginGroup('displayedColumns')
+        self.settings.setValue('frequency', self.action_show_frequency.isChecked())
+        self.settings.setValue('intensity', self.action_show_intensity.isChecked())
+        self.settings.setValue('lowerStateEnergy', self.action_show_lower_state_energy.isChecked())
+        self.settings.endGroup()
         self.settings.beginGroup('window')
         self.settings.setValue('geometry', self.saveGeometry())
         self.settings.setValue('state', self.saveState())
@@ -950,7 +693,8 @@ class UI(QMainWindow):
             [
                 self.tr('Substance'),
                 f'{self.tr("Frequency")} [{self.settings.frequency_unit_str}]',
-                f'{self.tr("Intensity")} [{self.settings.intensity_unit_str}]'
+                f'{self.tr("Intensity")} [{self.settings.intensity_unit_str}]',
+                f'{self.tr("Lower state energy")} [{self.settings.energy_unit_str}]',
             ]
         )
         self.update()
@@ -965,7 +709,7 @@ class UI(QMainWindow):
             for spin in frequency_spins:
                 spin.setMinimum(self.settings.from_mhz(self.catalog.min_frequency))
                 spin.setMaximum(self.settings.from_mhz(self.catalog.max_frequency))
-        if frequency_suffix in (0, 1, 2):  # MHz, GHz, 1/cm
+        if frequency_suffix in (0, 1, 2):  # MHz, GHz, cm⁻¹
             self.spin_frequency_from.setValue(self.settings.from_mhz(self.frequency_from))
             self.spin_frequency_to.setValue(self.settings.from_mhz(self.frequency_to))
             self.spin_frequency_center.setValue(self.settings.from_mhz(self.frequency_center))
@@ -1042,6 +786,7 @@ class UI(QMainWindow):
             for line in e[LINES]:
                 last_row: int = self.results_table.rowCount()
                 self.results_table.setRowCount(last_row + 1)
+
                 label: QLabel = QLabel(best_name(e, self.settings.rich_text_in_formulas), self.results_table)
                 label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
                 setattr(label, ID, e[ID])
@@ -1050,17 +795,31 @@ class UI(QMainWindow):
                 p.setBrush(QPalette.Inactive, QPalette.HighlightedText, p.highlightedText())
                 label.setPalette(p)
                 self.results_table.setCellWidget(last_row, 0, label)
+
                 frequency: float = self.settings.from_mhz(line[FREQUENCY])
                 item: QTableWidgetItem = QTableWidgetItem(f'{frequency:.{precision}f}')
                 item.setTextAlignment(int(Qt.AlignRight | Qt.AlignVCenter))
                 self.results_table.setItem(last_row, 1, item)
+
                 intensity: float = self.settings.from_log10_sq_nm_mhz(line[INTENSITY])
-                if abs(intensity) < 0.1:
+                if intensity == 0.0:
+                    item: QTableWidgetItem = QTableWidgetItem('0')
+                elif abs(intensity) < 0.1:
                     item: QTableWidgetItem = QTableWidgetItem(f'{intensity:.4e}')
                 else:
                     item: QTableWidgetItem = QTableWidgetItem(f'{intensity:.4f}')
                 item.setTextAlignment(int(Qt.AlignRight | Qt.AlignVCenter))
                 self.results_table.setItem(last_row, 2, item)
+
+                lower_state_energy: float = self.settings.from_rec_cm(line[LOWER_STATE_ENERGY])
+                if lower_state_energy == 0.0:
+                    item: QTableWidgetItem = QTableWidgetItem('0')
+                elif abs(lower_state_energy) < 0.1:
+                    item: QTableWidgetItem = QTableWidgetItem(f'{lower_state_energy:.4e}')
+                else:
+                    item: QTableWidgetItem = QTableWidgetItem(f'{lower_state_energy:.4f}')
+                item.setTextAlignment(int(Qt.AlignRight | Qt.AlignVCenter))
+                self.results_table.setItem(last_row, 3, item)
 
         self.results_table.setSortingEnabled(True)
         self.action_select_all.setEnabled(bool(entries))

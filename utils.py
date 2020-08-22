@@ -15,15 +15,16 @@ except ImportError:
 
 
 __all__ = ['M_LOG10E',
-           'T0', 'c', 'h', 'k',
+           'T0', 'c', 'h', 'k', 'e',
            'CATALOG', 'LINES', 'FREQUENCY', 'INTENSITY', 'ID', 'STRUCTURAL_FORMULA', 'STOICHIOMETRIC_FORMULA',
            'MOLECULE', 'MOLECULE_SYMBOL', 'SPECIES_TAG', 'NAME', 'TRIVIAL_NAME', 'ISOTOPOLOG', 'STATE', 'STATE_HTML',
            'INCHI_KEY', 'DEGREES_OF_FREEDOM', 'LOWER_STATE_ENERGY', 'CONTRIBUTOR', 'VERSION', 'DATE_OF_ENTRY',
            'HUMAN_READABLE',
-           'ghz_to_mhz', 'ghz_to_nm', 'ghz_to_rev_cm',
-           'mhz_to_ghz', 'mhz_to_nm', 'mhz_to_rev_cm',
-           'nm_to_ghz', 'nm_to_mhz', 'nm_to_rev_cm',
-           'rev_cm_to_ghz', 'rev_cm_to_mhz', 'rev_cm_to_nm',
+           'ghz_to_mhz', 'ghz_to_nm', 'ghz_to_rec_cm',
+           'mhz_to_ghz', 'mhz_to_nm', 'mhz_to_rec_cm',
+           'nm_to_ghz', 'nm_to_mhz', 'nm_to_rec_cm',
+           'rec_cm_to_ghz', 'rec_cm_to_mhz', 'rec_cm_to_nm', 'rec_cm_to_meV', 'rec_cm_to_j',
+           'meV_to_rec_cm', 'j_to_rec_cm',
            'log10_sq_nm_mhz_to_sq_nm_mhz',
            'log10_sq_nm_mhz_to_log10_cm_per_molecule',
            'log10_sq_nm_mhz_to_cm_per_molecule',
@@ -35,9 +36,10 @@ __all__ = ['M_LOG10E',
 M_LOG10E: Final[float] = math.log10(math.e)
 
 T0: Final[float] = 300.00
-k: Final[float] = 1.38064900e-23  # https://physics.nist.gov/cgi-bin/cuu/Value?k
-h: Final[float] = 6.62607015e-34  # https://physics.nist.gov/cgi-bin/cuu/Value?h
-c: Final[float] = 299792458.0000  # https://physics.nist.gov/cgi-bin/cuu/Value?c
+k: Final[float] = 1.380649000e-23  # https://physics.nist.gov/cgi-bin/cuu/Value?k
+h: Final[float] = 6.626070150e-34  # https://physics.nist.gov/cgi-bin/cuu/Value?h
+e: Final[float] = 1.602176634e-19  # https://physics.nist.gov/cgi-bin/cuu/Value?e
+c: Final[float] = 299792458.00000  # https://physics.nist.gov/cgi-bin/cuu/Value?c
 
 CATALOG: Final[str] = 'catalog'
 LINES: Final[str] = 'lines'
@@ -101,7 +103,7 @@ def mhz_to_ghz(frequency_mhz: float) -> float:
     return frequency_mhz * 1e-3
 
 
-def mhz_to_rev_cm(frequency_mhz: float) -> float:
+def mhz_to_rec_cm(frequency_mhz: float) -> float:
     return frequency_mhz * 1e4 / c
 
 
@@ -113,7 +115,7 @@ def ghz_to_mhz(frequency_ghz: float) -> float:
     return frequency_ghz * 1e3
 
 
-def ghz_to_rev_cm(frequency_ghz: float) -> float:
+def ghz_to_rec_cm(frequency_ghz: float) -> float:
     return frequency_ghz * 1e7 / c
 
 
@@ -121,16 +123,24 @@ def ghz_to_nm(frequency_ghz: float) -> float:
     return c / frequency_ghz
 
 
-def rev_cm_to_mhz(frequency_rev_cm: float) -> float:
-    return frequency_rev_cm * 1e-4 * c
+def rec_cm_to_mhz(frequency_rec_cm: float) -> float:
+    return frequency_rec_cm * 1e-4 * c
 
 
-def rev_cm_to_ghz(frequency_rev_cm: float) -> float:
-    return frequency_rev_cm * 1e-7 * c
+def rec_cm_to_ghz(frequency_rec_cm: float) -> float:
+    return frequency_rec_cm * 1e-7 * c
 
 
-def rev_cm_to_nm(frequency_rev_cm: float) -> float:
-    return 1e7 / frequency_rev_cm
+def rec_cm_to_nm(frequency_rec_cm: float) -> float:
+    return 1e7 / frequency_rec_cm
+
+
+def rec_cm_to_meV(energy_rec_cm: float) -> float:
+    return 1e5 * h * c / e * energy_rec_cm
+
+
+def rec_cm_to_j(energy_rec_cm: float) -> float:
+    return 1e2 * h * c * energy_rec_cm
 
 
 def nm_to_mhz(frequency_nm: float) -> float:
@@ -141,8 +151,16 @@ def nm_to_ghz(frequency_nm: float) -> float:
     return c / frequency_nm
 
 
-def nm_to_rev_cm(frequency_nm: float) -> float:
+def nm_to_rec_cm(frequency_nm: float) -> float:
     return 1e7 / frequency_nm
+
+
+def meV_to_rec_cm(energy_mev: float) -> float:
+    return 1e-5 * e / h / c * energy_mev
+
+
+def j_to_rec_cm(energy_j: float) -> float:
+    return 1e-2 / h / c * energy_j
 
 
 def log10_sq_nm_mhz_to_sq_nm_mhz(intensity_log10_sq_nm_mhz: float) -> float:
@@ -293,8 +311,8 @@ def chem_html(formula: str) -> str:
         if html_formula_pieces[i].startswith('v'):
             html_formula_pieces[i] = v(html_formula_pieces[i])
             break
-        for e in (subscript, prefix, charge):
-            html_formula_pieces[i] = e(html_formula_pieces[i])
+        for function in (subscript, prefix, charge):
+            html_formula_pieces[i] = function(html_formula_pieces[i])
     html_formula = ', '.join(html_formula_pieces)
     return html_formula
 
