@@ -31,23 +31,24 @@ class SubstanceInfo(QDialog):
         if parent is not None:
             self.setWindowIcon(parent.windowIcon())
         layout: QFormLayout = QFormLayout(self)
-        for e in catalog.catalog:
-            if e[ID] == entry_id:
-                for key in e:
+        for entry in catalog.catalog:
+            if entry[ID] == entry_id:
+                for key in entry:
                     if key == LINES:
                         continue
                     elif key == STATE_HTML:
-                        label: QLabel = QLabel(chem_html(e[key]), self)
+                        label: QLabel = QLabel(chem_html(entry[key]), self)
                         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
                         layout.addRow(self.tr(HUMAN_READABLE[key]), label)
                     elif key == INCHI_KEY:
                         label: QLabel = \
-                            QLabel(f'<a href="https://pubchem.ncbi.nlm.nih.gov/#query={e[key]}">{e[key]}</a>', self)
+                            QLabel(f'<a href="https://pubchem.ncbi.nlm.nih.gov/#query={entry[key]}">{entry[key]}</a>',
+                                   self)
                         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
                         label.setOpenExternalLinks(True)
                         layout.addRow(self.tr(HUMAN_READABLE[key]), label)
                     else:
-                        label: QLabel = QLabel(str(e[key]), self)
+                        label: QLabel = QLabel(str(entry[key]), self)
                         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
                         layout.addRow(self.tr(HUMAN_READABLE[key]), label)
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.Close, self)

@@ -12,10 +12,10 @@ from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QAction, QAppli
     QTableWidget, QTableWidgetItem, QTableWidgetSelectionRange, QWidget
 
 from catalog import Catalog
-from floatspinbox import FloatSpinBox
-from preferences import Preferences
-from settings import Settings
-from substance_info import SubstanceInfo
+from gui.floatspinbox import FloatSpinBox
+from gui.preferences import Preferences
+from gui.settings import Settings
+from gui.substance_info import SubstanceInfo
 from utils import *
 
 try:
@@ -782,14 +782,14 @@ class UI(QMainWindow):
                                 self.tr('Too many results'),
                                 self.tr('There are too many lines that meet your criteria. '
                                         'Not all of them are displayed.'))
-        for e in entries:
-            for line in e[LINES]:
+        for entry in entries:
+            for line in entry[LINES]:
                 last_row: int = self.results_table.rowCount()
                 self.results_table.setRowCount(last_row + 1)
 
-                label: QLabel = QLabel(best_name(e, self.settings.rich_text_in_formulas), self.results_table)
+                label: QLabel = QLabel(best_name(entry, self.settings.rich_text_in_formulas), self.results_table)
                 label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-                setattr(label, ID, e[ID])
+                setattr(label, ID, entry[ID])
                 p: QPalette = QPalette(self.results_table.palette())
                 p.setBrush(QPalette.Inactive, QPalette.Highlight, p.highlight())
                 p.setBrush(QPalette.Inactive, QPalette.HighlightedText, p.highlightedText())
@@ -843,25 +843,26 @@ class UI(QMainWindow):
         if filter_text:
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                for e in self.catalog.catalog:
-                    plain_text_name: str = remove_html(e[name_key])
-                    if name_key in e and plain_text_name.startswith(filter_text) and plain_text_name not in list_items:
+                for entry in self.catalog.catalog:
+                    plain_text_name: str = remove_html(entry[name_key])
+                    if (name_key in entry and plain_text_name.startswith(filter_text)
+                            and plain_text_name not in list_items):
                         list_items.append(plain_text_name)
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                for e in self.catalog.catalog:
-                    plain_text_name: str = remove_html(e[name_key])
-                    if name_key in e and filter_text in plain_text_name and plain_text_name not in list_items:
+                for entry in self.catalog.catalog:
+                    plain_text_name: str = remove_html(entry[name_key])
+                    if name_key in entry and filter_text in plain_text_name and plain_text_name not in list_items:
                         list_items.append(plain_text_name)
             if filter_text.isdecimal():
-                for e in self.catalog.catalog:
-                    if SPECIES_TAG in e and str(e[SPECIES_TAG]).startswith(filter_text):
-                        list_items.append(str(e[SPECIES_TAG]))
+                for entry in self.catalog.catalog:
+                    if SPECIES_TAG in entry and str(entry[SPECIES_TAG]).startswith(filter_text):
+                        list_items.append(str(entry[SPECIES_TAG]))
         else:
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                for e in self.catalog.catalog:
-                    plain_text_name: str = remove_html(e[name_key])
+                for entry in self.catalog.catalog:
+                    plain_text_name: str = remove_html(entry[name_key])
                     if plain_text_name not in list_items:
                         list_items.append(plain_text_name)
             list_items = sorted(list_items)

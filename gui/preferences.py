@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QCheckBox, QComboBox, \
     QDialog, QDialogButtonBox, QFormLayout, QGroupBox, \
     QVBoxLayout, QWidget
 
-from settings import Settings
+from gui.settings import Settings
 
 try:
     from typing import Final
