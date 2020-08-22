@@ -150,7 +150,7 @@ def log10_sq_nm_mhz_to_sq_nm_mhz(intensity_log10_sq_nm_mhz: float) -> float:
 
 
 def log10_sq_nm_mhz_to_log10_cm_per_molecule(intensity_log10_sq_nm_mhz: float) -> float:
-    return -10. + intensity_log10_sq_nm_mhz - math.log(c) / M_LOG10E
+    return -10. + intensity_log10_sq_nm_mhz - math.log10(c)
 
 
 def log10_sq_nm_mhz_to_cm_per_molecule(intensity_log10_sq_nm_mhz: float) -> float:
@@ -166,7 +166,7 @@ def sq_nm_mhz_to_log10_sq_nm_mhz(intensity_sq_nm_mhz: float) -> float:
 
 
 def log10_cm_per_molecule_to_log10_sq_nm_mhz(intensity_log10_cm_per_molecule: float) -> float:
-    return intensity_log10_cm_per_molecule + 10. + math.log(c) / M_LOG10E
+    return intensity_log10_cm_per_molecule + 10. + math.log10(c)
 
 
 def cm_per_molecule_to_log10_sq_nm_mhz(intensity_cm_per_molecule: float) -> float:
@@ -174,7 +174,7 @@ def cm_per_molecule_to_log10_sq_nm_mhz(intensity_cm_per_molecule: float) -> floa
         return -math.inf
     if intensity_cm_per_molecule < 0.0:
         return math.nan
-    return math.log10(intensity_cm_per_molecule) + 10. + math.log(c) / M_LOG10E
+    return log10_cm_per_molecule_to_log10_sq_nm_mhz(math.log10(intensity_cm_per_molecule))
 
 
 def tex_to_html_entity(s: str) -> str:
