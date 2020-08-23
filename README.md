@@ -2,7 +2,7 @@
 
 Yet another implementation of [JPL](https://spec.jpl.nasa.gov/) and [CDMS](https://astro.uni-koeln.de/) spectroscopy catalogs offline search.
 
-It consists of two parts:
+It consists of three parts:
 
 ### `catalog`
 
@@ -91,10 +91,14 @@ downloader.save_catalog('catalog.json.gz', (115000, 178000), qt_json_filename='c
       If the value is omitted, nothing gets stored.
     - `bool qt_json_zipped`: the flag to indicate whether the data stored into ``qt_json_filename`` is compressed.
       Default is `True`.
+      
+### `gui`
+
+This is the graphical interface built with `PyQt5`. Just run `main.py` and see for yourself.
 
 ### Requirements
 
-The code is developed under `python 3.7.5`. It should work under `python 3.6` but not tested.
+The code is developed under `python 3.8`. It should work under `python 3.6` but not tested.
 
 If you want to save the catalog as a [Qt JSON Document](https://doc.qt.io/qt-5/qjsondocument.html),
 then `PyQt5` is needed. Otherwise, only the built-ins are used.
