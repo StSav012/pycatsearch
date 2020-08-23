@@ -885,8 +885,12 @@ class UI(QMainWindow):
         self.status_bar.showMessage(self.tr('Ready.'))
 
 
-if __name__ == '__main__':
+def run():
     app = QApplication(sys.argv)
     window = UI(Catalog(*sys.argv[1:]))
     window.show()
     app.exec_()
+
+
+if __name__ == '__main__':
+    run()
