@@ -2,20 +2,21 @@
 import math
 import sys
 from base64 import b64encode
-from typing import Dict, List, Optional, Set, Type, Union
+from typing import Dict, List, Optional, Type, Union
 
 from PyQt5.QtCore import QByteArray, QPoint, Qt
-from PyQt5.QtGui import QCloseEvent, QIcon, QPixmap, QPalette
-from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QAction, QApplication, QCheckBox, QDesktopWidget, \
-    QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QGroupBox, QHeaderView, QLabel, QLineEdit, QListWidget, \
-    QListWidgetItem, QMainWindow, QMenu, QMenuBar, QMessageBox, QPushButton, QStatusBar, QStyle, QTabWidget, \
-    QTableWidget, QTableWidgetItem, QTableWidgetSelectionRange, QWidget
+from PyQt5.QtGui import QCloseEvent, QIcon, QPalette, QPixmap
+from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QAction, QApplication, QDesktopWidget, \
+    QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QHeaderView, QLabel, QMainWindow, QMenu, QMenuBar, \
+    QMessageBox, QPushButton, QStatusBar, QStyle, QTableWidget, QTableWidgetItem, QTableWidgetSelectionRange, QWidget
 
+from gui._frequency_box import FrequencyBox
 from catalog import Catalog
-from gui.floatspinbox import FloatSpinBox
-from gui.preferences import Preferences
-from gui.settings import Settings
-from gui.substance_info import SubstanceInfo
+from gui._float_spinbox import FloatSpinBox
+from gui._preferences import Preferences
+from gui._settings import Settings
+from gui._substance_info import SubstanceInfo
+from gui._substances_box import SubstancesBox
 from utils import *
 
 try:
@@ -51,28 +52,22 @@ class UI(QMainWindow):
 
     def __init__(self, catalog: Catalog, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.catalog: Catalog = catalog
+        self.settings: Settings = Settings('SavSoft', 'CatSearch', self)
+
         self.central_widget: QWidget = QWidget(self)
         self.layout_main: QGridLayout = QGridLayout(self.central_widget)
-        self.results_table: QTableWidget = QTableWidget(self.central_widget)
-        self.box_substance: QGroupBox = QGroupBox(self.central_widget)
-        self.layout_substance: QGridLayout = QGridLayout(self.box_substance)
-        self.text_substance: QLineEdit = QLineEdit(self.box_substance)
-        self.list_substance: QListWidget = QListWidget(self.box_substance)
-        self.check_keep_selection: QCheckBox = QCheckBox(self.box_substance)
-        self.button_select_none: QPushButton = QPushButton(self.box_substance)
+
         self.layout_options: QFormLayout = QFormLayout()
         self.spin_intensity: FloatSpinBox = FloatSpinBox(self.central_widget)
         self.spin_temperature: QDoubleSpinBox = QDoubleSpinBox(self.central_widget)
+
+        self.box_substance: SubstancesBox = SubstancesBox(self.catalog, self.settings, self.central_widget)
+        self.box_frequency: FrequencyBox = FrequencyBox(self.settings, self.central_widget)
         self.button_search: QPushButton = QPushButton(self.central_widget)
-        self.tabs_frequency: QTabWidget = QTabWidget(self.central_widget)
-        self.page_by_range: QWidget = QWidget()
-        self.layout_by_range: QFormLayout = QFormLayout(self.page_by_range)
-        self.spin_frequency_from: QDoubleSpinBox = QDoubleSpinBox(self.page_by_range)
-        self.spin_frequency_to: QDoubleSpinBox = QDoubleSpinBox(self.page_by_range)
-        self.page_by_center: QWidget = QWidget()
-        self.layout_by_center: QFormLayout = QFormLayout(self.page_by_center)
-        self.spin_frequency_center: QDoubleSpinBox = QDoubleSpinBox(self.page_by_center)
-        self.spin_frequency_deviation: QDoubleSpinBox = QDoubleSpinBox(self.page_by_center)
+
+        self.results_table: QTableWidget = QTableWidget(self.central_widget)
+
         self.menu_bar: QMenuBar = QMenuBar(self)
         self.menu_file: QMenu = QMenu(self.menu_bar.tr('&File'), self.menu_bar)
         self.menu_help: QMenu = QMenu(self.menu_bar.tr('&Help'), self.menu_bar)
@@ -106,6 +101,7 @@ class UI(QMainWindow):
         self.action_show_lower_state_energy: QAction = QAction(self.menu_columns.tr('&Lower state energy'),
                                                                self.menu_columns)
         self.action_substance_info: QAction = QAction(self.menu_edit.tr('Substance &Info'), self.menu_edit)
+
         self.status_bar = QStatusBar(self)
 
         def setup_ui():
@@ -149,26 +145,10 @@ class UI(QMainWindow):
             self.layout_main.addWidget(self.results_table, 4, 0, 1, 3)
 
             # substance selection
-            self.box_substance.setCheckable(True)
-            self.box_substance.setTitle(self.box_substance.tr('Search Only For…'))
-            self.text_substance.setClearButtonEnabled(True)
-            self.text_substance.setPlaceholderText(self.text_substance.tr('Filter'))
-            self.layout_substance.addWidget(self.text_substance, 0, 0, 1, 1)
-            self.list_substance.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            self.list_substance.setDropIndicatorShown(False)
-            self.list_substance.setAlternatingRowColors(True)
-            self.list_substance.setSelectionMode(QAbstractItemView.ExtendedSelection)
-            self.list_substance.setSelectionBehavior(QAbstractItemView.SelectRows)
-            self.list_substance.setSortingEnabled(False)
-            self.layout_substance.addWidget(self.list_substance, 1, 0, 1, 1)
-            self.check_keep_selection.setStatusTip(
-                self.check_keep_selection.tr('Keep substances list selection through filter changes'))
-            self.check_keep_selection.setText(self.check_keep_selection.tr('Persistent Selection'))
-            self.layout_substance.addWidget(self.check_keep_selection, 2, 0, 1, 1)
-            self.button_select_none.setStatusTip(self.button_select_none.tr('Clear substances list selection'))
-            self.button_select_none.setText(self.button_select_none.tr('Select None'))
-            self.layout_substance.addWidget(self.button_select_none, 3, 0, 1, 1)
             self.layout_main.addWidget(self.box_substance, 0, 0, 4, 1)
+
+            # frequency limits
+            self.layout_main.addWidget(self.box_frequency, 0, 1, 2, 1)
 
             self.spin_intensity.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
             self.spin_intensity.setButtonSymbols(QAbstractSpinBox.NoButtons)
@@ -190,44 +170,6 @@ class UI(QMainWindow):
 
             self.button_search.setText(self.button_search.tr('Show'))
             self.layout_main.addWidget(self.button_search, 3, 1, 1, 1)
-
-            self.layout_by_range.setLabelAlignment(Qt.AlignLeft)
-            self.spin_frequency_from.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-            self.spin_frequency_from.setButtonSymbols(QAbstractSpinBox.NoButtons)
-            self.spin_frequency_from.setAccelerated(True)
-            self.spin_frequency_from.setDecimals(4)
-            self.spin_frequency_from.setMaximum(9999999.9999)
-            self.spin_frequency_from.setValue(118747.341)
-            self.spin_frequency_from.setSuffix(self.spin_frequency_from.tr(' MHz'))
-            self.layout_by_range.addRow(self.layout_by_range.tr('From:'), self.spin_frequency_from)
-            self.spin_frequency_to.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-            self.spin_frequency_to.setButtonSymbols(QAbstractSpinBox.NoButtons)
-            self.spin_frequency_to.setAccelerated(True)
-            self.spin_frequency_to.setDecimals(4)
-            self.spin_frequency_to.setMaximum(9999999.9999)
-            self.spin_frequency_to.setValue(118753.341)
-            self.spin_frequency_to.setSuffix(self.spin_frequency_to.tr(' MHz'))
-            self.layout_by_range.addRow(self.layout_by_range.tr('To:'), self.spin_frequency_to)
-            self.tabs_frequency.addTab(self.page_by_range, self.tabs_frequency.tr('Range'))
-
-            self.spin_frequency_center.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-            self.spin_frequency_center.setButtonSymbols(QAbstractSpinBox.NoButtons)
-            self.spin_frequency_center.setAccelerated(True)
-            self.spin_frequency_center.setDecimals(4)
-            self.spin_frequency_center.setMaximum(9999999.9999)
-            self.spin_frequency_center.setValue(118750.341)
-            self.spin_frequency_center.setSuffix(self.spin_frequency_center.tr(' MHz'))
-            self.layout_by_center.addRow(self.layout_by_center.tr('Center:'), self.spin_frequency_center)
-            self.spin_frequency_deviation.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-            self.spin_frequency_deviation.setButtonSymbols(QAbstractSpinBox.NoButtons)
-            self.spin_frequency_deviation.setDecimals(4)
-            self.spin_frequency_deviation.setMaximum(99.9999)
-            self.spin_frequency_deviation.setSingleStep(0.1)
-            self.spin_frequency_deviation.setValue(0.4)
-            self.spin_frequency_deviation.setSuffix(self.spin_frequency_deviation.tr(' MHz'))
-            self.layout_by_center.addRow(self.layout_by_center.tr('Deviation:'), self.spin_frequency_deviation)
-            self.tabs_frequency.addTab(self.page_by_center, self.tabs_frequency.tr('Center'))
-            self.layout_main.addWidget(self.tabs_frequency, 0, 1, 2, 1)
 
             self.setMenuBar(self.menu_bar)
             self.action_preferences.setMenuRole(QAction.PreferencesRole)
@@ -284,18 +226,11 @@ class UI(QMainWindow):
 
         setup_ui()
 
-        self.frequency_from: float = -math.inf  # [MHz]
-        self.frequency_to: float = math.inf  # [MHz]
-        self.frequency_center: float = 0  # [MHz]
-        self.frequency_deviation: float = math.inf  # [MHz]
         self.temperature: float = 300.0  # [K]
         self.minimal_intensity: float = -math.inf  # [log10(nm²×MHz)]
 
-        self.catalog: Catalog = catalog
         self.button_search.setDisabled(self.catalog.is_empty)
-        self.selected_substances: Set[str] = set()
 
-        self.settings: Settings = Settings('SavSoft', 'CatSearch', self)
         self.preferences_dialog: Preferences = Preferences(self.settings, self)
 
         self.results_shown: bool = False
@@ -307,16 +242,9 @@ class UI(QMainWindow):
         self.results_table.customContextMenuRequested.connect(self.on_table_context_menu_requested)
         self.results_table.itemSelectionChanged.connect(self.on_table_item_selection_changed)
         self.results_table.cellDoubleClicked.connect(self.on_action_substance_info_triggered)
-        self.text_substance.textChanged.connect(self.text_substance_changed)
-        self.check_keep_selection.toggled.connect(self.on_check_save_selection_toggled)
-        self.button_select_none.clicked.connect(self.on_button_select_none_clicked)
         self.spin_intensity.valueChanged.connect(self.on_spin_intensity_changed)
         self.spin_temperature.valueChanged.connect(self.on_spin_temperature_changed)
         self.button_search.clicked.connect(self.on_button_search_clicked)
-        self.spin_frequency_from.editingFinished.connect(self.on_spin_frequency_from_edited)
-        self.spin_frequency_to.editingFinished.connect(self.on_spin_frequency_to_edited)
-        self.spin_frequency_center.editingFinished.connect(self.on_spin_frequency_center_edited)
-        self.spin_frequency_deviation.editingFinished.connect(self.on_spin_frequency_deviation_edited)
         self.action_load.triggered.connect(self.on_action_load_triggered)
         self.action_quit.triggered.connect(self.on_action_quit_triggered)
         self.action_about.triggered.connect(self.on_action_about_triggered)
@@ -336,34 +264,11 @@ class UI(QMainWindow):
         self.action_clear.triggered.connect(self.on_action_clear_triggered)
 
         if not self.catalog.is_empty:
-            frequency_spins: List[QDoubleSpinBox] = [self.spin_frequency_from, self.spin_frequency_to,
-                                                     self.spin_frequency_center]
-            for spin in frequency_spins:
-                spin.setMinimum(self.settings.from_mhz(self.catalog.min_frequency))
-                spin.setMaximum(self.settings.from_mhz(self.catalog.max_frequency))
+            self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.save_settings()
         event.accept()
-
-    def on_spin_frequency_from_edited(self):
-        self.frequency_from = \
-            self.settings.to_mhz(self.spin_frequency_from.value())
-
-    def on_spin_frequency_to_edited(self):
-        self.frequency_to = \
-            self.settings.to_mhz(self.spin_frequency_to.value())
-
-    def on_spin_frequency_center_edited(self):
-        self.frequency_center = \
-            self.settings.to_mhz(self.spin_frequency_center.value())
-
-    def on_spin_frequency_deviation_edited(self):
-        self.frequency_deviation = \
-            self.settings.to_mhz(self.spin_frequency_deviation.value())
-
-    def text_substance_changed(self, current_text: str):
-        self.fill_substances_list(current_text)
 
     def on_spin_temperature_changed(self, arg1: float):
         self.temperature = self.settings.to_k(arg1)
@@ -373,16 +278,6 @@ class UI(QMainWindow):
         self.minimal_intensity = self.settings.to_log10_sq_nm_mhz(arg1)
         if self.results_shown:
             self.fill_table()
-
-    def on_check_save_selection_toggled(self, new_state):
-        if not new_state:
-            self.selected_substances.clear()
-            self.update_selected_substances()
-
-    def on_button_select_none_clicked(self):
-        for i in range(self.list_substance.count()):
-            self.list_substance.item(i).setCheckState(Qt.Unchecked)
-        self.selected_substances.clear()
 
     def on_table_context_menu_requested(self, pos: QPoint):
         self.menu_edit.popup(self.results_table.viewport().mapToGlobal(pos))
@@ -412,15 +307,11 @@ class UI(QMainWindow):
         if new_catalog_file_names:
             self.status_bar.showMessage(self.tr('Loading...'))
             self.catalog = Catalog(*new_catalog_file_names)
+            self.box_substance.catalog = self.catalog
             self.button_search.setDisabled(self.catalog.is_empty)
             if not self.catalog.is_empty:
                 self.status_bar.showMessage(self.tr('Catalogs loaded.'))
-                frequency_spins: List[QDoubleSpinBox] = [self.spin_frequency_from, self.spin_frequency_to,
-                                                         self.spin_frequency_center]
-                for spin in frequency_spins:
-                    spin.setMinimum(self.settings.from_mhz(self.catalog.min_frequency))
-                    spin.setMaximum(self.settings.from_mhz(self.catalog.max_frequency))
-                self.fill_substances_list(self.text_substance.text())
+                self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
             else:
                 self.status_bar.showMessage(self.tr('Failed to load a catalog.'))
 
@@ -431,14 +322,11 @@ class UI(QMainWindow):
         if self.catalog.sources:
             self.status_bar.showMessage(self.tr('Loading...'))
             self.catalog = Catalog(*self.catalog.sources)
+            self.box_substance.catalog = self.catalog
             self.button_search.setDisabled(self.catalog.is_empty)
             if not self.catalog.is_empty:
                 self.status_bar.showMessage(self.tr('Catalogs loaded.'))
-                frequency_spins: List[QDoubleSpinBox] = [self.spin_frequency_from, self.spin_frequency_to,
-                                                         self.spin_frequency_center]
-                for spin in frequency_spins:
-                    spin.setMinimum(self.settings.from_mhz(self.catalog.min_frequency))
-                    spin.setMaximum(self.settings.from_mhz(self.catalog.max_frequency))
+                self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
             else:
                 self.status_bar.showMessage(self.tr('Failed to load a catalog.'))
         else:
@@ -601,19 +489,8 @@ class UI(QMainWindow):
         self.settings.endArray()
         if not catalog_file_names:
             catalog_file_names = ['catalog.json.gz', 'catalog.json']
-        self.settings.beginGroup('selection')
-        self.text_substance.setText(self.settings.value('filter', self.text_substance.text(), str))
-        self.check_keep_selection.setChecked(self.settings.value('isPersistent', False, bool))
-        self.box_substance.setChecked(self.settings.value('enabled', self.box_substance.isChecked(), bool))
-        self.settings.endGroup()
         self.temperature = self.settings.value('temperature', self.spin_temperature.value(), float)
         self.minimal_intensity = self.settings.value('intensity', self.spin_intensity.value(), float)
-        self.settings.beginGroup('frequency')
-        self.frequency_from = self.settings.value('from', self.spin_frequency_from.value(), float)
-        self.frequency_to = self.settings.value('to', self.spin_frequency_to.value(), float)
-        self.frequency_center = self.settings.value('center', self.spin_frequency_center.value(), float)
-        self.frequency_deviation = self.settings.value('deviation', self.spin_frequency_deviation.value(), float)
-        self.settings.endGroup()
         self.settings.endGroup()
         self.settings.beginGroup('displayedColumns')
         self.action_show_frequency.setChecked(self.settings.value('frequency', True, bool))
@@ -640,12 +517,8 @@ class UI(QMainWindow):
             self.catalog = Catalog(*catalog_file_names)
             self.button_search.setEnabled(not self.catalog.is_empty)
             if not self.catalog.is_empty:
-                frequency_spins: List[QDoubleSpinBox] = [self.spin_frequency_from, self.spin_frequency_to,
-                                                         self.spin_frequency_center]
-                for spin in frequency_spins:
-                    spin.setMinimum(self.settings.from_mhz(self.catalog.min_frequency))
-                    spin.setMaximum(self.settings.from_mhz(self.catalog.max_frequency))
-                self.fill_substances_list(self.text_substance.text())
+                self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
+                self.box_substance.catalog = self.catalog
 
     def save_settings(self):
         self.settings.beginGroup('search')
@@ -654,19 +527,8 @@ class UI(QMainWindow):
             self.settings.setArrayIndex(i)
             self.settings.setValue('path', s)
         self.settings.endArray()
-        self.settings.beginGroup('selection')
-        self.settings.setValue('filter', self.text_substance.text())
-        self.settings.setValue('isPersistent', self.check_keep_selection.isChecked())
-        self.settings.setValue('enabled', self.box_substance.isChecked())
-        self.settings.endGroup()
         self.settings.setValue('temperature', self.temperature)
         self.settings.setValue('intensity', self.minimal_intensity)
-        self.settings.beginGroup('frequency')
-        self.settings.setValue('from', self.frequency_from)
-        self.settings.setValue('to', self.frequency_to)
-        self.settings.setValue('center', self.frequency_center)
-        self.settings.setValue('deviation', self.frequency_deviation)
-        self.settings.endGroup()
         self.settings.endGroup()
         self.settings.beginGroup('displayedColumns')
         self.settings.setValue('frequency', self.action_show_frequency.isChecked())
@@ -677,6 +539,8 @@ class UI(QMainWindow):
         self.settings.setValue('geometry', self.saveGeometry())
         self.settings.setValue('state', self.saveState())
         self.settings.endGroup()
+        self.box_substance.save_settings()
+        self.box_frequency.save_settings()
         self.settings.sync()
 
     def preset_table(self):
@@ -701,36 +565,9 @@ class UI(QMainWindow):
 
     def fill_parameters(self):
         # frequency
-        frequency_suffix: int = self.settings.frequency_unit
-        frequency_suffix_str: str = ' ' + self.settings.FREQUENCY_UNITS[frequency_suffix]
         if not self.catalog.is_empty:
-            frequency_spins: List[QDoubleSpinBox] = [self.spin_frequency_from, self.spin_frequency_to,
-                                                     self.spin_frequency_center]
-            for spin in frequency_spins:
-                spin.setMinimum(self.settings.from_mhz(self.catalog.min_frequency))
-                spin.setMaximum(self.settings.from_mhz(self.catalog.max_frequency))
-        if frequency_suffix in (0, 1, 2):  # MHz, GHz, cm⁻¹
-            self.spin_frequency_from.setValue(self.settings.from_mhz(self.frequency_from))
-            self.spin_frequency_to.setValue(self.settings.from_mhz(self.frequency_to))
-            self.spin_frequency_center.setValue(self.settings.from_mhz(self.frequency_center))
-            self.spin_frequency_deviation.setValue(self.settings.from_mhz(self.frequency_deviation))
-        elif frequency_suffix == 3:  # nm
-            self.spin_frequency_from.setValue(mhz_to_nm(self.frequency_from))
-            self.spin_frequency_to.setValue(mhz_to_nm(self.frequency_to))
-            self.spin_frequency_center.setValue(mhz_to_nm(self.frequency_center))
-            self.spin_frequency_deviation.setValue(
-                abs(mhz_to_nm(self.frequency_center - self.frequency_deviation) -
-                    mhz_to_nm(self.frequency_center + self.frequency_deviation)) / 2.0)
-        else:
-            raise IndexError('Wrong frequency unit index', frequency_suffix)
-        precision: int = [4, 7, 8, 8][frequency_suffix]
-        step_factor: float = [2.5, 2.5, 2.5, 0.25][frequency_suffix]
-        frequency_spins: List[QDoubleSpinBox] = [self.spin_frequency_from, self.spin_frequency_to,
-                                                 self.spin_frequency_center, self.spin_frequency_deviation]
-        for spin in frequency_spins:
-            spin.setSuffix(frequency_suffix_str)
-            spin.setDecimals(precision)
-            spin.setSingleStep(step_factor * self.spin_frequency_deviation.value())
+            self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
+        self.box_frequency.fill_parameters()
 
         # intensity
         self.spin_intensity.setSuffix(' ' + self.settings.intensity_unit_str)
@@ -752,26 +589,20 @@ class UI(QMainWindow):
         self.preset_table()
         self.results_table.setSortingEnabled(False)
 
-        min_frequency: float = (self.frequency_from
-                                if self.tabs_frequency.currentWidget() is self.page_by_range
-                                else (self.frequency_center - self.frequency_deviation))
-        max_frequency: float = (self.frequency_to
-                                if self.tabs_frequency.currentWidget() is self.page_by_range
-                                else (self.frequency_center + self.frequency_deviation))
         entries: List[Dict[str, Union[int, str, List[Dict[str, float]]]]] = \
             (sum(
                 (
-                    self.catalog.filter(min_frequency=min_frequency,
-                                        max_frequency=max_frequency,
+                    self.catalog.filter(min_frequency=self.box_frequency.min_frequency,
+                                        max_frequency=self.box_frequency.max_frequency,
                                         min_intensity=self.minimal_intensity,
                                         any_name_or_formula=name,
                                         temperature=self.temperature)
-                    for name in self.selected_substances
+                    for name in self.box_substance.selected_substances
                 ),
                 []
-            ) if self.selected_substances and self.box_substance.isChecked()
-             else self.catalog.filter(min_frequency=min_frequency,
-                                      max_frequency=max_frequency,
+            ) if self.box_substance.selected_substances and self.box_substance.isChecked()
+             else self.catalog.filter(min_frequency=self.box_frequency.min_frequency,
+                                      max_frequency=self.box_frequency.max_frequency,
                                       min_intensity=self.minimal_intensity,
                                       temperature=self.temperature))
         frequency_suffix: int = self.settings.frequency_unit
@@ -827,60 +658,9 @@ class UI(QMainWindow):
         self.menu_copy_only.setEnabled(bool(entries))
         self.results_shown = True
 
-    def update_selected_substances(self):
-        if self.box_substance.isChecked():
-            for i in range(self.list_substance.count()):
-                item: QListWidgetItem = self.list_substance.item(i)
-                if item.checkState() == Qt.Checked:
-                    self.selected_substances.add(item.text())
-                else:
-                    self.selected_substances.discard(item.text())
-        else:
-            self.selected_substances.clear()
-
-    def filter_substances_list(self, filter_text: str) -> List[str]:
-        list_items: List[str] = []
-        if filter_text:
-            for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
-                             STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                for entry in self.catalog.catalog:
-                    plain_text_name: str = remove_html(entry[name_key])
-                    if (name_key in entry and plain_text_name.startswith(filter_text)
-                            and plain_text_name not in list_items):
-                        list_items.append(plain_text_name)
-            for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
-                             STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                for entry in self.catalog.catalog:
-                    plain_text_name: str = remove_html(entry[name_key])
-                    if name_key in entry and filter_text in plain_text_name and plain_text_name not in list_items:
-                        list_items.append(plain_text_name)
-            if filter_text.isdecimal():
-                for entry in self.catalog.catalog:
-                    if SPECIES_TAG in entry and str(entry[SPECIES_TAG]).startswith(filter_text):
-                        list_items.append(str(entry[SPECIES_TAG]))
-        else:
-            for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
-                             STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                for entry in self.catalog.catalog:
-                    plain_text_name: str = remove_html(entry[name_key])
-                    if plain_text_name not in list_items:
-                        list_items.append(plain_text_name)
-            list_items = sorted(list_items)
-        return list_items
-
-    def fill_substances_list(self, filter_text: str):
-        self.update_selected_substances()
-        self.list_substance.clear()
-
-        for text in self.filter_substances_list(filter_text):
-            new_item: QListWidgetItem = QListWidgetItem(text, self.list_substance)
-            new_item.setFlags(int(new_item.flags()) | Qt.ItemIsUserCheckable)
-            new_item.setCheckState(Qt.Checked if text in self.selected_substances else Qt.Unchecked)
-            self.list_substance.addItem(new_item)
-
     def on_button_search_clicked(self):
         self.status_bar.showMessage(self.tr('Searching...'))
-        self.update_selected_substances()
+        self.box_substance.update_selected_substances()
         self.fill_table()
         self.status_bar.showMessage(self.tr('Ready.'))
 
@@ -889,7 +669,7 @@ def run():
     app = QApplication(sys.argv)
     window = UI(Catalog(*sys.argv[1:]))
     window.show()
-    app.exec_()
+    app.exec()
 
 
 if __name__ == '__main__':
