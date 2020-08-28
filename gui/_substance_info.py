@@ -1,23 +1,10 @@
 # -*- coding: utf-8 -*-
-from typing import Type
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QWidget
 
 from catalog import Catalog
 from utils import *
-
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
-
-
-    Final = _Final()
-
 
 __all__ = ['SubstanceInfo']
 

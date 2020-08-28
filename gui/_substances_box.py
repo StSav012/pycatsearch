@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import List, Optional, Set, Type
+from typing import List, Optional, Set
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget, \
@@ -9,16 +9,7 @@ from catalog import Catalog
 from gui._settings import Settings
 from utils import *
 
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
-
-
-    Final = _Final()
+__all__ = ['SubstancesBox']
 
 
 class SubstancesBox(QGroupBox):

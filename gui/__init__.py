@@ -6,13 +6,14 @@ from typing import Dict, List, Optional, Type, Union
 
 from PyQt5.QtCore import QByteArray, QPoint, Qt
 from PyQt5.QtGui import QCloseEvent, QIcon, QPalette, QPixmap
-from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QAction, QApplication, QDesktopWidget, \
-    QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QHeaderView, QLabel, QMainWindow, QMenu, QMenuBar, \
-    QMessageBox, QPushButton, QStatusBar, QStyle, QTableWidget, QTableWidgetItem, QTableWidgetSelectionRange, QWidget
+from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QApplication, QDesktopWidget, \
+    QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QHeaderView, QLabel, QMainWindow, QMessageBox, QPushButton, \
+    QStatusBar, QTableWidget, QTableWidgetItem, QTableWidgetSelectionRange, QWidget
 
-from gui._frequency_box import FrequencyBox
 from catalog import Catalog
 from gui._float_spinbox import FloatSpinBox
+from gui._frequency_box import FrequencyBox
+from gui._menu_bar import MenuBar
 from gui._preferences import Preferences
 from gui._settings import Settings
 from gui._substance_info import SubstanceInfo
@@ -68,39 +69,7 @@ class UI(QMainWindow):
 
         self.results_table: QTableWidget = QTableWidget(self.central_widget)
 
-        self.menu_bar: QMenuBar = QMenuBar(self)
-        self.menu_file: QMenu = QMenu(self.menu_bar.tr('&File'), self.menu_bar)
-        self.menu_help: QMenu = QMenu(self.menu_bar.tr('&Help'), self.menu_bar)
-        self.menu_edit: QMenu = QMenu(self.menu_bar.tr('&Edit'), self.menu_bar)
-        self.menu_columns: QMenu = QMenu(self.menu_bar.tr('&Columns'), self.menu_bar)
-        self.menu_copy_only: QMenu = QMenu(self.menu_edit.tr('Copy &Only'), self.menu_edit)
-        self.action_load: QAction = QAction(QIcon.fromTheme('document-open'), self.menu_file.tr('&Load Catalog...'),
-                                            self.menu_file)
-        self.action_preferences: QAction = QAction('&Preferences...', self.menu_file)
-        self.action_quit: QAction = QAction(QIcon.fromTheme('application-exit'), self.menu_file.tr('&Quit'),
-                                            self.menu_file)
-        self.action_about: QAction = QAction(QIcon.fromTheme('help-about'), self.menu_help.tr('&About...'),
-                                             self.menu_help)
-        self.action_about_qt: QAction = QAction(self.style().standardIcon(QStyle.SP_TitleBarMenuButton),
-                                                self.menu_help.tr('About &Qt...'), self.menu_help)
-        self.action_copy: QAction = QAction(QIcon.fromTheme('edit-copy'), self.menu_edit.tr('Co&py Selection'),
-                                            self.menu_edit)
-        self.action_clear: QAction = QAction(QIcon.fromTheme('edit-clear'), self.menu_edit.tr('&Clear Results'),
-                                             self.menu_edit)
-        self.action_select_all: QAction = QAction(QIcon.fromTheme('edit-select-all'), self.menu_edit.tr('&Select All'),
-                                                  self.menu_edit)
-        self.action_reload: QAction = QAction(QIcon.fromTheme('document-revert'), self.menu_file.tr('&Reload Catalogs'),
-                                              self.menu_file)
-        self.action_copy_name: QAction = QAction(self.menu_copy_only.tr('&Substance Name'), self.menu_copy_only)
-        self.action_copy_frequency: QAction = QAction(self.menu_copy_only.tr('&Frequency'), self.menu_copy_only)
-        self.action_copy_intensity: QAction = QAction(self.menu_copy_only.tr('&Intensity'), self.menu_copy_only)
-        self.action_copy_lower_state_energy: QAction = QAction(self.menu_copy_only.tr('&Lower state energy'),
-                                                               self.menu_copy_only)
-        self.action_show_frequency: QAction = QAction(self.menu_columns.tr('&Frequency'), self.menu_columns)
-        self.action_show_intensity: QAction = QAction(self.menu_columns.tr('&Intensity'), self.menu_columns)
-        self.action_show_lower_state_energy: QAction = QAction(self.menu_columns.tr('&Lower state energy'),
-                                                               self.menu_columns)
-        self.action_substance_info: QAction = QAction(self.menu_edit.tr('Substance &Info'), self.menu_edit)
+        self.menu_bar: MenuBar = MenuBar(self)
 
         self.status_bar = QStatusBar(self)
 
@@ -172,55 +141,9 @@ class UI(QMainWindow):
             self.layout_main.addWidget(self.button_search, 3, 1, 1, 1)
 
             self.setMenuBar(self.menu_bar)
-            self.action_preferences.setMenuRole(QAction.PreferencesRole)
-            self.action_quit.setMenuRole(QAction.QuitRole)
-            self.action_about.setMenuRole(QAction.AboutRole)
-            self.action_about_qt.setMenuRole(QAction.AboutQtRole)
-            self.menu_file.addAction(self.action_load)
-            self.menu_file.addAction(self.action_reload)
-            self.menu_file.addSeparator()
-            self.menu_file.addAction(self.action_preferences)
-            self.menu_file.addSeparator()
-            self.menu_file.addAction(self.action_quit)
-            self.menu_help.addAction(self.action_about)
-            self.menu_help.addAction(self.action_about_qt)
-            self.menu_copy_only.addAction(self.action_copy_name)
-            self.menu_copy_only.addAction(self.action_copy_frequency)
-            self.menu_copy_only.addAction(self.action_copy_intensity)
-            self.menu_copy_only.addAction(self.action_copy_lower_state_energy)
-            self.menu_edit.addAction(self.action_clear)
-            self.menu_edit.addSeparator()
-            self.menu_edit.addAction(self.menu_copy_only.menuAction())
-            self.menu_edit.addAction(self.action_copy)
-            self.menu_edit.addSeparator()
-            self.menu_edit.addAction(self.action_select_all)
-            self.menu_edit.addSeparator()
-            self.menu_edit.addAction(self.action_substance_info)
-            self.menu_columns.addAction(self.action_show_frequency)
-            self.menu_columns.addAction(self.action_show_intensity)
-            self.menu_columns.addAction(self.action_show_lower_state_energy)
-            self.menu_bar.addAction(self.menu_file.menuAction())
-            self.menu_bar.addAction(self.menu_edit.menuAction())
-            self.menu_bar.addAction(self.menu_columns.menuAction())
-            self.menu_bar.addAction(self.menu_help.menuAction())
             self.setStatusBar(self.status_bar)
 
             self.button_search.setShortcut('Ctrl+Return')
-            self.action_load.setShortcut('Ctrl+L')
-            self.action_quit.setShortcut('Ctrl+Q')
-            self.action_about.setShortcut('F1')
-            self.action_preferences.setShortcut('Ctrl+,')
-            self.action_copy.setShortcut('Ctrl+C')
-            self.action_select_all.setShortcut('Ctrl+A')
-            self.action_reload.setShortcut('Ctrl+R')
-            self.action_copy_name.setShortcut('Ctrl+Shift+C, N')
-            self.action_copy_frequency.setShortcut('Ctrl+Shift+C, F')
-            self.action_copy_intensity.setShortcut('Ctrl+Shift+C, I')
-            self.action_copy_lower_state_energy.setShortcut('Ctrl+Shift+C, E')
-            self.action_substance_info.setShortcut('Ctrl+I')
-            self.action_show_frequency.setCheckable(True)
-            self.action_show_intensity.setCheckable(True)
-            self.action_show_lower_state_energy.setCheckable(True)
 
             self.adjustSize()
 
@@ -245,23 +168,23 @@ class UI(QMainWindow):
         self.spin_intensity.valueChanged.connect(self.on_spin_intensity_changed)
         self.spin_temperature.valueChanged.connect(self.on_spin_temperature_changed)
         self.button_search.clicked.connect(self.on_button_search_clicked)
-        self.action_load.triggered.connect(self.on_action_load_triggered)
-        self.action_quit.triggered.connect(self.on_action_quit_triggered)
-        self.action_about.triggered.connect(self.on_action_about_triggered)
-        self.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
-        self.action_preferences.triggered.connect(self.on_action_preferences_triggered)
-        self.action_copy.triggered.connect(self.on_action_copy_triggered)
-        self.action_select_all.triggered.connect(self.on_action_select_all_triggered)
-        self.action_reload.triggered.connect(self.on_action_reload_triggered)
-        self.action_copy_name.triggered.connect(self.on_action_copy_name_triggered)
-        self.action_copy_frequency.triggered.connect(self.on_action_copy_frequency_triggered)
-        self.action_copy_intensity.triggered.connect(self.on_action_copy_intensity_triggered)
-        self.action_copy_lower_state_energy.triggered.connect(self.on_action_copy_lower_state_energy_triggered)
-        self.action_show_frequency.toggled.connect(self.on_action_show_frequency_toggled)
-        self.action_show_intensity.toggled.connect(self.on_action_show_intensity_toggled)
-        self.action_show_lower_state_energy.toggled.connect(self.on_action_show_lower_state_energy_toggled)
-        self.action_substance_info.triggered.connect(self.on_action_substance_info_triggered)
-        self.action_clear.triggered.connect(self.on_action_clear_triggered)
+        self.menu_bar.action_load.triggered.connect(self.on_action_load_triggered)
+        self.menu_bar.action_quit.triggered.connect(self.on_action_quit_triggered)
+        self.menu_bar.action_about.triggered.connect(self.on_action_about_triggered)
+        self.menu_bar.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
+        self.menu_bar.action_preferences.triggered.connect(self.on_action_preferences_triggered)
+        self.menu_bar.action_copy.triggered.connect(self.on_action_copy_triggered)
+        self.menu_bar.action_select_all.triggered.connect(self.on_action_select_all_triggered)
+        self.menu_bar.action_reload.triggered.connect(self.on_action_reload_triggered)
+        self.menu_bar.action_copy_name.triggered.connect(self.on_action_copy_name_triggered)
+        self.menu_bar.action_copy_frequency.triggered.connect(self.on_action_copy_frequency_triggered)
+        self.menu_bar.action_copy_intensity.triggered.connect(self.on_action_copy_intensity_triggered)
+        self.menu_bar.action_copy_lower_state_energy.triggered.connect(self.on_action_copy_lower_state_energy_triggered)
+        self.menu_bar.action_show_frequency.toggled.connect(self.on_action_show_frequency_toggled)
+        self.menu_bar.action_show_intensity.toggled.connect(self.on_action_show_intensity_toggled)
+        self.menu_bar.action_show_lower_state_energy.toggled.connect(self.on_action_show_lower_state_energy_toggled)
+        self.menu_bar.action_substance_info.triggered.connect(self.on_action_substance_info_triggered)
+        self.menu_bar.action_clear.triggered.connect(self.on_action_clear_triggered)
 
         if not self.catalog.is_empty:
             self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
@@ -280,11 +203,11 @@ class UI(QMainWindow):
             self.fill_table()
 
     def on_table_context_menu_requested(self, pos: QPoint):
-        self.menu_edit.popup(self.results_table.viewport().mapToGlobal(pos))
+        self.menu_bar.menu_edit.popup(self.results_table.viewport().mapToGlobal(pos))
 
     def on_table_item_selection_changed(self):
-        self.action_copy.setEnabled(bool(self.results_table.selectedItems()))
-        self.action_substance_info.setEnabled(bool(self.results_table.selectedItems()))
+        self.menu_bar.action_copy.setEnabled(bool(self.results_table.selectedItems()))
+        self.menu_bar.action_substance_info.setEnabled(bool(self.results_table.selectedItems()))
         for r in range(self.results_table.rowCount()):
             # noinspection PyTypeChecker
             label: Optional[QLabel] = self.results_table.cellWidget(r, 0)
@@ -342,7 +265,8 @@ class UI(QMainWindow):
         if self.settings.with_units:
             units: Dict[int, str] = {
                 1: self.settings.frequency_unit_str,
-                2: self.settings.intensity_unit_str
+                2: self.settings.intensity_unit_str,
+                3: self.settings.energy_unit_str,
             }
             for selection in self.results_table.selectedRanges():
                 for r in range(selection.topRow(), selection.bottomRow() + 1):
@@ -351,7 +275,8 @@ class UI(QMainWindow):
                         f'</td>{self.settings.csv_separator}<td>'.join(
                             [self.results_table.cellWidget(r, 0).text()] +
                             [(self.results_table.item(r, _c).text() + (' ' + units[_c] if _c in units else ''))
-                             for _c, _a in zip(range(1, self.results_table.columnCount()), self.menu_columns.actions())
+                             for _c, _a in zip(range(1, self.results_table.columnCount()),
+                                               self.menu_bar.menu_columns.actions())
                              if _a.isChecked()]
                         ) +
                         '</td></tr>' + self.settings.line_end
@@ -364,7 +289,8 @@ class UI(QMainWindow):
                         f'</td>{self.settings.csv_separator}<td>'.join(
                             [self.results_table.cellWidget(r, 0).text()] +
                             [self.results_table.item(r, _c).text()
-                             for _c, _a in zip(range(1, self.results_table.columnCount()), self.menu_columns.actions())
+                             for _c, _a in zip(range(1, self.results_table.columnCount()),
+                                               self.menu_bar.menu_columns.actions())
                              if _a.isChecked()]
                         ) +
                         '</td></tr>' + self.settings.line_end
@@ -493,12 +419,12 @@ class UI(QMainWindow):
         self.minimal_intensity = self.settings.value('intensity', self.spin_intensity.value(), float)
         self.settings.endGroup()
         self.settings.beginGroup('displayedColumns')
-        self.action_show_frequency.setChecked(self.settings.value('frequency', True, bool))
-        self.toggle_results_table_column_visibility(1, self.action_show_frequency.isChecked())
-        self.action_show_intensity.setChecked(self.settings.value('intensity', True, bool))
-        self.toggle_results_table_column_visibility(2, self.action_show_intensity.isChecked())
-        self.action_show_lower_state_energy.setChecked(self.settings.value('lowerStateEnergy', False, bool))
-        self.toggle_results_table_column_visibility(3, self.action_show_lower_state_energy.isChecked())
+        self.menu_bar.action_show_frequency.setChecked(self.settings.value('frequency', True, bool))
+        self.toggle_results_table_column_visibility(1, self.menu_bar.action_show_frequency.isChecked())
+        self.menu_bar.action_show_intensity.setChecked(self.settings.value('intensity', True, bool))
+        self.toggle_results_table_column_visibility(2, self.menu_bar.action_show_intensity.isChecked())
+        self.menu_bar.action_show_lower_state_energy.setChecked(self.settings.value('lowerStateEnergy', False, bool))
+        self.toggle_results_table_column_visibility(3, self.menu_bar.action_show_lower_state_energy.isChecked())
         self.settings.endGroup()
         self.settings.beginGroup('window')
         desktop: QDesktopWidget = QApplication.desktop()
@@ -531,9 +457,9 @@ class UI(QMainWindow):
         self.settings.setValue('intensity', self.minimal_intensity)
         self.settings.endGroup()
         self.settings.beginGroup('displayedColumns')
-        self.settings.setValue('frequency', self.action_show_frequency.isChecked())
-        self.settings.setValue('intensity', self.action_show_intensity.isChecked())
-        self.settings.setValue('lowerStateEnergy', self.action_show_lower_state_energy.isChecked())
+        self.settings.setValue('frequency', self.menu_bar.action_show_frequency.isChecked())
+        self.settings.setValue('intensity', self.menu_bar.action_show_intensity.isChecked())
+        self.settings.setValue('lowerStateEnergy', self.menu_bar.action_show_lower_state_energy.isChecked())
         self.settings.endGroup()
         self.settings.beginGroup('window')
         self.settings.setValue('geometry', self.saveGeometry())
@@ -547,18 +473,19 @@ class UI(QMainWindow):
         self.results_shown = False
         self.results_table.clearContents()
         self.results_table.clearSelection()
-        self.action_copy.setDisabled(True)
-        self.action_substance_info.setDisabled(True)
-        self.action_select_all.setDisabled(True)
-        self.action_clear.setDisabled(True)
-        self.menu_copy_only.setDisabled(True)
+        self.menu_bar.action_copy.setDisabled(True)
+        self.menu_bar.action_substance_info.setDisabled(True)
+        self.menu_bar.action_select_all.setDisabled(True)
+        self.menu_bar.action_clear.setDisabled(True)
+        self.menu_bar.menu_copy_only.setDisabled(True)
         self.results_table.setRowCount(0)
+        unit_format: Final[str] = self.tr('%s [%s]', 'unit format')
         self.results_table.setHorizontalHeaderLabels(
             [
                 self.tr('Substance'),
-                f'{self.tr("Frequency")} [{self.settings.frequency_unit_str}]',
-                f'{self.tr("Intensity")} [{self.settings.intensity_unit_str}]',
-                f'{self.tr("Lower state energy")} [{self.settings.energy_unit_str}]',
+                unit_format % (self.tr("Frequency"), self.settings.frequency_unit_str),
+                unit_format % (self.tr("Intensity"), self.settings.intensity_unit_str),
+                unit_format % (self.tr("Lower state energy"), self.settings.energy_unit_str),
             ]
         )
         self.update()
@@ -653,9 +580,9 @@ class UI(QMainWindow):
                 self.results_table.setItem(last_row, 3, item)
 
         self.results_table.setSortingEnabled(True)
-        self.action_select_all.setEnabled(bool(entries))
-        self.action_clear.setEnabled(bool(entries))
-        self.menu_copy_only.setEnabled(bool(entries))
+        self.menu_bar.action_select_all.setEnabled(bool(entries))
+        self.menu_bar.action_clear.setEnabled(bool(entries))
+        self.menu_bar.menu_copy_only.setEnabled(bool(entries))
         self.results_shown = True
 
     def on_button_search_clicked(self):

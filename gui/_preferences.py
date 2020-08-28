@@ -1,23 +1,10 @@
 # -*- coding: utf-8 -*-
-from typing import Type
 
 from PyQt5.QtWidgets import QCheckBox, QComboBox, \
     QDialog, QDialogButtonBox, QFormLayout, QGroupBox, \
     QVBoxLayout, QWidget
 
 from gui._settings import Settings
-
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
-
-
-    Final = _Final()
-
 
 __all__ = ['Preferences']
 

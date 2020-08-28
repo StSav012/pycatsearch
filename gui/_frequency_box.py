@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
-from typing import List, Type
+from typing import List
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, \
@@ -9,16 +9,7 @@ from PyQt5.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabW
 from gui._settings import Settings
 from utils import *
 
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
-
-
-    Final = _Final()
+__all__ = ['FrequencyBox']
 
 
 class FrequencyBox(QTabWidget):
