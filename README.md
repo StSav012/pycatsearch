@@ -40,7 +40,8 @@ c.print(min_frequency=140141, max_frequency=140142)
                stoichiometric_formula: str = '',
                isotopolog: str = '',
                state: str = '',
-               degrees_of_freedom: Union[None, int] = None) -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]`
+               degrees_of_freedom: Optional[int] = None,
+               timeout: Optional[float] = None) -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]`
   returns only the catalog entries that meet the criteria specified. The arguments are the following:
     - `float min_frequency`: the lower frequency \[MHz\] to take.
     - `float max_frequency`: the upper frequency \[MHz\] to take.
@@ -62,6 +63,7 @@ c.print(min_frequency=140141, max_frequency=140142)
     - `str isotopolog`: a string to match the ``isotopolog`` field.
     - `str state`: a string to match the ``isotopolog`` or the ``state_html`` field.
     - `int degrees_of_freedom`: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
+    - `float timeout`: maximum time span for the filtering to take.
 - `print(**kwargs)` prints a table of the filtered catalog entries.
   It accepts all the arguments valid for the `filter` function.
 

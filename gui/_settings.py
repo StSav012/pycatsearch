@@ -39,6 +39,10 @@ class Settings(QSettings):
         'Display': {
             'Allow rich text in formulas': ('rich_text_in_formulas',),
         },
+        'Search': {
+            'Timeout:': (slice(1, 99), (' sec',), 'timeout',),
+            'Maximum lines:': (slice(1, 999), tuple(), 'max_lines',),
+        },
         'Units': {
             'Frequency:': (FREQUENCY_UNITS, 'frequency_unit'),
             'Intensity:': (INTENSITY_UNITS, 'intensity_unit'),
@@ -292,4 +296,30 @@ class Settings(QSettings):
     def with_units(self, new_value: bool):
         self.beginGroup('export')
         self.setValue('withUnits', new_value)
+        self.endGroup()
+
+    @property
+    def timeout(self) -> float:
+        self.beginGroup('search')
+        v: float = self.value('timeout', 99.0, float)
+        self.endGroup()
+        return v
+
+    @timeout.setter
+    def timeout(self, new_value: float):
+        self.beginGroup('search')
+        self.setValue('timeout', new_value)
+        self.endGroup()
+
+    @property
+    def max_lines(self) -> int:
+        self.beginGroup('search')
+        v: int = self.value('maxLines', 999, int)
+        self.endGroup()
+        return v
+
+    @max_lines.setter
+    def max_lines(self, new_value: int):
+        self.beginGroup('search')
+        self.setValue('maxLines', new_value)
         self.endGroup()

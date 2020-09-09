@@ -4,12 +4,27 @@ import json
 import math
 import os.path
 import sys
-from typing import Any, Dict, List, Tuple, Union
+import time
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 from utils import *
 
 if sys.version_info < (3, 6):
     raise ImportError('Compatible only with Python 3.6 and newer')
+
+try:
+    from typing import Final
+except ImportError:
+    class _Final:
+        @staticmethod
+        def __getitem__(item: Type):
+            return item
+
+
+    Final = _Final()
+
+
+_TIME_FUNCTION: Final[Callable] = time.monotonic if hasattr(time, 'monotonic') else time.time
 
 
 class Catalog:
@@ -113,7 +128,8 @@ class Catalog:
                stoichiometric_formula: str = '',
                isotopolog: str = '',
                state: str = '',
-               degrees_of_freedom: Union[None, int] = None
+               degrees_of_freedom: Optional[int] = None,
+               timeout: Optional[float] = None
                ) -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]:
         """
         Extract only the entries that match all the specified conditions
@@ -138,6 +154,7 @@ class Catalog:
         :param str isotopolog: a string to match the ``isotopolog`` field.
         :param str state: a string to match the ``isotopolog`` or the ``state_html`` field.
         :param int degrees_of_freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
+        :param float timeout: if positive, the maximum time [seconds] for filtering.
         :raises: :class:`ValueError`: Invalid frequency range
                  if the specified frequency range does not intersect with the catalog one.
         :return: a list of substances with non-empty lists of absorption lines that match all the conditions.
@@ -161,14 +178,14 @@ class Catalog:
 
         def filter_by_frequency_and_intensity(catalog_entry: Dict[str, Union[int, str, List[Dict[str, float]]]]) \
                 -> Dict[str, Union[int, str, List[Dict[str, float]]]]:
-            def intensity(entry) -> float:
+            def intensity(_entry) -> float:
                 if catalog_entry[DEGREES_OF_FREEDOM] >= 0 and temperature > 0. and temperature != T0:
-                    return (entry[INTENSITY]
+                    return (_entry[INTENSITY]
                             + ((0.5 * catalog_entry[DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
-                               - ((1 / temperature - 1 / T0) * entry[
+                               - ((1 / temperature - 1 / T0) * _entry[
                                         LOWER_STATE_ENERGY] * 100. * h * c / k)) / M_LOG10E)
                 else:
-                    return entry[INTENSITY]
+                    return _entry[INTENSITY]
 
             new_catalog_entry: Dict[str, Union[int, str, List[Dict[str, float]]]] = catalog_entry.copy()
             if LINES in new_catalog_entry:
@@ -184,47 +201,53 @@ class Catalog:
                 or min_frequency > self._max_frequency
                 or max_frequency < self._min_frequency):
             raise ValueError('Invalid frequency range')
+        start_time: float = _TIME_FUNCTION()
         if (species_tag or inchi or trivial_name or structural_formula or name or stoichiometric_formula
                 or isotopolog or state or degrees_of_freedom or any_name or any_formula or any_name_or_formula):
             selected_entries = []
-            for e in self.catalog:
-                if ((not species_tag or (SPECIES_TAG in e and e[SPECIES_TAG] == species_tag))
-                        and (not inchi or (INCHI_KEY in e and e[INCHI_KEY] == inchi))
+            for entry in self.catalog:
+                if timeout is not None and 0.0 < timeout <= _TIME_FUNCTION() - start_time:
+                    break
+                if ((not species_tag or (SPECIES_TAG in entry and entry[SPECIES_TAG] == species_tag))
+                        and (not inchi or (INCHI_KEY in entry and entry[INCHI_KEY] == inchi))
                         and (not trivial_name
-                             or (TRIVIAL_NAME in e and e[TRIVIAL_NAME] == trivial_name))
+                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME] == trivial_name))
                         and (not structural_formula
-                             or (STRUCTURAL_FORMULA in e and e[STRUCTURAL_FORMULA] == structural_formula))
-                        and (not name or (NAME in e and e[NAME] == name))
+                             or (STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == structural_formula))
+                        and (not name or (NAME in entry and entry[NAME] == name))
                         and (not stoichiometric_formula
-                             or (STOICHIOMETRIC_FORMULA in e and e[STOICHIOMETRIC_FORMULA] == stoichiometric_formula))
-                        and (not isotopolog or (ISOTOPOLOG in e and e[ISOTOPOLOG] == isotopolog))
+                             or (STOICHIOMETRIC_FORMULA in entry
+                                 and entry[STOICHIOMETRIC_FORMULA] == stoichiometric_formula))
+                        and (not isotopolog or (ISOTOPOLOG in entry and entry[ISOTOPOLOG] == isotopolog))
                         and (not state
-                             or (STATE in e and e[STATE] == state)
-                             or (STATE_HTML in e and e[STATE_HTML] == state))
+                             or (STATE in entry and entry[STATE] == state)
+                             or (STATE_HTML in entry and entry[STATE_HTML] == state))
                         and (degrees_of_freedom is None
-                             or (DEGREES_OF_FREEDOM in e and e[DEGREES_OF_FREEDOM] == degrees_of_freedom))
+                             or (DEGREES_OF_FREEDOM in entry and entry[DEGREES_OF_FREEDOM] == degrees_of_freedom))
                         and (not any_name
-                             or (TRIVIAL_NAME in e and e[TRIVIAL_NAME] == any_name)
-                             or (NAME in e and e[NAME] == any_name))
+                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME] == any_name)
+                             or (NAME in entry and entry[NAME] == any_name))
                         and (not any_formula
-                             or (STRUCTURAL_FORMULA in e and e[STRUCTURAL_FORMULA] == any_formula)
-                             or (MOLECULE_SYMBOL in e and e[MOLECULE_SYMBOL] == any_formula)
-                             or (STOICHIOMETRIC_FORMULA in e and e[STOICHIOMETRIC_FORMULA] == any_formula)
-                             or (ISOTOPOLOG in e and e[ISOTOPOLOG] == any_formula))
+                             or (STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == any_formula)
+                             or (MOLECULE_SYMBOL in entry and entry[MOLECULE_SYMBOL] == any_formula)
+                             or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == any_formula)
+                             or (ISOTOPOLOG in entry and entry[ISOTOPOLOG] == any_formula))
                         and (not any_name_or_formula
-                             or (TRIVIAL_NAME in e and e[TRIVIAL_NAME] == any_name_or_formula)
-                             or (NAME in e and e[NAME] == any_name_or_formula)
-                             or (STRUCTURAL_FORMULA in e and e[STRUCTURAL_FORMULA] == any_name_or_formula)
-                             or (MOLECULE_SYMBOL in e and e[MOLECULE_SYMBOL] == any_name_or_formula)
-                             or (STOICHIOMETRIC_FORMULA in e and e[STOICHIOMETRIC_FORMULA] == any_name_or_formula)
-                             or (ISOTOPOLOG in e and e[ISOTOPOLOG] == any_name_or_formula))):
-                    filtered_entry = filter_by_frequency_and_intensity(e)
+                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME] == any_name_or_formula)
+                             or (NAME in entry and entry[NAME] == any_name_or_formula)
+                             or (STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == any_name_or_formula)
+                             or (MOLECULE_SYMBOL in entry and entry[MOLECULE_SYMBOL] == any_name_or_formula)
+                             or (STOICHIOMETRIC_FORMULA in entry
+                                 and entry[STOICHIOMETRIC_FORMULA] == any_name_or_formula)
+                             or (ISOTOPOLOG in entry and entry[ISOTOPOLOG] == any_name_or_formula))):
+                    filtered_entry = filter_by_frequency_and_intensity(entry)
                     if filtered_entry[LINES]:
                         selected_entries.append(filtered_entry)
         else:
-            filtered_entries = [filter_by_frequency_and_intensity(e)
-                                for e in self._data[CATALOG]]
-            selected_entries = [e for e in filtered_entries if e[LINES]]
+            filtered_entries = [filter_by_frequency_and_intensity(entry)
+                                for entry in self._data[CATALOG]
+                                if timeout is None or (timeout > 0.0 and timeout >= _TIME_FUNCTION() - start_time)]
+            selected_entries = [entry for entry in filtered_entries if entry[LINES]]
         unique_entries = selected_entries
         all_unique: bool = True  # unless the opposite is proven
         for i in range(len(selected_entries)):
@@ -250,9 +273,9 @@ class Catalog:
         names: List[str] = []
         frequencies: List[float] = []
         intensities: List[float] = []
-        for e in entries:
-            for line in e[LINES]:
-                names.append(e[NAME])
+        for entry in entries:
+            for line in entry[LINES]:
+                names.append(entry[NAME])
                 frequencies.append(line[FREQUENCY])
                 intensities.append(line[INTENSITY])
 
