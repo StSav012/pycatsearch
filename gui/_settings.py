@@ -41,7 +41,6 @@ class Settings(QSettings):
         },
         'Search': {
             'Timeout:': (slice(1, 99), (' sec',), 'timeout',),
-            'Maximum lines:': (slice(1, 999), tuple(), 'max_lines',),
         },
         'Units': {
             'Frequency:': (FREQUENCY_UNITS, 'frequency_unit'),
@@ -309,17 +308,4 @@ class Settings(QSettings):
     def timeout(self, new_value: float):
         self.beginGroup('search')
         self.setValue('timeout', new_value)
-        self.endGroup()
-
-    @property
-    def max_lines(self) -> int:
-        self.beginGroup('search')
-        v: int = self.value('maxLines', 999, int)
-        self.endGroup()
-        return v
-
-    @max_lines.setter
-    def max_lines(self, new_value: int):
-        self.beginGroup('search')
-        self.setValue('maxLines', new_value)
         self.endGroup()

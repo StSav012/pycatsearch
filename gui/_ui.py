@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import math
 from base64 import b64encode
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, List, Tuple, Type, Union
 
-from PyQt5.QtCore import QByteArray, QPoint, Qt
-from PyQt5.QtGui import QCloseEvent, QIcon, QPalette, QPixmap
+from PyQt5.QtCore import QAbstractTableModel, QByteArray, QModelIndex, QPoint, QRect, QSize, Qt
+from PyQt5.QtGui import QAbstractTextDocumentLayout, QCloseEvent, QIcon, QPainter, QPixmap, QTextDocument
 from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QApplication, QDesktopWidget, \
-    QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QHeaderView, QLabel, QMainWindow, QMessageBox, QPushButton, \
-    QStatusBar, QTableWidget, QTableWidgetItem, QTableWidgetSelectionRange, QWidget
+    QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QHeaderView, QMainWindow, QMessageBox, QPushButton, \
+    QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView, QTableWidgetSelectionRange, QWidget
 
 from catalog import Catalog
 from gui._float_spinbox import FloatSpinBox
@@ -30,6 +30,8 @@ except ImportError:
 
     Final = _Final()
 
+CatalogEntry: Final[Type] = Dict[str, Union[int, str, List[Dict[str, float]]]]
+
 
 def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.PlainText):
     from PyQt5.QtGui import QClipboard
@@ -45,6 +47,147 @@ def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.Plain
     else:
         mime_data.setText(text)
     clipboard.setMimeData(mime_data, QClipboard.Clipboard)
+
+
+class HTMLDelegate(QStyledItemDelegate):
+    @staticmethod
+    def anchorAt(html, point):
+        doc = QTextDocument()
+        doc.setHtml(html)
+        text_layout = doc.documentLayout()
+        return text_layout.anchorAt(point)
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
+        self.initStyleOption(option, index)
+        if option.widget:
+            style: QStyle = option.widget.style()
+        else:
+            style: QStyle = QApplication.style()
+        doc: QTextDocument = QTextDocument()
+        doc.setHtml(option.text)
+        option.text = ''
+        style.drawControl(QStyle.CE_ItemViewItem, option, painter)
+        ctx = QAbstractTextDocumentLayout.PaintContext()
+        text_rect: QRect = style.subElementRect(QStyle.SE_ItemViewItemText, option)
+        painter.save()
+        painter.translate(text_rect.topLeft())
+        painter.setClipRect(text_rect.translated(-text_rect.topLeft()))
+        painter.translate(0, 0.5 * (option.rect.height() - doc.size().height()))
+        doc.documentLayout().draw(painter, ctx)
+        painter.restore()
+
+    def sizeHint(self, option, index):
+        options = QStyleOptionViewItem(option)
+        self.initStyleOption(options, index)
+        doc: QTextDocument = QTextDocument()
+        doc.setHtml(options.text)
+        doc.setTextWidth(options.rect.width())
+        return QSize(doc.idealWidth(), doc.size().height())
+
+
+class ListStore(QAbstractTableModel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._entries: List[CatalogEntry] = []
+        self._data: List[Tuple[int, str, float, float, float]] = []
+
+        unit_format: Final[str] = self.tr('%s [%s]', 'unit format')
+        self._header: Final[List[str]] = [
+            self.tr('Substance'),
+            unit_format % (self.tr("Frequency"), self.parent().settings.frequency_unit_str),
+            unit_format % (self.tr("Intensity"), self.parent().settings.intensity_unit_str),
+            unit_format % (self.tr("Lower state energy"), self.parent().settings.energy_unit_str),
+        ]
+
+    def update_units(self):
+        unit_format: Final[str] = self.tr('%s [%s]', 'unit format')
+        self._header[1] = unit_format % (self.tr("Frequency"), self.parent().settings.frequency_unit_str)
+        self._header[2] = unit_format % (self.tr("Intensity"), self.parent().settings.intensity_unit_str)
+        self._header[3] = unit_format % (self.tr("Lower state energy"), self.parent().settings.energy_unit_str)
+
+    def rowCount(self, parent=None) -> int:
+        return len(self._entries)
+
+    def columnCount(self, parent=None) -> int:
+        return len(self._header)
+
+    def data(self, index: QModelIndex, role=Qt.DisplayRole):
+        if index.isValid():
+            if role == Qt.DisplayRole:
+                data_column: Final[int] = {0: 1, 1: 2, 2: 4, 3: 6}[index.column()]
+                return self._data[index.row()][data_column]
+        return None
+
+    def row(self, row_index: int) -> Tuple[int, str, float, float, float]:
+        return self._data[row_index]
+
+    def item(self, row_index: int, column_index: int) -> Tuple[int, str, float, float, float]:
+        data_column: Final[int] = {0: 1, 1: 2, 2: 4, 3: 6}[column_index]
+        return self._data[row_index][data_column]
+
+    def raw_item(self, row_index: int, column_index: int) -> Tuple[int, str, float, float, float]:
+        return self._data[row_index][column_index]
+
+    def headerData(self, col, orientation, role=None):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self._header[col]
+        return None
+
+    def setHeaderData(self, section: int, orientation: Qt.Orientation, value, role: int = ...) -> bool:
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole and 0 <= section < len(self._header):
+            self._header[section] = value
+            return True
+        return False
+
+    def clear(self):
+        self.set_entries([])
+
+    def set_entries(self, new_data: List[CatalogEntry]):
+        def frequency_str(line: Dict[str, float]) -> Tuple[str, float]:
+            frequency: float = self.parent().settings.from_mhz(line[FREQUENCY])
+            frequency_suffix: int = self.parent().settings.frequency_unit
+            precision: int = [4, 7, 8, 8][frequency_suffix]
+            return f'{frequency:.{precision}f}', frequency
+
+        def intensity_str(line: Dict[str, float]) -> Tuple[str, float]:
+            intensity: float = self.parent().settings.from_log10_sq_nm_mhz(line[INTENSITY])
+            if intensity == 0.0:
+                return '0', intensity
+            elif abs(intensity) < 0.1:
+                return f'{intensity:.4e}', intensity
+            else:
+                return f'{intensity:.4f}', intensity
+
+        def lower_state_energy_str(line: Dict[str, float]) -> Tuple[str, float]:
+            lower_state_energy: float = self.parent().settings.from_rec_cm(line[LOWER_STATE_ENERGY])
+            if lower_state_energy == 0.0:
+                return '0', lower_state_energy
+            elif abs(lower_state_energy) < 0.1:
+                return f'{lower_state_energy:.4e}', lower_state_energy
+            else:
+                return f'{lower_state_energy:.4f}', lower_state_energy
+
+        self.beginResetModel()
+        self._entries = new_data[:]
+        entry: CatalogEntry
+        self._data = [
+            (
+                entry[ID],
+                best_name(entry, self.parent().settings.rich_text_in_formulas),
+                *frequency_str(line),
+                *intensity_str(line),
+                *lower_state_energy_str(line),
+            )
+            for entry in self._entries
+            for line in entry[LINES]
+        ]
+        self.endResetModel()
+
+    def sort(self, column: int, order: Qt.SortOrder = Qt.AscendingOrder) -> None:
+        self.beginResetModel()
+        data_column: Final[int] = {0: 1, 1: 3, 2: 5, 3: 7}[column]
+        self._data.sort(key=lambda l: l[data_column], reverse=bool(order != Qt.AscendingOrder))
+        self.endResetModel()
 
 
 class UI(QMainWindow):
@@ -64,7 +207,8 @@ class UI(QMainWindow):
         self.box_frequency: FrequencyBox = FrequencyBox(self.settings, self.central_widget)
         self.button_search: QPushButton = QPushButton(self.central_widget)
 
-        self.results_table: QTableWidget = QTableWidget(self.central_widget)
+        self.results_model: ListStore = ListStore(self)
+        self.results_table: QTableView = QTableView(self.central_widget)
 
         self.menu_bar: MenuBar = MenuBar(self)
 
@@ -89,6 +233,8 @@ class UI(QMainWindow):
             self.layout_main.setColumnStretch(0, 1)
             self.layout_main.setRowStretch(4, 1)
 
+            self.results_table.setModel(self.results_model)
+            self.results_table.setItemDelegateForColumn(0, HTMLDelegate())
             self.results_table.setMouseTracking(True)
             self.results_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.results_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -96,8 +242,6 @@ class UI(QMainWindow):
             self.results_table.setDragDropOverwriteMode(False)
             self.results_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             self.results_table.setCornerButtonEnabled(False)
-            self.results_table.setColumnCount(4)
-            self.results_table.setRowCount(0)
             self.results_table.setSortingEnabled(True)
             self.results_table.setAlternatingRowColors(True)
             self.results_table.horizontalHeader().setDefaultSectionSize(180)
@@ -160,8 +304,8 @@ class UI(QMainWindow):
         self.load_settings()
 
         self.results_table.customContextMenuRequested.connect(self.on_table_context_menu_requested)
-        self.results_table.itemSelectionChanged.connect(self.on_table_item_selection_changed)
-        self.results_table.cellDoubleClicked.connect(self.on_action_substance_info_triggered)
+        self.results_table.selectionModel().selectionChanged.connect(self.on_table_item_selection_changed)
+        self.results_table.doubleClicked.connect(self.on_action_substance_info_triggered)
         self.spin_intensity.valueChanged.connect(self.on_spin_intensity_changed)
         self.spin_temperature.valueChanged.connect(self.on_spin_temperature_changed)
         self.button_search.clicked.connect(self.on_button_search_clicked)
@@ -203,16 +347,8 @@ class UI(QMainWindow):
         self.menu_bar.menu_edit.popup(self.results_table.viewport().mapToGlobal(pos))
 
     def on_table_item_selection_changed(self):
-        self.menu_bar.action_copy.setEnabled(bool(self.results_table.selectedItems()))
-        self.menu_bar.action_substance_info.setEnabled(bool(self.results_table.selectedItems()))
-        for r in range(self.results_table.rowCount()):
-            # noinspection PyTypeChecker
-            label: Optional[QLabel] = self.results_table.cellWidget(r, 0)
-            if label is not None:
-                if self.results_table.item(r, 1).isSelected():
-                    label.setSelection(0, len(remove_html(label.text())))
-                else:
-                    label.setSelection(0, 0)
+        self.menu_bar.action_copy.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
+        self.menu_bar.action_substance_info.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
 
     def on_action_load_triggered(self):
         self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
@@ -258,46 +394,31 @@ class UI(QMainWindow):
         :return: the rich text representation of the selected table lines
         """
         text: List[str] = []
-        selection: QTableWidgetSelectionRange
-        if self.settings.with_units:
-            units: Dict[int, str] = {
-                1: self.settings.frequency_unit_str,
-                2: self.settings.intensity_unit_str,
-                3: self.settings.energy_unit_str,
-            }
-            for selection in self.results_table.selectedRanges():
-                for r in range(selection.topRow(), selection.bottomRow() + 1):
-                    text.append(
-                        '<tr><td>' +
-                        f'</td>{self.settings.csv_separator}<td>'.join(
-                            [self.results_table.cellWidget(r, 0).text()] +
-                            [(self.results_table.item(r, _c).text() + (' ' + units[_c] if _c in units else ''))
-                             for _c, _a in zip(range(1, self.results_table.columnCount()),
-                                               self.menu_bar.menu_columns.actions())
-                             if _a.isChecked()]
-                        ) +
-                        '</td></tr>' + self.settings.line_end
-                    )
-        else:
-            for selection in self.results_table.selectedRanges():
-                for r in range(selection.topRow(), selection.bottomRow() + 1):
-                    text.append(
-                        '<tr><td>' +
-                        f'</td>{self.settings.csv_separator}<td>'.join(
-                            [self.results_table.cellWidget(r, 0).text()] +
-                            [self.results_table.item(r, _c).text()
-                             for _c, _a in zip(range(1, self.results_table.columnCount()),
-                                               self.menu_bar.menu_columns.actions())
-                             if _a.isChecked()]
-                        ) +
-                        '</td></tr>' + self.settings.line_end
-                    )
+        r: QModelIndex
+        units: Dict[int, str] = {
+            1: self.settings.frequency_unit_str,
+            2: self.settings.intensity_unit_str,
+            3: self.settings.energy_unit_str,
+        }
+        for r in self.results_table.selectionModel().selectedRows():
+            row: Tuple[int, str, float, float, float] = self.results_model.row(r.row())
+            text.append(
+                '<tr><td>' +
+                f'</td>{self.settings.csv_separator}<td>'.join(
+                    [row[1]] +
+                    [(row[_c * 2] + ((' ' + units[_c]) if self.settings.with_units and _c in units else ''))
+                     for _c, _a in zip(range(1, self.results_model.columnCount()),
+                                       self.menu_bar.menu_columns.actions())
+                     if _a.isChecked()]
+                ) +
+                '</td></tr>' + self.settings.line_end
+            )
         return '<table>' + self.settings.line_end + ''.join(text) + '</table>'
 
     def on_action_preferences_triggered(self):
         self.preferences_dialog.exec()
         self.fill_parameters()
-        if self.results_table.rowCount():
+        if self.results_model.rowCount():
             self.preset_table()
             self.fill_table()
         else:
@@ -307,10 +428,11 @@ class UI(QMainWindow):
         self.close()
 
     def on_action_clear_triggered(self):
+        self.results_model.clear()
         self.preset_table()
 
     def copy_selected_items(self, col: int):
-        if col >= self.results_table.columnCount():
+        if col >= self.results_model.columnCount():
             return
 
         def html_list(lines: List[str]) -> str:
@@ -318,15 +440,11 @@ class UI(QMainWindow):
 
         text_to_copy: List[str] = []
         selection: QTableWidgetSelectionRange
+        for row in self.results_table.selectionModel().selectedRows(col):
+            text_to_copy.append(self.results_model.data(row))
         if col == 0:
-            for selection in self.results_table.selectedRanges():
-                for row in range(selection.topRow(), selection.bottomRow() + 1):
-                    text_to_copy.append(self.results_table.cellWidget(row, col).text())
             copy_to_clipboard(html_list(text_to_copy), Qt.RichText)
         else:
-            for selection in self.results_table.selectedRanges():
-                for row in range(selection.topRow(), selection.bottomRow() + 1):
-                    text_to_copy.append(self.results_table.item(row, col).text())
             copy_to_clipboard(self.settings.line_end.join(text_to_copy), Qt.PlainText)
 
     def on_action_copy_name_triggered(self):
@@ -348,10 +466,10 @@ class UI(QMainWindow):
         self.results_table.selectAll()
 
     def on_action_substance_info_triggered(self):
-        if self.results_table.selectedRanges():
+        if self.results_table.selectionModel().selectedRows():
             syn: SubstanceInfo = SubstanceInfo(
                 self.catalog,
-                getattr(self.results_table.cellWidget(self.results_table.selectedRanges()[0].topRow(), 0), ID),
+                self.results_model.row(self.results_table.selectionModel().selectedRows()[0].row())[0],
                 self)
             syn.exec()
 
@@ -468,23 +586,13 @@ class UI(QMainWindow):
 
     def preset_table(self):
         self.results_shown = False
-        self.results_table.clearContents()
         self.results_table.clearSelection()
         self.menu_bar.action_copy.setDisabled(True)
         self.menu_bar.action_substance_info.setDisabled(True)
         self.menu_bar.action_select_all.setDisabled(True)
         self.menu_bar.action_clear.setDisabled(True)
         self.menu_bar.menu_copy_only.setDisabled(True)
-        self.results_table.setRowCount(0)
-        unit_format: Final[str] = self.tr('%s [%s]', 'unit format')
-        self.results_table.setHorizontalHeaderLabels(
-            [
-                self.tr('Substance'),
-                unit_format % (self.tr("Frequency"), self.settings.frequency_unit_str),
-                unit_format % (self.tr("Intensity"), self.settings.intensity_unit_str),
-                unit_format % (self.tr("Lower state energy"), self.settings.energy_unit_str),
-            ]
-        )
+        self.results_model.update_units()
         self.update()
 
     def fill_parameters(self):
@@ -531,55 +639,7 @@ class UI(QMainWindow):
                                       min_intensity=self.minimal_intensity,
                                       temperature=self.temperature,
                                       timeout=self.settings.timeout))
-        frequency_suffix: int = self.settings.frequency_unit
-        precision: int = [4, 7, 8, 8][frequency_suffix]
-        for entry in entries:
-            last_row: int = -1
-            for line in entry[LINES]:
-                last_row = self.results_table.rowCount()
-                if last_row >= self.settings.max_lines:
-                    QMessageBox.warning(self,
-                                        self.tr('Too many results'),
-                                        self.tr('There are too many lines that meet your criteria. '
-                                                'Not all of them are displayed.'))
-                    break
-                self.results_table.setRowCount(last_row + 1)
-
-                label: QLabel = QLabel(best_name(entry, self.settings.rich_text_in_formulas), self.results_table)
-                label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-                setattr(label, ID, entry[ID])
-                p: QPalette = QPalette(self.results_table.palette())
-                p.setBrush(QPalette.Inactive, QPalette.Highlight, p.highlight())
-                p.setBrush(QPalette.Inactive, QPalette.HighlightedText, p.highlightedText())
-                label.setPalette(p)
-                self.results_table.setCellWidget(last_row, 0, label)
-
-                frequency: float = self.settings.from_mhz(line[FREQUENCY])
-                item: QTableWidgetItem = QTableWidgetItem(f'{frequency:.{precision}f}')
-                item.setTextAlignment(int(Qt.AlignRight | Qt.AlignVCenter))
-                self.results_table.setItem(last_row, 1, item)
-
-                intensity: float = self.settings.from_log10_sq_nm_mhz(line[INTENSITY])
-                if intensity == 0.0:
-                    item: QTableWidgetItem = QTableWidgetItem('0')
-                elif abs(intensity) < 0.1:
-                    item: QTableWidgetItem = QTableWidgetItem(f'{intensity:.4e}')
-                else:
-                    item: QTableWidgetItem = QTableWidgetItem(f'{intensity:.4f}')
-                item.setTextAlignment(int(Qt.AlignRight | Qt.AlignVCenter))
-                self.results_table.setItem(last_row, 2, item)
-
-                lower_state_energy: float = self.settings.from_rec_cm(line[LOWER_STATE_ENERGY])
-                if lower_state_energy == 0.0:
-                    item: QTableWidgetItem = QTableWidgetItem('0')
-                elif abs(lower_state_energy) < 0.1:
-                    item: QTableWidgetItem = QTableWidgetItem(f'{lower_state_energy:.4e}')
-                else:
-                    item: QTableWidgetItem = QTableWidgetItem(f'{lower_state_energy:.4f}')
-                item.setTextAlignment(int(Qt.AlignRight | Qt.AlignVCenter))
-                self.results_table.setItem(last_row, 3, item)
-            if last_row >= self.settings.max_lines:
-                break
+        self.results_model.set_entries(entries)
 
         self.results_table.setSortingEnabled(True)
         self.menu_bar.action_select_all.setEnabled(bool(entries))
