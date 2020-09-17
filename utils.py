@@ -367,7 +367,7 @@ def remove_html(line: str) -> str:
         new_line = new_line[:tag_start] + new_line[tag_end + 1:]
         tag_start: int = new_line.find('<')
         tag_end: int = new_line.find('>', tag_start)
-    return html.unescape(new_line)
+    return html.unescape(new_line).lstrip()
 
 
 def wrap_in_html(text: str, line_end: str = os.linesep) -> str:
