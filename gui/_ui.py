@@ -30,6 +30,15 @@ except ImportError:
 
     Final = _Final()
 
+try:
+    import version
+except ImportError:
+    version = None
+    UPDATED: Final[str] = ''
+else:
+    UPDATED: Final[str] = version.UPDATED
+
+
 CatalogEntry: Final[Type] = Dict[str, Union[int, str, List[Dict[str, float]]]]
 
 
@@ -228,7 +237,11 @@ class UI(QMainWindow):
             </svg>\
             ''')), 'SVG')
             self.setWindowIcon(QIcon(QPixmap(window_icon)))
-            self.setWindowTitle(self.tr('PyQtCatSearch'))
+            
+            if UPDATED:
+                self.setWindowTitle(self.tr('PyQtCatSearch') + self.tr(' (as of {0})').format(UPDATED))
+            else:
+                self.setWindowTitle(self.tr('PyQtCatSearch'))
             self.setCentralWidget(self.central_widget)
             self.layout_main.setColumnStretch(0, 1)
             self.layout_main.setRowStretch(4, 1)
