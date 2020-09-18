@@ -86,10 +86,13 @@ class HTMLDelegate(QStyledItemDelegate):
 
 
 class ListStore(QAbstractTableModel):
+    ROW_BATCH_COUNT: Final[int] = 5
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._entries: List[CatalogEntry] = []
         self._data: List[Tuple[int, str, float, float, float]] = []
+        self._rows_loaded: int = self.ROW_BATCH_COUNT
 
         unit_format: Final[str] = self.tr('%s [%s]', 'unit format')
         self._header: Final[List[str]] = [
@@ -106,7 +109,7 @@ class ListStore(QAbstractTableModel):
         self._header[3] = unit_format % (self.tr("Lower state energy"), self.parent().settings.energy_unit_str)
 
     def rowCount(self, parent=None) -> int:
-        return len(self._entries)
+        return min(len(self._data), self._rows_loaded)
 
     def columnCount(self, parent=None) -> int:
         return len(self._header)
@@ -181,6 +184,7 @@ class ListStore(QAbstractTableModel):
             for entry in self._entries
             for line in entry[LINES]
         ]
+        self._rows_loaded = self.ROW_BATCH_COUNT
         self.endResetModel()
 
     def sort(self, column: int, order: Qt.SortOrder = Qt.AscendingOrder) -> None:
@@ -188,6 +192,17 @@ class ListStore(QAbstractTableModel):
         data_column: Final[int] = {0: 1, 1: 3, 2: 5, 3: 7}[column]
         self._data.sort(key=lambda l: l[data_column], reverse=bool(order != Qt.AscendingOrder))
         self.endResetModel()
+
+    def canFetchMore(self, index=QModelIndex()):
+        return len(self._data) > self._rows_loaded
+
+    def fetchMore(self, index=QModelIndex()):
+        # https://sateeshkumarb.wordpress.com/2012/04/01/paginated-display-of-table-data-in-pyqt/
+        reminder: int = len(self._data) - self._rows_loaded
+        items_to_fetch: int = min(reminder, self.ROW_BATCH_COUNT)
+        self.beginInsertRows(QModelIndex(), self._rows_loaded, self._rows_loaded + items_to_fetch - 1)
+        self._rows_loaded += items_to_fetch
+        self.endInsertRows()
 
 
 class UI(QMainWindow):
