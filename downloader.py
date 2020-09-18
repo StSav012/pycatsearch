@@ -80,7 +80,7 @@ def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -
         }
 
     catalog: List[Dict[str, Union[int, str, List[Dict[str, float]]]]] \
-        = [get_substance_catalog(e) for e in get_species()]
+        = [get_substance_catalog(_e) for _e in get_species()]
     return [catalog_entry for catalog_entry in catalog
             if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]]
 
