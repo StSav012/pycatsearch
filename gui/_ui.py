@@ -85,7 +85,7 @@ class HTMLDelegate(QStyledItemDelegate):
         return QSize(doc.idealWidth(), doc.size().height())
 
 
-class ListStore(QAbstractTableModel):
+class LinesListModel(QAbstractTableModel):
     ROW_BATCH_COUNT: Final[int] = 5
 
     def __init__(self, parent=None):
@@ -94,19 +94,19 @@ class ListStore(QAbstractTableModel):
         self._data: List[Tuple[int, str, float, float, float]] = []
         self._rows_loaded: int = self.ROW_BATCH_COUNT
 
-        unit_format: Final[str] = self.tr('%s [%s]', 'unit format')
+        unit_format: Final[str] = self.tr('{0} [{1}]', 'unit format')
         self._header: Final[List[str]] = [
             self.tr('Substance'),
-            unit_format % (self.tr("Frequency"), self.parent().settings.frequency_unit_str),
-            unit_format % (self.tr("Intensity"), self.parent().settings.intensity_unit_str),
-            unit_format % (self.tr("Lower state energy"), self.parent().settings.energy_unit_str),
+            unit_format.format(self.tr("Frequency"), self.parent().settings.frequency_unit_str),
+            unit_format.format(self.tr("Intensity"), self.parent().settings.intensity_unit_str),
+            unit_format.format(self.tr("Lower state energy"), self.parent().settings.energy_unit_str),
         ]
 
     def update_units(self):
-        unit_format: Final[str] = self.tr('%s [%s]', 'unit format')
-        self._header[1] = unit_format % (self.tr("Frequency"), self.parent().settings.frequency_unit_str)
-        self._header[2] = unit_format % (self.tr("Intensity"), self.parent().settings.intensity_unit_str)
-        self._header[3] = unit_format % (self.tr("Lower state energy"), self.parent().settings.energy_unit_str)
+        unit_format: Final[str] = self.tr('{0} [{1}]', 'unit format')
+        self._header[1] = unit_format.format(self.tr("Frequency"), self.parent().settings.frequency_unit_str)
+        self._header[2] = unit_format.format(self.tr("Intensity"), self.parent().settings.intensity_unit_str)
+        self._header[3] = unit_format.format(self.tr("Lower state energy"), self.parent().settings.energy_unit_str)
 
     def rowCount(self, parent=None) -> int:
         return min(len(self._data), self._rows_loaded)
@@ -222,7 +222,7 @@ class UI(QMainWindow):
         self.box_frequency: FrequencyBox = FrequencyBox(self.settings, self.central_widget)
         self.button_search: QPushButton = QPushButton(self.central_widget)
 
-        self.results_model: ListStore = ListStore(self)
+        self.results_model: LinesListModel = LinesListModel(self)
         self.results_table: QTableView = QTableView(self.central_widget)
 
         self.menu_bar: MenuBar = MenuBar(self)
