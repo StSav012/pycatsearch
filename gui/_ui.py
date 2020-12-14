@@ -49,6 +49,13 @@ def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.Plain
     clipboard.setMimeData(mime_data, QClipboard.Clipboard)
 
 
+def substitute(fmt: str, *args) -> str:
+    res: str = fmt
+    for index, value in enumerate(args):
+        res = res.replace(f'{{{index}}}', str(value))
+    return res
+
+
 class HTMLDelegate(QStyledItemDelegate):
     @staticmethod
     def anchorAt(html, point):
@@ -97,16 +104,16 @@ class LinesListModel(QAbstractTableModel):
         unit_format: Final[str] = self.tr('{0} [{1}]', 'unit format')
         self._header: Final[List[str]] = [
             self.tr('Substance'),
-            unit_format.format(self.tr("Frequency"), self.parent().settings.frequency_unit_str),
-            unit_format.format(self.tr("Intensity"), self.parent().settings.intensity_unit_str),
-            unit_format.format(self.tr("Lower state energy"), self.parent().settings.energy_unit_str),
+            substitute(unit_format, self.tr("Frequency"), self.parent().settings.frequency_unit_str),
+            substitute(unit_format, self.tr("Intensity"), self.parent().settings.intensity_unit_str),
+            substitute(unit_format, self.tr("Lower state energy"), self.parent().settings.energy_unit_str),
         ]
 
     def update_units(self):
         unit_format: Final[str] = self.tr('{0} [{1}]', 'unit format')
-        self._header[1] = unit_format.format(self.tr("Frequency"), self.parent().settings.frequency_unit_str)
-        self._header[2] = unit_format.format(self.tr("Intensity"), self.parent().settings.intensity_unit_str)
-        self._header[3] = unit_format.format(self.tr("Lower state energy"), self.parent().settings.energy_unit_str)
+        self._header[1] = substitute(unit_format, self.tr("Frequency"), self.parent().settings.frequency_unit_str)
+        self._header[2] = substitute(unit_format, self.tr("Intensity"), self.parent().settings.intensity_unit_str)
+        self._header[3] = substitute(unit_format, self.tr("Lower state energy"), self.parent().settings.energy_unit_str)
 
     def rowCount(self, parent=None) -> int:
         return min(len(self._data), self._rows_loaded)
