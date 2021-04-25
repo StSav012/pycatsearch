@@ -28,6 +28,7 @@ if __name__ == '__main__':
         except (OSError, ModuleNotFoundError):
             pass
 
+    if not hasattr(sys, '_MEIPASS'):
         import importlib
 
         for package in REQUIREMENTS:
