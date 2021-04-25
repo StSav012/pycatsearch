@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import http.client
 import io
 import json
@@ -20,19 +21,7 @@ except ImportError:
 
 def update(user: str, repo_name: str, branch: str = 'master'):
     extraction_root: Path = Path.cwd()
-    url: str = f'https://github.com/{user}/{repo_name}/archive/{branch}.zip'
-    r: http.client.HTTPResponse = urllib.request.urlopen(url, timeout=1)
-    if r.getcode() != 200:
-        return
-    with zipfile.ZipFile(io.BytesIO(r.read())) as inner_zip:
-        root: Path = Path(f'{repo_name}-{branch}/')
-        for member in inner_zip.infolist():
-            if member.is_dir():
-                continue
-            content: bytes = inner_zip.read(member)
-            (extraction_root / Path(member.filename).relative_to(root)).parent.mkdir(parents=True, exist_ok=True)
-            with (extraction_root / Path(member.filename).relative_to(root)).open('wb') as f_out:
-                f_out.write(content)
+
     url: str = f'https://api.github.com/repos/{user}/{repo_name}/commits?page=1&per_page=1'
     r: http.client.HTTPResponse = urllib.request.urlopen(url, timeout=1)
     if r.getcode() != 200:
@@ -55,5 +44,27 @@ def update(user: str, repo_name: str, branch: str = 'master'):
     if not isinstance(d, list) or not len(d):
         return
     date: Final[str] = d[0].get('commit', dict()).get('author', dict()).get('date', '')
-    with (extraction_root / Path('version.py')).open('w') as f_out:
+    if (extraction_root / Path('version.py')).exists():
+        try:
+            import version
+
+            if version.UPDATED == f'{date}':
+                return
+        except (OSError, ImportError, ModuleNotFoundError):
+            pass
+    with (extraction_root / Path('version.py')).open('wt') as f_out:
         f_out.write(f'UPDATED: str = "{date}"\n')
+
+    url: str = f'https://github.com/{user}/{repo_name}/archive/{branch}.zip'
+    r: http.client.HTTPResponse = urllib.request.urlopen(url, timeout=1)
+    if r.getcode() != 200:
+        return
+    with zipfile.ZipFile(io.BytesIO(r.read())) as inner_zip:
+        root: Path = Path(f'{repo_name}-{branch}/')
+        for member in inner_zip.infolist():
+            if member.is_dir():
+                continue
+            content: bytes = inner_zip.read(member)
+            (extraction_root / Path(member.filename).relative_to(root)).parent.mkdir(parents=True, exist_ok=True)
+            with (extraction_root / Path(member.filename).relative_to(root)).open('wb') as f_out:
+                f_out.write(content)

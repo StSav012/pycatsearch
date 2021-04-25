@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 from pathlib import Path
-from typing import Type
+from typing import Type, List
 
 try:
     from typing import Final
@@ -17,6 +17,8 @@ except ImportError:
 __author__: Final[str] = 'StSav012'
 __original_name__: Final[str] = 'pycatsearch'
 
+REQUIREMENTS: Final[List[str]] = ['PyQt5']
+
 if __name__ == '__main__':
     if not hasattr(sys, '_MEIPASS') and not Path('.git').exists():
         try:
@@ -25,6 +27,18 @@ if __name__ == '__main__':
             updater.update(__author__, __original_name__)
         except (OSError, ModuleNotFoundError):
             pass
+
+        import importlib
+
+        for package in REQUIREMENTS:
+            try:
+                importlib.import_module(package)
+            except (ImportError, ModuleNotFoundError) as ex:
+                import subprocess
+
+                if subprocess.check_call([sys.executable, '-m', 'pip', 'install', package]):
+                    tb = sys.exc_info()[2]
+                    print(ex.with_traceback(tb))
     try:
         import gui
     except ImportError as ex:
