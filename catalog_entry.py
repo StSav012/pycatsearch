@@ -4,6 +4,8 @@ from typing import Dict
 
 from utils import *
 
+__all__ = ['CatalogEntry']
+
 
 class CatalogEntry:
     def __init__(self, spcat_line: str = '', *, frequency: float = math.nan, intensity: float = math.nan,
@@ -46,7 +48,7 @@ class CatalogEntry:
         return self.ELO
 
     def to_dict(self) -> Dict[str, float]:
-        return {'frequency': self.FREQ, 'intensity': self.INT, 'lowerstateenergy': self.ELO}
+        return {FREQUENCY: self.FREQ, INTENSITY: self.INT, LOWER_STATE_ENERGY: self.ELO}
 
     def __repr__(self) -> str:
         return f'{self.FREQ} {self.INT} {self.ELO}'
