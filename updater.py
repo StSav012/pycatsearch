@@ -1,29 +1,20 @@
 # -*- coding: utf-8 -*-
-import http.client
 import io
 import json
 import urllib.request
 import zipfile
+from http.client import HTTPResponse
 from pathlib import Path
-from typing import Dict, List, Type, Union
-
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
+from typing import BinaryIO, Dict, Final, List, TextIO, Union, cast
 
 
-    Final = _Final()
-
-
-def update(user: str, repo_name: str, branch: str = 'master'):
+def update(user: str, repo_name: str, branch: str = 'master') -> None:
     extraction_root: Path = Path.cwd()
 
-    url: str = f'https://api.github.com/repos/{user}/{repo_name}/commits?page=1&per_page=1'
-    r: http.client.HTTPResponse = urllib.request.urlopen(url, timeout=1)
+    url: str
+    r: HTTPResponse
+    url = f'https://api.github.com/repos/{user}/{repo_name}/commits?page=1&per_page=1'
+    r = urllib.request.urlopen(url, timeout=1)
     if r.getcode() != 200:
         return
     content: bytes = r.read()
@@ -41,9 +32,11 @@ def update(user: str, repo_name: str, branch: str = 'master'):
                                              bool]]]],
                        List[Dict[str, str]]]]] \
         = json.loads(content)
-    if not isinstance(d, list) or not len(d):
+    if not isinstance(d, list) or not d:
         return
-    date: Final[str] = d[0].get('commit', dict()).get('author', dict()).get('date', '')
+    date: Final[str] = cast(str, d[0].get('commit', dict()).get('author', dict()).get('date', ''))
+    ft_out: TextIO
+    fb_out: BinaryIO
     if (extraction_root / Path('version.py')).exists():
         try:
             import version
@@ -52,19 +45,20 @@ def update(user: str, repo_name: str, branch: str = 'master'):
                 return
         except (OSError, ImportError, ModuleNotFoundError):
             pass
-    with (extraction_root / Path('version.py')).open('wt') as f_out:
-        f_out.write(f'UPDATED: str = "{date}"\n')
+    with (extraction_root / Path('version.py')).open('wt') as ft_out:
+        ft_out.write(f'UPDATED: str = "{date}"\n')
 
-    url: str = f'https://github.com/{user}/{repo_name}/archive/{branch}.zip'
-    r: http.client.HTTPResponse = urllib.request.urlopen(url, timeout=1)
+    url = f'https://github.com/{user}/{repo_name}/archive/{branch}.zip'
+    r = urllib.request.urlopen(url, timeout=1)
     if r.getcode() != 200:
         return
     with zipfile.ZipFile(io.BytesIO(r.read())) as inner_zip:
         root: Path = Path(f'{repo_name}-{branch}/')
+        member: zipfile.ZipInfo
         for member in inner_zip.infolist():
             if member.is_dir():
                 continue
-            content: bytes = inner_zip.read(member)
+            content = inner_zip.read(member)
             (extraction_root / Path(member.filename).relative_to(root)).parent.mkdir(parents=True, exist_ok=True)
-            with (extraction_root / Path(member.filename).relative_to(root)).open('wb') as f_out:
-                f_out.write(content)
+            with (extraction_root / Path(member.filename).relative_to(root)).open('wb') as fb_out:
+                fb_out.write(content)

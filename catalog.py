@@ -3,45 +3,32 @@ import gzip
 import json
 import math
 import os.path
-import sys
 import time
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from numbers import Real
+from typing import Any, Callable, Dict, Final, List, Optional, Tuple, Union, cast
 
 from utils import *
 
-if sys.version_info < (3, 6):
-    raise ImportError('Compatible only with Python 3.6 and newer')
 
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
-
-
-    Final = _Final()
-
-
-_TIME_FUNCTION: Final[Callable] = time.monotonic if hasattr(time, 'monotonic') else time.time
+_TIME_FUNCTION: Final[Callable[[], float]] = time.monotonic if hasattr(time, 'monotonic') else time.time
 
 
 class Catalog:
-    def __init__(self, *catalog_file_names: str):
-        self._data: Union[None,
-                          Dict[str, Union[Tuple[Tuple[float, float], ...],
-                                          List[Dict[str, Union[int,
-                                                               str,
-                                                               List[Dict[str, float]]]]]]]] = None
+    def __init__(self, *catalog_file_names: str) -> None:
+        self._data: Optional[
+            Dict[str, Union[Tuple[Tuple[float, float], ...],
+                            List[Dict[str, Union[int,
+                                                 str,
+                                                 List[Dict[str, float]]]]]]]] = None
         self._min_frequency: float = math.nan
         self._max_frequency: float = math.nan
         self._sources: List[str] = []
 
-        def merge_catalogs(*args: List[Dict[str, Union[int, str, List[Dict[str, float]]]]]):
-            return sum(args)
+        def merge_catalogs(*args: List[Dict[str, Union[int, str, List[Dict[str, float]]]]]) \
+                -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]:
+            return sum(args, [])
 
-        def merge_frequency_tuples(*args: Tuple[float, float]) -> Tuple[Tuple[float, float], ...]:
+        def merge_frequency_tuples(*args: Union[Tuple[float, float], List[Real]]) -> Tuple[Tuple[float, float], ...]:
             if not args:
                 return tuple()
             ranges: Tuple[Tuple[float, float], ...] = tuple()
@@ -50,7 +37,7 @@ class Catalog:
                 if skip > 0:
                     skip -= 1
                     continue
-                current_range: Tuple[float, float] = args[i]
+                current_range: Tuple[float, float] = (float(args[i][0]), float(args[i][-1]))
                 current_min: float = min(current_range)
                 current_max: float = max(current_range)
                 for r in args[1 + i:]:
@@ -71,7 +58,9 @@ class Catalog:
                     if isinstance(content, bytes):
                         content = content.decode()
                     try:
-                        json_data: Dict = json.loads(content)
+                        json_data: Dict[str, Union[List[Real],
+                                                   List[Dict[str, Union[int, str, List[Dict[str, float]]]]]]] \
+                            = json.loads(content)
                     except json.decoder.JSONDecodeError:
                         pass
                     else:
@@ -82,7 +71,7 @@ class Catalog:
                             }
                         else:
                             self._data = {
-                                CATALOG: merge_catalogs(self._data[CATALOG], json_data[CATALOG]),
+                                CATALOG: merge_catalogs(self.catalog, json_data[CATALOG]),
                                 FREQUENCY: merge_frequency_tuples(*self._data[FREQUENCY], json_data[FREQUENCY])
                             }
                         self._sources.append(filename)
@@ -178,7 +167,7 @@ class Catalog:
 
         def filter_by_frequency_and_intensity(catalog_entry: Dict[str, Union[int, str, List[Dict[str, float]]]]) \
                 -> Dict[str, Union[int, str, List[Dict[str, float]]]]:
-            def intensity(_entry) -> float:
+            def intensity(_entry: Dict[str, float]) -> float:
                 if catalog_entry[DEGREES_OF_FREEDOM] >= 0 and temperature > 0. and temperature != T0:
                     return (_entry[INTENSITY]
                             + ((0.5 * catalog_entry[DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
@@ -262,7 +251,7 @@ class Catalog:
                 unique_entries.append(selected_entries[i])
         return unique_entries
 
-    def print(self, **kwargs):
+    def print(self, **kwargs: Union[None, int, float, str]) -> None:
         """
         Print a table of the filtered catalog entries
 
@@ -274,17 +263,13 @@ class Catalog:
         frequencies: List[float] = []
         intensities: List[float] = []
         for entry in entries:
-            for line in entry[LINES]:
+            for line in cast(List[Dict[str, float]], entry[LINES]):
                 names.append(entry[NAME])
                 frequencies.append(line[FREQUENCY])
                 intensities.append(line[INTENSITY])
 
         def max_width(items: List[Any]) -> int:
-            w: int = 0
-            for item in items:
-                s = str(item)
-                w = max(w, len(s))
-            return w
+            return max(len(str(item)) for item in items)
 
         names_width: int = max_width(names)
         frequencies_width: int = max_width(frequencies)

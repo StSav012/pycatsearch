@@ -7,9 +7,9 @@ from catalog import Catalog
 from gui._ui import UI
 
 
-def run():
-    app = QApplication(sys.argv)
-    window = UI(Catalog(*sys.argv[1:]))
+def run() -> None:
+    app: QApplication = QApplication(sys.argv)
+    window: UI = UI(Catalog(*sys.argv[1:]))
     window.show()
     app.exec()
 

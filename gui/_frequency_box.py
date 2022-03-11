@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
-from typing import List
+from typing import Any, List
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, \
@@ -13,7 +13,7 @@ __all__ = ['FrequencyBox']
 
 
 class FrequencyBox(QTabWidget):
-    def __init__(self, settings: Settings, *args, **kwargs):
+    def __init__(self, settings: Settings, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self._settings: Settings = settings
@@ -76,7 +76,7 @@ class FrequencyBox(QTabWidget):
         self._spin_frequency_center.editingFinished.connect(self.on_spin_frequency_center_edited)
         self._spin_frequency_deviation.editingFinished.connect(self.on_spin_frequency_deviation_edited)
 
-    def load_settings(self):
+    def load_settings(self) -> None:
         self._settings.beginGroup('search')
         self._settings.beginGroup('frequency')
         self._frequency_from = self._settings.value('from', self._spin_frequency_from.value(), float)
@@ -86,7 +86,7 @@ class FrequencyBox(QTabWidget):
         self._settings.endGroup()
         self._settings.endGroup()
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         self._settings.beginGroup('search')
         self._settings.beginGroup('frequency')
         self._settings.setValue('from', self._frequency_from)
@@ -110,28 +110,29 @@ class FrequencyBox(QTabWidget):
         else:
             return self._frequency_center + self._frequency_deviation
 
-    def set_frequency_limits(self, min_value: float, max_value: float):
+    def set_frequency_limits(self, min_value: float, max_value: float) -> None:
         frequency_spins: List[QDoubleSpinBox] = [self._spin_frequency_from, self._spin_frequency_to,
                                                  self._spin_frequency_center]
         min_value = self._settings.from_mhz(min_value)
         max_value = self._settings.from_mhz(max_value)
+        spin: QDoubleSpinBox
         for spin in frequency_spins:
             spin.setMinimum(min_value)
             spin.setMaximum(max_value)
 
-    def on_spin_frequency_from_edited(self):
+    def on_spin_frequency_from_edited(self) -> None:
         self._frequency_from = self._settings.to_mhz(self._spin_frequency_from.value())
 
-    def on_spin_frequency_to_edited(self):
+    def on_spin_frequency_to_edited(self) -> None:
         self._frequency_to = self._settings.to_mhz(self._spin_frequency_to.value())
 
-    def on_spin_frequency_center_edited(self):
+    def on_spin_frequency_center_edited(self) -> None:
         self._frequency_center = self._settings.to_mhz(self._spin_frequency_center.value())
 
-    def on_spin_frequency_deviation_edited(self):
+    def on_spin_frequency_deviation_edited(self) -> None:
         self._frequency_deviation = self._settings.to_mhz(self._spin_frequency_deviation.value())
 
-    def fill_parameters(self):
+    def fill_parameters(self) -> None:
         frequency_suffix: int = self._settings.frequency_unit
         frequency_suffix_str: str = ' ' + self._settings.FREQUENCY_UNITS[frequency_suffix]
         if frequency_suffix in (0, 1, 2):  # MHz, GHz, cm⁻¹

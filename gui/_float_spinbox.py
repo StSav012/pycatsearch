@@ -1,25 +1,17 @@
+# -*- coding: utf-8 -*-
 import math
-from typing import List, Optional, Tuple, Type
+from typing import Final, List, Optional, Tuple
 
 from PyQt5.QtGui import QValidator
 from PyQt5.QtWidgets import QDoubleSpinBox, QWidget
 
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
-
-
-    Final = _Final()
+__all__ = ['FloatSpinBox']
 
 
 class FloatSpinBox(QDoubleSpinBox):
     MODES: Final[List[str]] = ['auto', 'fixed', 'scientific']
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._mode: str = 'auto'
         self._decimals: int = 2
@@ -30,7 +22,7 @@ class FloatSpinBox(QDoubleSpinBox):
         return self._mode
 
     @mode.setter
-    def mode(self, new_mode: str):
+    def mode(self, new_mode: str) -> None:
         if new_mode not in self.MODES:
             raise ValueError(f'Invalid mode: {new_mode}')
         self._mode = new_mode

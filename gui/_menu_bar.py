@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from typing import Type
+from typing import Any
 
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMenu, QMenuBar, \
-    QStyle
+from PyQt5.QtWidgets import QAction, QMenu, QMenuBar, QStyle
+
 
 class MenuBar(QMenuBar):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.menu_file: QMenu = QMenu(self.tr('&File'), self)
         self.menu_help: QMenu = QMenu(self.tr('&Help'), self)

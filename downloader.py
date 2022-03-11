@@ -3,16 +3,14 @@ import gzip
 import json
 import math
 import sys
-from typing import Dict, List, Tuple, Union
+from http.client import HTTPResponse
+from typing import Any, BinaryIO, Dict, List, Tuple, Union, cast
 from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from catalog_entry import CatalogEntry
 from utils import *
-
-if sys.version_info < (3, 6):
-    raise ImportError('Compatible only with Python 3.6 and newer')
 
 
 def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -> \
@@ -25,29 +23,32 @@ def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -
     """
 
     def get(url: str) -> str:
-        response = urlopen(url)
+        response: HTTPResponse = urlopen(url)
         return response.read().decode()
 
-    def post(url: str, data: Dict) -> str:
-        response = urlopen(Request(url, data=urlencode(data).encode()))
+    def post(url: str, data: Dict[str, Any]) -> str:
+        response: HTTPResponse = urlopen(Request(url, data=urlencode(data).encode()))
         return response.read().decode()
 
     def get_species() -> List[Dict[str, Union[int, str]]]:
         def purge_null_data(entry: Dict[str, Union[None, int, str]]) -> Dict[str, Union[int, str]]:
-            for key, value in entry.copy().items():
-                if value is None or value in ('', 'None'):
-                    del entry[key]
+            key: str
+            value: Union[None, int, str]
+            return dict((key, value) for key, value in entry.items() if value is not None and value not in ('', 'None'))
+
+        def trim_strings(entry: Dict[str, Union[None, int, str]]) -> Dict[str, Union[None, int, str]]:
+            key: str
+            for key in entry:
+                if isinstance(entry[key], str):
+                    entry[key] = cast(str, entry[key]).strip()
             return entry
 
-        def trim_strings(entry: Dict[str, Union[None, int, str]]) -> Dict[str, Union[int, str]]:
-            for key, value in entry.items():
-                if isinstance(value, str):
-                    entry[key] = entry[key].strip()
-            return entry
-
-        data = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1}))
+        data: Dict[str, Union[int, str, List[Dict[str, Union[None, int, str]]]]] \
+            = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1}))
         if 'species' in data:
-            return [purge_null_data(trim_strings(s)) for s in data['species']]
+            return cast(List[Dict[str, Union[int, str]]],
+                        [purge_null_data(trim_strings(s))
+                         for s in cast(List[Dict[str, Union[None, int, str]]], data['species'])])
         else:
             return []
 
@@ -56,7 +57,7 @@ def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -
         if SPECIES_TAG not in species_entry:
             # nothing to go on with
             return dict()
-        species_tag: int = species_entry[SPECIES_TAG]
+        species_tag: int = cast(int, species_entry[SPECIES_TAG])
         fn: str = f'c{species_tag:06}.cat'
         if species_tag % 1000 > 500:
             fn = 'https://cdms.astro.uni-koeln.de/classic/entries/' + fn
@@ -87,7 +88,7 @@ def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -
 
 def save_catalog(filename: str,
                  frequency_limits: Tuple[float, float] = (-math.inf, math.inf), *,
-                 qt_json_filename: str = '', qt_json_zipped: bool = True):
+                 qt_json_filename: str = '', qt_json_zipped: bool = True) -> bool:
     """
     Download and save the spectral lines catalog data
 
@@ -103,26 +104,30 @@ def save_catalog(filename: str,
     if not filename.endswith('.json.gz'):
         filename += '.json.gz'
     catalog: List[Dict[str, Union[int, str, List[Dict[str, float]]]]] = get_catalog(frequency_limits)
-    if catalog:
-        with gzip.open(filename, 'wb') as f:
-            f.write(json.dumps({
-                CATALOG: catalog,
-                FREQUENCY: frequency_limits
-            }, indent=4).encode())
-        if qt_json_filename:
-            from PyQt5.QtCore import qCompress, QJsonDocument
-            if qt_json_zipped:
-                with open(qt_json_filename, 'wb') as f:
-                    f.write(qCompress(QJsonDocument({
-                        CATALOG: catalog,
-                        FREQUENCY: frequency_limits
-                    }).toBinaryData()).data())
-            else:
-                with open(qt_json_filename, 'wb') as f:
-                    f.write(QJsonDocument({
-                        CATALOG: catalog,
-                        FREQUENCY: frequency_limits
-                    }).toBinaryData().data())
+    if not catalog:
+        return False
+
+    f: Union[BinaryIO, gzip.GzipFile]
+    with gzip.open(filename, 'wb') as f:
+        f.write(json.dumps({
+            CATALOG: catalog,
+            FREQUENCY: frequency_limits
+        }, indent=4).encode())
+    if qt_json_filename:
+        from PyQt5.QtCore import qCompress, QJsonDocument
+        if qt_json_zipped:
+            with open(qt_json_filename, 'wb') as f:
+                f.write(qCompress(QJsonDocument({
+                    CATALOG: catalog,
+                    FREQUENCY: frequency_limits
+                }).toBinaryData()).data())
+        else:
+            with open(qt_json_filename, 'wb') as f:
+                f.write(QJsonDocument({
+                    CATALOG: catalog,
+                    FREQUENCY: frequency_limits
+                }).toBinaryData().data())
+    return True
 
 
 if __name__ == '__main__':

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import math
+from typing import Dict
 
 from utils import *
 
 
 class CatalogEntry:
     def __init__(self, spcat_line: str = '', *, frequency: float = math.nan, intensity: float = math.nan,
-                 degrees_of_freedom: int = -1, lower_state_energy: float = math.nan):
+                 degrees_of_freedom: int = -1, lower_state_energy: float = math.nan) -> None:
         self.FREQ: float  # frequency, MHz, mandatory
         self.INT: float  # intensity, log10(nm²×MHz), mandatory
         self.DR: int  # degrees of freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
@@ -44,8 +45,8 @@ class CatalogEntry:
     def lower_state_energy(self) -> float:
         return self.ELO
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, float]:
         return {'frequency': self.FREQ, 'intensity': self.INT, 'lowerstateenergy': self.ELO}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.FREQ} {self.INT} {self.ELO}'

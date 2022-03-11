@@ -1,18 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
 from pathlib import Path
-from typing import Type, List
+from typing import Final, List
 
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
-
-
-    Final = _Final()
 
 __author__: Final[str] = 'StSav012'
 __original_name__: Final[str] = 'pycatsearch'

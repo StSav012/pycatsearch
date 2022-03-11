@@ -1,17 +1,10 @@
 # -*- coding: utf-8 -*-
 import html
+import html.entities
 import math
 import os
-from typing import Tuple, Union, Type, List, Dict
-
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
-    Final = _Final()
+from numbers import Real
+from typing import Dict, Final, List, Tuple, Union, cast
 
 
 __all__ = ['UPDATED',
@@ -101,10 +94,11 @@ HUMAN_READABLE: Final[Dict[str, str]] = {
 def within(x: float, limits: Union[Tuple[float, float], Tuple[Tuple[float, float], ...]]) -> bool:
     if len(limits) < 2:
         raise ValueError('Invalid limits')
-    if isinstance(limits[0], (int, float)):
-        return min(limits) <= x <= max(limits)
-    elif isinstance(limits[0], tuple):
-        return any(min(limit) <= x <= max(limit) for limit in limits)
+    if all(isinstance(cast(float, limit), Real) for limit in limits):
+        return min(cast(Tuple[float, float], limits)) <= x <= max(cast(Tuple[float, float], limits))
+    elif all(isinstance(limit, tuple) for limit in limits):
+        return any(min(cast(Tuple[float, float], limit)) <= x <= max(cast(Tuple[float, float], limit))
+                   for limit in limits)
     else:
         raise TypeError('Invalid limits type')
 
@@ -277,7 +271,7 @@ def chem_html(formula: str) -> str:
             s = s[:number_start] + '<sub>' + s[number_start:] + '</sub>'
         return s
 
-    def prefix(s: str):
+    def prefix(s: str) -> str:
         no_digits: bool = False
         _i: int = len(s)
         while not no_digits:
@@ -297,7 +291,7 @@ def chem_html(formula: str) -> str:
                 return '<i>' + s[:_i] + '</i>' + s[_i:]
         return s
 
-    def charge(s: str):
+    def charge(s: str) -> str:
         if s[-1] in '+-':
             return s[:-1] + '<sup>' + s[-1] + '</sup>'
         return s
@@ -337,17 +331,19 @@ def best_name(entry: Dict[str, Union[int, str, List[Dict[str, float]]]],
               allow_html: bool = True) -> str:
     if allow_html and ISOTOPOLOG in entry and entry[ISOTOPOLOG]:
         if allow_html:
-            if (is_good_html(entry[MOLECULE_SYMBOL])
+            if (is_good_html(str(entry[MOLECULE_SYMBOL]))
                     and ((STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == entry[ISOTOPOLOG])
                          or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == entry[ISOTOPOLOG]))):
                 if STATE_HTML in entry and entry[STATE_HTML]:
                     # span tags are needed when the molecule symbol is malformed
-                    return f'<span>{entry[MOLECULE_SYMBOL]}</span>, {chem_html(tex_to_html_entity(entry[STATE_HTML]))}'
-                return entry[MOLECULE_SYMBOL]
+                    return f'<span>{entry[MOLECULE_SYMBOL]}</span>, ' \
+                           f'{chem_html(tex_to_html_entity(str(entry[STATE_HTML])))}'
+                return str(entry[MOLECULE_SYMBOL])
             else:
                 if STATE_HTML in entry and entry[STATE_HTML]:
-                    return f'{chem_html(entry[ISOTOPOLOG])}, {chem_html(tex_to_html_entity(entry[STATE_HTML]))}'
-                return chem_html(entry[ISOTOPOLOG])
+                    return f'{chem_html(str(entry[ISOTOPOLOG]))}, ' \
+                           f'{chem_html(tex_to_html_entity(str(entry[STATE_HTML])))}'
+                return chem_html(str(entry[ISOTOPOLOG]))
         else:
             if STATE_HTML in entry and entry[STATE_HTML]:
                 return f'{entry[ISOTOPOLOG]}, {remove_html(tex_to_html_entity(entry[STATE_HTML]))}'
@@ -357,9 +353,9 @@ def best_name(entry: Dict[str, Union[int, str, List[Dict[str, float]]]],
 
     for key in (NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA):
         if key in entry and entry[key]:
-            return chem_html(entry[key]) if allow_html else entry[key]
+            return chem_html(str(entry[key])) if allow_html else str(entry[key])
     if TRIVIAL_NAME in entry and entry[TRIVIAL_NAME]:
-        return entry[TRIVIAL_NAME]
+        return str(entry[TRIVIAL_NAME])
     if SPECIES_TAG in entry and entry[SPECIES_TAG]:
         return str(entry[SPECIES_TAG])
     return 'no name'
@@ -375,8 +371,8 @@ def remove_html(line: str) -> str:
     tag_end: int = new_line.find('>', tag_start)
     while tag_start != -1 and tag_end != -1:
         new_line = new_line[:tag_start] + new_line[tag_end + 1:]
-        tag_start: int = new_line.find('<')
-        tag_end: int = new_line.find('>', tag_start)
+        tag_start = new_line.find('<')
+        tag_end = new_line.find('>', tag_start)
     return html.unescape(new_line).lstrip()
 
 

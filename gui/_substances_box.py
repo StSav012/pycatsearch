@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget, \
@@ -13,7 +13,7 @@ __all__ = ['SubstancesBox']
 
 
 class SubstancesBox(QGroupBox):
-    def __init__(self, catalog: Catalog, settings: Settings, *args, **kwargs):
+    def __init__(self, catalog: Catalog, settings: Settings, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self._catalog: Catalog = catalog
@@ -52,7 +52,7 @@ class SubstancesBox(QGroupBox):
 
         self.load_settings()
 
-    def update_selected_substances(self):
+    def update_selected_substances(self) -> None:
         if self.isChecked():
             for i in range(self._list_substance.count()):
                 item: QListWidgetItem = self._list_substance.item(i)
@@ -65,18 +65,19 @@ class SubstancesBox(QGroupBox):
 
     def filter_substances_list(self, filter_text: str) -> List[str]:
         list_items: List[str] = []
+        plain_text_name: str
         if filter_text:
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                 for entry in self._catalog.catalog:
-                    plain_text_name: str = remove_html(entry[name_key])
+                    plain_text_name = remove_html(str(entry[name_key]))
                     if (name_key in entry and plain_text_name.startswith(filter_text)
                             and plain_text_name not in list_items):
                         list_items.append(plain_text_name)
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                 for entry in self._catalog.catalog:
-                    plain_text_name: str = remove_html(entry[name_key])
+                    plain_text_name = remove_html(str(entry[name_key]))
                     if name_key in entry and filter_text in plain_text_name and plain_text_name not in list_items:
                         list_items.append(plain_text_name)
             if filter_text.isdecimal():
@@ -87,13 +88,13 @@ class SubstancesBox(QGroupBox):
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                 for entry in self._catalog.catalog:
-                    plain_text_name: str = remove_html(entry[name_key])
+                    plain_text_name = remove_html(str(entry[name_key]))
                     if plain_text_name not in list_items:
                         list_items.append(plain_text_name)
             list_items = sorted(list_items)
         return list_items
 
-    def fill_substances_list(self, filter_text: Optional[str] = None):
+    def fill_substances_list(self, filter_text: Optional[str] = None) -> None:
         if not filter_text:
             filter_text = self._text_substance.text()
 
@@ -106,20 +107,20 @@ class SubstancesBox(QGroupBox):
             new_item.setCheckState(Qt.Checked if text in self._selected_substances else Qt.Unchecked)
             self._list_substance.addItem(new_item)
 
-    def on_text_changed(self, current_text: str):
+    def on_text_changed(self, current_text: str) -> None:
         self.fill_substances_list(current_text)
 
-    def on_check_save_selection_toggled(self, new_state):
+    def on_check_save_selection_toggled(self, new_state: bool) -> None:
         if not new_state:
             self._selected_substances.clear()
             self.update_selected_substances()
 
-    def on_button_select_none_clicked(self):
+    def on_button_select_none_clicked(self) -> None:
         for i in range(self._list_substance.count()):
             self._list_substance.item(i).setCheckState(Qt.Unchecked)
         self._selected_substances.clear()
 
-    def load_settings(self):
+    def load_settings(self) -> None:
         self._settings.beginGroup('search')
         self._settings.beginGroup('selection')
         self._text_substance.setText(self._settings.value('filter', self._text_substance.text(), str))
@@ -128,7 +129,7 @@ class SubstancesBox(QGroupBox):
         self._settings.endGroup()
         self._settings.endGroup()
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         self._settings.beginGroup('search')
         self._settings.beginGroup('selection')
         self._settings.setValue('filter', self._text_substance.text())
@@ -142,7 +143,7 @@ class SubstancesBox(QGroupBox):
         return self._catalog
 
     @catalog.setter
-    def catalog(self, new_value: Catalog):
+    def catalog(self, new_value: Catalog) -> None:
         self._catalog = new_value
         self.fill_substances_list()
 

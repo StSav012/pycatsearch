@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import math
 from base64 import b64encode
-from typing import Dict, List, Tuple, Type, Union
+from typing import Any, Dict, Final, List, Optional, Tuple, Union
 
-from PyQt5.QtCore import QAbstractTableModel, QByteArray, QModelIndex, QPoint, QRect, QSize, Qt
+from PyQt5.QtCore import QAbstractTableModel, QByteArray, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
 from PyQt5.QtGui import QAbstractTextDocumentLayout, QCloseEvent, QIcon, QPainter, QPixmap, QTextDocument
 from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QApplication, QDesktopWidget, \
     QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QHeaderView, QMainWindow, QMessageBox, QPushButton, \
@@ -19,21 +19,10 @@ from gui._substance_info import SubstanceInfo
 from gui._substances_box import SubstancesBox
 from utils import *
 
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
+CatalogEntry = Dict[str, Union[int, str, List[Dict[str, float]]]]
 
 
-    Final = _Final()
-
-CatalogEntry: Final[Type] = Dict[str, Union[int, str, List[Dict[str, float]]]]
-
-
-def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.PlainText):
+def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.PlainText) -> None:
     from PyQt5.QtGui import QClipboard
     from PyQt5.QtCore import QMimeData
 
@@ -49,7 +38,7 @@ def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.Plain
     clipboard.setMimeData(mime_data, QClipboard.Clipboard)
 
 
-def substitute(fmt: str, *args) -> str:
+def substitute(fmt: str, *args: Any) -> str:
     res: str = fmt
     for index, value in enumerate(args):
         res = res.replace(f'{{{index}}}', str(value))
@@ -58,23 +47,24 @@ def substitute(fmt: str, *args) -> str:
 
 class HTMLDelegate(QStyledItemDelegate):
     @staticmethod
-    def anchorAt(html, point):
-        doc = QTextDocument()
+    def anchorAt(html: str, point: Union[QPoint, QPointF]) -> str:
+        doc: QTextDocument = QTextDocument()
         doc.setHtml(html)
-        text_layout = doc.documentLayout()
+        text_layout: QAbstractTextDocumentLayout = doc.documentLayout()
         return text_layout.anchorAt(point)
 
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         self.initStyleOption(option, index)
+        style: QStyle
         if option.widget:
-            style: QStyle = option.widget.style()
+            style = option.widget.style()
         else:
-            style: QStyle = QApplication.style()
+            style = QApplication.style()
         doc: QTextDocument = QTextDocument()
         doc.setHtml(option.text)
         option.text = ''
         style.drawControl(QStyle.CE_ItemViewItem, option, painter)
-        ctx = QAbstractTextDocumentLayout.PaintContext()
+        ctx: QAbstractTextDocumentLayout.PaintContext = QAbstractTextDocumentLayout.PaintContext()
         text_rect: QRect = style.subElementRect(QStyle.SE_ItemViewItemText, option)
         painter.save()
         painter.translate(text_rect.topLeft())
@@ -83,19 +73,19 @@ class HTMLDelegate(QStyledItemDelegate):
         doc.documentLayout().draw(painter, ctx)
         painter.restore()
 
-    def sizeHint(self, option, index):
-        options = QStyleOptionViewItem(option)
+    def sizeHint(self, option: Optional[QStyleOptionViewItem], index: QModelIndex) -> QSize:
+        options: QStyleOptionViewItem = QStyleOptionViewItem(option)
         self.initStyleOption(options, index)
         doc: QTextDocument = QTextDocument()
         doc.setHtml(options.text)
         doc.setTextWidth(options.rect.width())
-        return QSize(doc.idealWidth(), doc.size().height())
+        return QSize(round(doc.idealWidth()), round(doc.size().height()))
 
 
 class LinesListModel(QAbstractTableModel):
     ROW_BATCH_COUNT: Final[int] = 5
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._entries: List[CatalogEntry] = []
         self._data: List[Tuple[int, str, float, float, float]] = []
@@ -109,19 +99,19 @@ class LinesListModel(QAbstractTableModel):
             substitute(unit_format, self.tr("Lower state energy"), self.parent().settings.energy_unit_str),
         ]
 
-    def update_units(self):
+    def update_units(self) -> None:
         unit_format: Final[str] = self.tr('{0} [{1}]', 'unit format')
         self._header[1] = substitute(unit_format, self.tr("Frequency"), self.parent().settings.frequency_unit_str)
         self._header[2] = substitute(unit_format, self.tr("Intensity"), self.parent().settings.intensity_unit_str)
         self._header[3] = substitute(unit_format, self.tr("Lower state energy"), self.parent().settings.energy_unit_str)
 
-    def rowCount(self, parent=None) -> int:
+    def rowCount(self, parent: QModelIndex = ...) -> int:
         return min(len(self._data), self._rows_loaded)
 
-    def columnCount(self, parent=None) -> int:
+    def columnCount(self, parent: QModelIndex = ...) -> int:
         return len(self._header)
 
-    def data(self, index: QModelIndex, role=Qt.DisplayRole):
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Optional[Union[int, str, float]]:
         if index.isValid():
             if role == Qt.DisplayRole:
                 data_column: Final[int] = {0: 1, 1: 2, 2: 4, 3: 6}[index.column()]
@@ -131,28 +121,28 @@ class LinesListModel(QAbstractTableModel):
     def row(self, row_index: int) -> Tuple[int, str, float, float, float]:
         return self._data[row_index]
 
-    def item(self, row_index: int, column_index: int) -> Tuple[int, str, float, float, float]:
+    def item(self, row_index: int, column_index: int) -> Union[int, str, float]:
         data_column: Final[int] = {0: 1, 1: 2, 2: 4, 3: 6}[column_index]
         return self._data[row_index][data_column]
 
-    def raw_item(self, row_index: int, column_index: int) -> Tuple[int, str, float, float, float]:
+    def raw_item(self, row_index: int, column_index: int) -> Union[int, str, float]:
         return self._data[row_index][column_index]
 
-    def headerData(self, col, orientation, role=None):
+    def headerData(self, col: int, orientation: Qt.Orientation, role: int = ...) -> Optional[str]:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self._header[col]
         return None
 
-    def setHeaderData(self, section: int, orientation: Qt.Orientation, value, role: int = ...) -> bool:
+    def setHeaderData(self, section: int, orientation: Qt.Orientation, value: str, role: int = ...) -> bool:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole and 0 <= section < len(self._header):
             self._header[section] = value
             return True
         return False
 
-    def clear(self):
+    def clear(self) -> None:
         self.set_entries([])
 
-    def set_entries(self, new_data: List[CatalogEntry]):
+    def set_entries(self, new_data: List[CatalogEntry]) -> None:
         def frequency_str(line: Dict[str, float]) -> Tuple[str, float]:
             frequency: float = self.parent().settings.from_mhz(line[FREQUENCY])
             frequency_suffix: int = self.parent().settings.frequency_unit
@@ -178,7 +168,7 @@ class LinesListModel(QAbstractTableModel):
                 return f'{lower_state_energy:.4f}', lower_state_energy
 
         self.beginResetModel()
-        self._entries = new_data[:]
+        self._entries = new_data.copy()
         entry: CatalogEntry
         self._data = [
             (
@@ -200,10 +190,10 @@ class LinesListModel(QAbstractTableModel):
         self._data.sort(key=lambda l: l[data_column], reverse=bool(order != Qt.AscendingOrder))
         self.endResetModel()
 
-    def canFetchMore(self, index=QModelIndex()):
+    def canFetchMore(self, index: QModelIndex = QModelIndex()) -> bool:
         return len(self._data) > self._rows_loaded
 
-    def fetchMore(self, index=QModelIndex()):
+    def fetchMore(self, index: QModelIndex = QModelIndex()) -> None:
         # https://sateeshkumarb.wordpress.com/2012/04/01/paginated-display-of-table-data-in-pyqt/
         reminder: int = len(self._data) - self._rows_loaded
         items_to_fetch: int = min(reminder, self.ROW_BATCH_COUNT)
@@ -213,7 +203,7 @@ class LinesListModel(QAbstractTableModel):
 
 
 class UI(QMainWindow):
-    def __init__(self, catalog: Catalog, *args, **kwargs):
+    def __init__(self, catalog: Catalog, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.catalog: Catalog = catalog
         self.settings: Settings = Settings('SavSoft', 'CatSearch', self)
@@ -234,9 +224,9 @@ class UI(QMainWindow):
 
         self.menu_bar: MenuBar = MenuBar(self)
 
-        self.status_bar = QStatusBar(self)
+        self.status_bar: QStatusBar = QStatusBar(self)
 
-        def setup_ui():
+        def setup_ui() -> None:
             # https://ru.stackoverflow.com/a/1032610
             window_icon: QPixmap = QPixmap()
             window_icon.loadFromData(QByteArray.fromBase64(b64encode(b'''\
@@ -360,23 +350,23 @@ class UI(QMainWindow):
         self.save_settings()
         event.accept()
 
-    def on_spin_temperature_changed(self, arg1: float):
+    def on_spin_temperature_changed(self, arg1: float) -> None:
         self.temperature = self.settings.to_k(arg1)
         self.fill_table()
 
-    def on_spin_intensity_changed(self, arg1: float):
+    def on_spin_intensity_changed(self, arg1: float) -> None:
         self.minimal_intensity = self.settings.to_log10_sq_nm_mhz(arg1)
         if self.results_shown:
             self.fill_table()
 
-    def on_table_context_menu_requested(self, pos: QPoint):
+    def on_table_context_menu_requested(self, pos: QPoint) -> None:
         self.menu_bar.menu_edit.popup(self.results_table.viewport().mapToGlobal(pos))
 
-    def on_table_item_selection_changed(self):
+    def on_table_item_selection_changed(self) -> None:
         self.menu_bar.action_copy.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
         self.menu_bar.action_substance_info.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
 
-    def on_action_load_triggered(self):
+    def on_action_load_triggered(self) -> None:
         self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
         new_catalog_file_names: List[str]
         new_catalog_file_names, _ = QFileDialog.getOpenFileNames(
@@ -400,7 +390,7 @@ class UI(QMainWindow):
         else:
             self.status_bar.clearMessage()
 
-    def on_action_reload_triggered(self):
+    def on_action_reload_triggered(self) -> None:
         if self.catalog.sources:
             self.status_bar.showMessage(self.tr('Loading...'))
             self.catalog = Catalog(*self.catalog.sources)
@@ -432,7 +422,7 @@ class UI(QMainWindow):
                 '<tr><td>' +
                 f'</td>{self.settings.csv_separator}<td>'.join(
                     [row[1]] +
-                    [(row[_c * 2] + ((' ' + units[_c]) if self.settings.with_units and _c in units else ''))
+                    [(str(row[_c * 2]) + ((' ' + units[_c]) if self.settings.with_units and _c in units else ''))
                      for _c, _a in zip(range(1, self.results_model.columnCount()),
                                        self.menu_bar.menu_columns.actions())
                      if _a.isChecked()]
@@ -441,7 +431,7 @@ class UI(QMainWindow):
             )
         return '<table>' + self.settings.line_end + ''.join(text) + '</table>'
 
-    def on_action_preferences_triggered(self):
+    def on_action_preferences_triggered(self) -> None:
         self.preferences_dialog.exec()
         self.fill_parameters()
         if self.results_model.rowCount():
@@ -450,14 +440,14 @@ class UI(QMainWindow):
         else:
             self.preset_table()
 
-    def on_action_quit_triggered(self):
+    def on_action_quit_triggered(self) -> None:
         self.close()
 
-    def on_action_clear_triggered(self):
+    def on_action_clear_triggered(self) -> None:
         self.results_model.clear()
         self.preset_table()
 
-    def copy_selected_items(self, col: int):
+    def copy_selected_items(self, col: int) -> None:
         if col >= self.results_model.columnCount():
             return
 
@@ -473,25 +463,25 @@ class UI(QMainWindow):
         else:
             copy_to_clipboard(self.settings.line_end.join(text_to_copy), Qt.PlainText)
 
-    def on_action_copy_name_triggered(self):
+    def on_action_copy_name_triggered(self) -> None:
         self.copy_selected_items(0)
 
-    def on_action_copy_frequency_triggered(self):
+    def on_action_copy_frequency_triggered(self) -> None:
         self.copy_selected_items(1)
 
-    def on_action_copy_intensity_triggered(self):
+    def on_action_copy_intensity_triggered(self) -> None:
         self.copy_selected_items(2)
 
-    def on_action_copy_lower_state_energy_triggered(self):
+    def on_action_copy_lower_state_energy_triggered(self) -> None:
         self.copy_selected_items(3)
 
-    def on_action_copy_triggered(self):
+    def on_action_copy_triggered(self) -> None:
         copy_to_clipboard(self.stringify_selection_html(), Qt.RichText)
 
-    def on_action_select_all_triggered(self):
+    def on_action_select_all_triggered(self) -> None:
         self.results_table.selectAll()
 
-    def on_action_substance_info_triggered(self):
+    def on_action_substance_info_triggered(self) -> None:
         if self.results_table.selectionModel().selectedRows():
             syn: SubstanceInfo = SubstanceInfo(
                 self.catalog,
@@ -499,22 +489,22 @@ class UI(QMainWindow):
                 self)
             syn.exec()
 
-    def toggle_results_table_column_visibility(self, column: int, is_visible: bool):
+    def toggle_results_table_column_visibility(self, column: int, is_visible: bool) -> None:
         if is_visible:
             self.results_table.showColumn(column)
         else:
             self.results_table.hideColumn(column)
 
-    def on_action_show_frequency_toggled(self, is_checked: bool):
+    def on_action_show_frequency_toggled(self, is_checked: bool) -> None:
         self.toggle_results_table_column_visibility(1, is_checked)
 
-    def on_action_show_intensity_toggled(self, is_checked: bool):
+    def on_action_show_intensity_toggled(self, is_checked: bool) -> None:
         self.toggle_results_table_column_visibility(2, is_checked)
 
-    def on_action_show_lower_state_energy_toggled(self, is_checked: bool):
+    def on_action_show_lower_state_energy_toggled(self, is_checked: bool) -> None:
         self.toggle_results_table_column_visibility(3, is_checked)
 
-    def on_action_about_triggered(self):
+    def on_action_about_triggered(self) -> None:
         QMessageBox.about(self,
                           self.tr("About CatSearch"),
                           "<html><p>"
@@ -542,10 +532,10 @@ class UI(QMainWindow):
                               "<a href='https://github.com/StSav012/pycatsearch'>GitHub</a>")
                           + "</p></html>")
 
-    def on_action_about_qt_triggered(self):
+    def on_action_about_qt_triggered(self) -> None:
         QMessageBox.aboutQt(self)
 
-    def load_settings(self):
+    def load_settings(self) -> None:
         self.settings.beginGroup('search')
         catalog_file_names: List[str] = []
         for i in range(self.settings.beginReadArray('catalogFiles')):
@@ -587,7 +577,7 @@ class UI(QMainWindow):
                 self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
                 self.box_substance.catalog = self.catalog
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         self.settings.beginGroup('search')
         self.settings.beginWriteArray('catalogFiles', len(self.catalog.sources))
         for i, s in enumerate(self.catalog.sources):
@@ -610,7 +600,7 @@ class UI(QMainWindow):
         self.box_frequency.save_settings()
         self.settings.sync()
 
-    def preset_table(self):
+    def preset_table(self) -> None:
         self.results_shown = False
         self.results_table.clearSelection()
         self.menu_bar.action_copy.setDisabled(True)
@@ -621,7 +611,7 @@ class UI(QMainWindow):
         self.results_model.update_units()
         self.update()
 
-    def fill_parameters(self):
+    def fill_parameters(self) -> None:
         # frequency
         if not self.catalog.is_empty:
             self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
@@ -643,7 +633,7 @@ class UI(QMainWindow):
         else:
             raise IndexError('Wrong temperature unit index', temperature_suffix)
 
-    def fill_table(self):
+    def fill_table(self) -> None:
         self.preset_table()
         self.results_table.setSortingEnabled(False)
 
@@ -673,7 +663,7 @@ class UI(QMainWindow):
         self.menu_bar.menu_copy_only.setEnabled(bool(entries))
         self.results_shown = True
 
-    def on_button_search_clicked(self):
+    def on_button_search_clicked(self) -> None:
         self.status_bar.showMessage(self.tr('Searching...'))
         self.box_substance.update_selected_substances()
         self.fill_table()

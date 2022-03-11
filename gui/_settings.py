@@ -1,21 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
-from typing import Callable, List, Type, Union
+from typing import Any, Callable, Dict, Final, List, Tuple, Union
 
 from PyQt5.QtCore import QSettings
 
 from utils import *
-
-try:
-    from typing import Final
-except ImportError:
-    class _Final:
-        @staticmethod
-        def __getitem__(item: Type):
-            return item
-
-
-    Final = _Final()
 
 
 __all__ = ['Settings']
@@ -32,7 +21,7 @@ class Settings(QSettings):
     CSV_SEPARATORS: Final[List[str]] = [r'comma (,)', r'tab (\t)', r'semicolon (;)', r'space ( )']
     _CSV_SEPARATORS: Final[List[str]] = [',', '\t', ';', ' ']
 
-    DIALOG = {
+    DIALOG: Dict[str, Dict[str, Tuple[Any, ...]]] = {
         'Start': {
             'Load catalogs when the program starts': ('load_last_catalogs',),
         },
@@ -85,7 +74,7 @@ class Settings(QSettings):
     TO_K: Final[List[Callable[[float], float]]] = [lambda x: x, lambda x: x + 273.15]
     FROM_K: Final[List[Callable[[float], float]]] = [lambda x: x, lambda x: x - 273.15]
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         super().__init__(*args)
 
     @property
@@ -96,7 +85,7 @@ class Settings(QSettings):
         return v
 
     @frequency_unit.setter
-    def frequency_unit(self, new_value: Union[int, str]):
+    def frequency_unit(self, new_value: Union[int, str]) -> None:
         self.beginGroup('frequency')
         if isinstance(new_value, str):
             new_value = self.FREQUENCY_UNITS.index(new_value)
@@ -132,7 +121,7 @@ class Settings(QSettings):
         return v
 
     @intensity_unit.setter
-    def intensity_unit(self, new_value: Union[int, str]):
+    def intensity_unit(self, new_value: Union[int, str]) -> None:
         self.beginGroup('intensity')
         if isinstance(new_value, str):
             new_value = self.INTENSITY_UNITS.index(new_value)
@@ -168,7 +157,7 @@ class Settings(QSettings):
         return v
 
     @energy_unit.setter
-    def energy_unit(self, new_value: Union[int, str]):
+    def energy_unit(self, new_value: Union[int, str]) -> None:
         self.beginGroup('energy')
         if isinstance(new_value, str):
             new_value = self.ENERGY_UNITS.index(new_value)
@@ -204,7 +193,7 @@ class Settings(QSettings):
         return v
 
     @temperature_unit.setter
-    def temperature_unit(self, new_value: Union[int, str]):
+    def temperature_unit(self, new_value: Union[int, str]) -> None:
         self.beginGroup('temperature')
         if isinstance(new_value, str):
             new_value = self.TEMPERATURE_UNITS.index(new_value)
@@ -240,7 +229,7 @@ class Settings(QSettings):
         return v
 
     @load_last_catalogs.setter
-    def load_last_catalogs(self, new_value: bool):
+    def load_last_catalogs(self, new_value: bool) -> None:
         self.beginGroup('start')
         self.setValue('loadLastCatalogs', new_value)
         self.endGroup()
@@ -253,7 +242,7 @@ class Settings(QSettings):
         return v
 
     @rich_text_in_formulas.setter
-    def rich_text_in_formulas(self, new_value: bool):
+    def rich_text_in_formulas(self, new_value: bool) -> None:
         self.beginGroup('display')
         self.setValue('richTextInFormulas', new_value)
         self.endGroup()
@@ -266,7 +255,7 @@ class Settings(QSettings):
         return self._LINE_ENDS[v]
 
     @line_end.setter
-    def line_end(self, new_value: str):
+    def line_end(self, new_value: str) -> None:
         self.beginGroup('export')
         self.setValue('lineEnd', self._LINE_ENDS.index(new_value))
         self.endGroup()
@@ -279,7 +268,7 @@ class Settings(QSettings):
         return self._CSV_SEPARATORS[v]
 
     @csv_separator.setter
-    def csv_separator(self, new_value: str):
+    def csv_separator(self, new_value: str) -> None:
         self.beginGroup('export')
         self.setValue('csvSeparator', self._CSV_SEPARATORS.index(new_value))
         self.endGroup()
@@ -292,7 +281,7 @@ class Settings(QSettings):
         return v
 
     @with_units.setter
-    def with_units(self, new_value: bool):
+    def with_units(self, new_value: bool) -> None:
         self.beginGroup('export')
         self.setValue('withUnits', new_value)
         self.endGroup()
@@ -305,7 +294,7 @@ class Settings(QSettings):
         return v
 
     @timeout.setter
-    def timeout(self, new_value: float):
+    def timeout(self, new_value: float) -> None:
         self.beginGroup('search')
         self.setValue('timeout', new_value)
         self.endGroup()
