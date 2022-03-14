@@ -100,7 +100,7 @@ This is the graphical interface built with `PyQt5`. Just run `main.py` and see f
 
 ### Requirements
 
-The code is developed under `python 3.8`. It should work under `python 3.6` but not tested.
+The code is developed under `python 3.10`. It should work under `python 3.8` but not tested.
 
 If you want to save the catalog as a [Qt JSON Document](https://doc.qt.io/qt-5/qjsondocument.html),
 then `PyQt5` is needed. Otherwise, only the built-ins are used.
