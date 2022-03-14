@@ -5,12 +5,11 @@ import math
 import os.path
 import time
 from numbers import Real
-from typing import Any, Callable, Dict, Final, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from utils import *
 
-
-_TIME_FUNCTION: Final[Callable[[], float]] = time.monotonic if hasattr(time, 'monotonic') else time.time
+__all__ = ['Catalog']
 
 
 class Catalog:
@@ -53,7 +52,9 @@ class Catalog:
 
         for filename in catalog_file_names:
             if os.path.exists(filename) and os.path.isfile(filename):
-                with gzip.GzipFile(filename, 'rb') if filename.endswith('.json.gz') else open(filename, 'r') as fin:
+                with (gzip.GzipFile(filename, 'rb')
+                      if filename.casefold().endswith('.json.gz')
+                      else open(filename, 'r')) as fin:
                     content = fin.read()
                     if isinstance(content, bytes):
                         content = content.decode()
@@ -190,12 +191,12 @@ class Catalog:
                 or min_frequency > self._max_frequency
                 or max_frequency < self._min_frequency):
             raise ValueError('Invalid frequency range')
-        start_time: float = _TIME_FUNCTION()
+        start_time: float = time.monotonic()
         if (species_tag or inchi or trivial_name or structural_formula or name or stoichiometric_formula
                 or isotopolog or state or degrees_of_freedom or any_name or any_formula or any_name_or_formula):
             selected_entries = []
             for entry in self.catalog:
-                if timeout is not None and 0.0 < timeout <= _TIME_FUNCTION() - start_time:
+                if timeout is not None and 0.0 < timeout <= time.monotonic() - start_time:
                     break
                 if ((not species_tag or (SPECIES_TAG in entry and entry[SPECIES_TAG] == species_tag))
                         and (not inchi or (INCHI_KEY in entry and entry[INCHI_KEY] == inchi))
@@ -235,7 +236,7 @@ class Catalog:
         else:
             filtered_entries = [filter_by_frequency_and_intensity(entry)
                                 for entry in self._data[CATALOG]
-                                if timeout is None or (timeout > 0.0 and timeout >= _TIME_FUNCTION() - start_time)]
+                                if timeout is None or (timeout > 0.0 and timeout >= time.monotonic() - start_time)]
             selected_entries = [entry for entry in filtered_entries if entry[LINES]]
         unique_entries = selected_entries
         all_unique: bool = True  # unless the opposite is proven
