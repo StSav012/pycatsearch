@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import math
-from base64 import b64encode
 from typing import Any, Dict, Final, List, Optional, Tuple, Union
 
-from PyQt5.QtCore import QAbstractTableModel, QByteArray, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
+from PyQt5.QtCore import QAbstractTableModel, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
 from PyQt5.QtGui import QAbstractTextDocumentLayout, QCloseEvent, QIcon, QPainter, QPixmap, QTextDocument
-from PyQt5.QtWidgets import QAbstractItemView, QAbstractSpinBox, QApplication, QDesktopWidget, \
-    QDoubleSpinBox, QFileDialog, QFormLayout, QGridLayout, QHeaderView, QMainWindow, QMessageBox, QPushButton, \
-    QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView, QTableWidgetSelectionRange, QWidget
+from PyQt5.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDesktopWidget, QDoubleSpinBox,
+                             QFileDialog, QFormLayout, QGridLayout, QHeaderView, QMainWindow, QMessageBox, QPushButton,
+                             QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView,
+                             QTableWidgetSelectionRange, QWidget)
 
 from catalog import Catalog
 from gui._float_spinbox import FloatSpinBox
@@ -229,7 +229,7 @@ class UI(QMainWindow):
         def setup_ui() -> None:
             # https://ru.stackoverflow.com/a/1032610
             window_icon: QPixmap = QPixmap()
-            window_icon.loadFromData(QByteArray.fromBase64(b64encode(b'''\
+            window_icon.loadFromData(b'''\
             <svg height="64" width="64" version="1.1">
             <path stroke-linejoin="round" d="m6.722 8.432c-9.05 9.648-6.022 27.23 6.048 33.04 6.269 3.614 13.88 \
             3.1 20-0.1664l20 20c2.013 2.013 5.256 2.013 7.27 0l1.259-1.259c2.013-2.013 2.013-5.256 \
@@ -237,9 +237,8 @@ class UI(QMainWindow):
             0.53-9.28 2.72-12.64 6.104-0.321 0.294-0.626 0.597-0.918 0.908zm8.015 6.192c4.978-5.372 14.79-3.878 17.96 \
             2.714 3.655 6.341-0.6611 15.28-7.902 16.36-7.14 1.62-14.4-5.14-13.29-12.38 0.2822-2.51 1.441-4.907 \
             3.231-6.689z" stroke="#000" stroke-width="2.4" fill="#fff"/>
-            </svg>\
-            ''')), 'SVG')
-            self.setWindowIcon(QIcon(QPixmap(window_icon)))
+            </svg>''')
+            self.setWindowIcon(QIcon(window_icon))
 
             if UPDATED:
                 self.setWindowTitle(self.tr('PyQtCatSearch') + self.tr(' (as of {0})').format(UPDATED))
