@@ -14,6 +14,8 @@ from urllib.request import Request, urlopen
 from catalog_entry import CatalogEntry
 from utils import *
 
+__all__ = ['get_catalog', 'save_catalog']
+
 
 def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) -> \
         list[dict[str, int | str | list[dict[str, float]]]]:
