@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import gzip
 import json
-import math
 import sys
 from http.client import HTTPResponse
-from typing import Any, BinaryIO, Dict, List, Tuple, Union, cast
+from math import inf
+from typing import Any, BinaryIO, cast
 from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -13,8 +15,8 @@ from catalog_entry import CatalogEntry
 from utils import *
 
 
-def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -> \
-        List[Dict[str, Union[int, str, List[Dict[str, float]]]]]:
+def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) -> \
+        list[dict[str, int | str | list[dict[str, float]]]]:
     """
     Download the spectral lines catalog data
 
@@ -26,34 +28,31 @@ def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -
         response: HTTPResponse = urlopen(url)
         return response.read().decode()
 
-    def post(url: str, data: Dict[str, Any]) -> str:
+    def post(url: str, data: dict[str, Any]) -> str:
         response: HTTPResponse = urlopen(Request(url, data=urlencode(data).encode()))
         return response.read().decode()
 
-    def get_species() -> List[Dict[str, Union[int, str]]]:
-        def purge_null_data(entry: Dict[str, Union[None, int, str]]) -> Dict[str, Union[int, str]]:
+    def get_species() -> list[dict[str, int | str]]:
+        def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
             key: str
-            value: Union[None, int, str]
+            value: None | int | str
             return dict((key, value) for key, value in entry.items() if value is not None and value not in ('', 'None'))
 
-        def trim_strings(entry: Dict[str, Union[None, int, str]]) -> Dict[str, Union[None, int, str]]:
+        def trim_strings(entry: dict[str, None | int | str]) -> dict[str, None | int | str]:
             key: str
             for key in entry:
                 if isinstance(entry[key], str):
                     entry[key] = cast(str, entry[key]).strip()
             return entry
 
-        data: Dict[str, Union[int, str, List[Dict[str, Union[None, int, str]]]]] \
+        data: dict[str, int | str | list[dict[str, None | int | str]]] \
             = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1}))
         if 'species' in data:
-            return cast(List[Dict[str, Union[int, str]]],
-                        [purge_null_data(trim_strings(s))
-                         for s in cast(List[Dict[str, Union[None, int, str]]], data['species'])])
+            return [purge_null_data(trim_strings(s)) for s in data['species']]
         else:
             return []
 
-    def get_substance_catalog(species_entry: Dict[str, Union[int, str]]) \
-            -> Dict[str, Union[int, str, List[Dict[str, float]]]]:
+    def get_substance_catalog(species_entry: dict[str, int | str]) -> dict[str, int | str | list[dict[str, float]]]:
         if SPECIES_TAG not in species_entry:
             # nothing to go on with
             return dict()
@@ -80,14 +79,13 @@ def get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) -
                     if within(catalog_entry.frequency, frequency_limits)]
         }
 
-    catalog: List[Dict[str, Union[int, str, List[Dict[str, float]]]]] \
-        = [get_substance_catalog(_e) for _e in get_species()]
+    catalog: list[dict[str, int | str | list[dict[str, float]]]] = [get_substance_catalog(_e) for _e in get_species()]
     return [catalog_entry for catalog_entry in catalog
             if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]]
 
 
 def save_catalog(filename: str,
-                 frequency_limits: Tuple[float, float] = (-math.inf, math.inf), *,
+                 frequency_limits: tuple[float, float] = (-inf, inf), *,
                  qt_json_filename: str = '', qt_json_zipped: bool = True) -> bool:
     """
     Download and save the spectral lines catalog data
@@ -103,30 +101,42 @@ def save_catalog(filename: str,
     """
     if not filename.endswith('.json.gz'):
         filename += '.json.gz'
-    catalog: List[Dict[str, Union[int, str, List[Dict[str, float]]]]] = get_catalog(frequency_limits)
+    catalog: list[dict[str, int | str | list[dict[str, float]]]] = get_catalog(frequency_limits)
     if not catalog:
         return False
 
-    f: Union[BinaryIO, gzip.GzipFile]
+    f: BinaryIO | gzip.GzipFile
     with gzip.open(filename, 'wb') as f:
         f.write(json.dumps({
             CATALOG: catalog,
             FREQUENCY: frequency_limits
         }, indent=4).encode())
     if qt_json_filename:
-        from PyQt5.QtCore import qCompress, QJsonDocument
-        if qt_json_zipped:
-            with open(qt_json_filename, 'wb') as f:
-                f.write(qCompress(QJsonDocument({
-                    CATALOG: catalog,
-                    FREQUENCY: frequency_limits
-                }).toBinaryData()).data())
+        import importlib
+
+        qt_core = None
+        for qt in ('PySide6', 'PyQt6', 'PyQt5', 'PySide2'):
+            try:
+                qt_core = importlib.import_module(f'{qt}.QtCore')
+            except (ImportError, ModuleNotFoundError):
+                pass
+            else:
+                break
+        if qt_core is not None:
+            if qt_json_zipped:
+                with open(qt_json_filename, 'wb') as f:
+                    f.write(qt_core.qCompress(qt_core.QJsonDocument({
+                        CATALOG: catalog,
+                        FREQUENCY: frequency_limits
+                    }).toBinaryData()).data())
+            else:
+                with open(qt_json_filename, 'wb') as f:
+                    f.write(qt_core.QJsonDocument({
+                        CATALOG: catalog,
+                        FREQUENCY: frequency_limits
+                    }).toBinaryData().data())
         else:
-            with open(qt_json_filename, 'wb') as f:
-                f.write(QJsonDocument({
-                    CATALOG: catalog,
-                    FREQUENCY: frequency_limits
-                }).toBinaryData().data())
+            print('No Qt realization found', file=sys.stderr)
     return True
 
 
