@@ -94,6 +94,14 @@ downloader.save_catalog('catalog.json.gz', (115000, 178000), qt_json_filename='c
     - `bool qt_json_zipped`: the flag to indicate whether the data stored into ``qt_json_filename`` is compressed.
       Default is `True`.
       
+### `async_downloader`
+
+This is just like `downloader`, but much, much faster.
+The download speed is limited by the remote servers.
+Most of the time, it takes no more than 90 seconds to load all the data.
+
+Requires `aiohttp`
+
 ### `gui`
 
 This is the graphical interface built with `PyQt5`. Just run `main.py` and see for yourself.
