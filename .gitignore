@@ -1,3 +1,5 @@
 .*
 *.json.gz
+*.qbjs
+*.qbjsz
 typograph.py
