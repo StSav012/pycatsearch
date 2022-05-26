@@ -100,16 +100,24 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
             return {
                 **species_entry,
                 DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
-                LINES: [catalog_entry.to_dict()
-                        for catalog_entry in catalog_entries
-                        if within(catalog_entry.frequency, frequency_limits)]
+                LINES: [_catalog_entry.to_dict()
+                        for _catalog_entry in catalog_entries
+                        if within(_catalog_entry.frequency, frequency_limits)]
             }
 
-        catalog: list[dict[str, int | str | list[dict[str, float]]]] \
-            = list(await asyncio.gather(*[asyncio.create_task(get_substance_catalog(_e))
-                                          for _e in await get_species()]))
-        return [catalog_entry for catalog_entry in catalog
-                if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]]
+        species: list[dict[str, int | str]] = await get_species()
+        catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
+        species_count: int = len(species)
+        catalog_entry: dict[str, int | str | list[dict[str, float]]]
+        future_entry: asyncio.Future[dict[str, int | str | list[dict[str, float]]]]
+        for future_entry in asyncio.as_completed([asyncio.create_task(get_substance_catalog(_e)) for _e in species]):
+            catalog_entry = await future_entry
+            if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]:
+                catalog.append(catalog_entry)
+                print(f'{len(catalog)} / {species_count} ')
+            else:
+                species_count -= 1
+        return catalog
 
     return asyncio.run(async_get_catalog())
 
