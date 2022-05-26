@@ -123,14 +123,13 @@ def save_catalog(filename: str,
             else:
                 break
         if qt_core is not None:
-            if qt_json_zipped:
-                with open(qt_json_filename, 'wb') as f:
+            with open(qt_json_filename, 'wb') as f:
+                if qt_json_zipped:
                     f.write(qt_core.qCompress(qt_core.QJsonDocument({
                         CATALOG: catalog,
                         FREQUENCY: frequency_limits
                     }).toBinaryData()).data())
-            else:
-                with open(qt_json_filename, 'wb') as f:
+                else:
                     f.write(qt_core.QJsonDocument({
                         CATALOG: catalog,
                         FREQUENCY: frequency_limits
