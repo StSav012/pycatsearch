@@ -119,8 +119,8 @@ The functions behave _almost_ exactly like their namesakes from `downloader`.
 
 ###### `Downloader` class
 An instance of `Downloader` class is created in `get_catalog` function.
-Then, a separate process takes care of the downloading.
-If the process fails, `get_catalog` returns an empty list, almost never raising an exception.
+Then, a separate thread takes care of the downloading.
+If the thread fails, `get_catalog` returns an empty list, almost never raising an exception.
 
 The class constructor accepts the frequency limits, just like `get_catalog` function.
 
@@ -140,11 +140,14 @@ This is the graphical interface built with `PyQt5`. Just run `main.py` and see f
 
 The code is developed under `python 3.10`. It should work under `python 3.8` but merely tested.
 
+The non-GUI parts require absolute minimum of non-standard modules.
 If you want to save the catalog as a [Qt JSON Document](https://doc.qt.io/qt-5/qjsondocument.html),
 then `PyQt5` is needed.
 If you want to download the catalog data faster, consider `async_downloader` module;
 it requires `aiohttp`.
 Otherwise, only the built-ins are used.
+
+The GUI requires `PyQt5`, `pathvalidate`, and `aiohttp`.
 
 ## File Format
 
