@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import math
-from typing import Dict
 
 from utils import *
 
@@ -47,7 +48,7 @@ class CatalogEntry:
     def lower_state_energy(self) -> float:
         return self.ELO
 
-    def to_dict(self) -> Dict[str, float]:
+    def to_dict(self) -> dict[str, float]:
         return {FREQUENCY: self.FREQ, INTENSITY: self.INT, LOWER_STATE_ENERGY: self.ELO}
 
     def __repr__(self) -> str:

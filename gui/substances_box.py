@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
-from typing import Any, List, Optional, Set
+from __future__ import annotations
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget, \
-    QListWidgetItem, QPushButton, QVBoxLayout
+from PyQt5.QtWidgets import (QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget,
+                             QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
 
 from catalog import Catalog
-from gui._settings import Settings
+from gui.settings import Settings
 from utils import *
 
 __all__ = ['SubstancesBox']
 
 
 class SubstancesBox(QGroupBox):
-    def __init__(self, catalog: Catalog, settings: Settings, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, catalog: Catalog, settings: Settings, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
 
         self._catalog: Catalog = catalog
         self._settings: Settings = settings
-        self._selected_substances: Set[str] = set()
+        self._selected_substances: set[str] = set()
 
         self._layout_substance: QVBoxLayout = QVBoxLayout(self)
         self._text_substance: QLineEdit = QLineEdit(self)
@@ -63,8 +63,8 @@ class SubstancesBox(QGroupBox):
         else:
             self._selected_substances.clear()
 
-    def filter_substances_list(self, filter_text: str) -> List[str]:
-        list_items: List[str] = []
+    def filter_substances_list(self, filter_text: str) -> list[str]:
+        list_items: list[str] = []
         plain_text_name: str
         if filter_text:
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
@@ -94,7 +94,7 @@ class SubstancesBox(QGroupBox):
             list_items = sorted(list_items)
         return list_items
 
-    def fill_substances_list(self, filter_text: Optional[str] = None) -> None:
+    def fill_substances_list(self, filter_text: str | None = None) -> None:
         if not filter_text:
             filter_text = self._text_substance.text()
 
@@ -148,5 +148,5 @@ class SubstancesBox(QGroupBox):
         self.fill_substances_list()
 
     @property
-    def selected_substances(self) -> Set[str]:
+    def selected_substances(self) -> set[str]:
         return self._selected_substances

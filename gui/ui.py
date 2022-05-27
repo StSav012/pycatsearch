@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import math
-from typing import Any, Dict, Final, List, Optional, Tuple, Union
+from typing import Any, Final
 
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
 from PyQt5.QtGui import QAbstractTextDocumentLayout, QCloseEvent, QIcon, QPainter, QPixmap, QTextDocument
@@ -10,19 +12,19 @@ from PyQt5.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, 
                              QTableWidgetSelectionRange, QWidget)
 
 from catalog import Catalog
-from gui._float_spinbox import FloatSpinBox
-from gui._frequency_box import FrequencyBox
-from gui._menu_bar import MenuBar
-from gui._preferences import Preferences
-from gui._settings import Settings
-from gui._substance_info import SubstanceInfo
-from gui._substances_box import SubstancesBox
+from gui.float_spinbox import FloatSpinBox
+from gui.frequency_box import FrequencyBox
+from gui.menu_bar import MenuBar
+from gui.preferences import Preferences
+from gui.settings import Settings
+from gui.substance_info import SubstanceInfo
+from gui.substances_box import SubstancesBox
 from utils import *
 
-CatalogEntry = Dict[str, Union[int, str, List[Dict[str, float]]]]
+__all__ = ['UI']
 
 
-def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.PlainText) -> None:
+def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.PlainText) -> None:
     from PyQt5.QtGui import QClipboard
     from PyQt5.QtCore import QMimeData
 
@@ -30,7 +32,7 @@ def copy_to_clipboard(text: str, text_type: Union[Qt.TextFormat, str] = Qt.Plain
     mime_data: QMimeData = QMimeData()
     if isinstance(text_type, str):
         mime_data.setData(text_type, text.encode())
-    elif text_type == Qt.RichText:
+    elif text_type == Qt.TextFormat.RichText:
         mime_data.setHtml(wrap_in_html(text))
         mime_data.setText(remove_html(text))
     else:
@@ -47,7 +49,7 @@ def substitute(fmt: str, *args: Any) -> str:
 
 class HTMLDelegate(QStyledItemDelegate):
     @staticmethod
-    def anchorAt(html: str, point: Union[QPoint, QPointF]) -> str:
+    def anchorAt(html: str, point: QPoint | QPointF) -> str:
         doc: QTextDocument = QTextDocument()
         doc.setHtml(html)
         text_layout: QAbstractTextDocumentLayout = doc.documentLayout()
@@ -73,7 +75,7 @@ class HTMLDelegate(QStyledItemDelegate):
         doc.documentLayout().draw(painter, ctx)
         painter.restore()
 
-    def sizeHint(self, option: Optional[QStyleOptionViewItem], index: QModelIndex) -> QSize:
+    def sizeHint(self, option: QStyleOptionViewItem | None, index: QModelIndex) -> QSize:
         options: QStyleOptionViewItem = QStyleOptionViewItem(option)
         self.initStyleOption(options, index)
         doc: QTextDocument = QTextDocument()
@@ -85,25 +87,26 @@ class HTMLDelegate(QStyledItemDelegate):
 class LinesListModel(QAbstractTableModel):
     ROW_BATCH_COUNT: Final[int] = 5
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self._entries: List[CatalogEntry] = []
-        self._data: List[Tuple[int, str, float, float, float]] = []
+        self._settings: Settings = settings
+        self._entries: list[dict[str, int | str | list[dict[str, float]]]] = []
+        self._data: list[tuple[int, str, float, float, float]] = []
         self._rows_loaded: int = self.ROW_BATCH_COUNT
 
         unit_format: Final[str] = self.tr('{0} [{1}]', 'unit format')
-        self._header: Final[List[str]] = [
+        self._header: Final[list[str]] = [
             self.tr('Substance'),
-            substitute(unit_format, self.tr("Frequency"), self.parent().settings.frequency_unit_str),
-            substitute(unit_format, self.tr("Intensity"), self.parent().settings.intensity_unit_str),
-            substitute(unit_format, self.tr("Lower state energy"), self.parent().settings.energy_unit_str),
+            substitute(unit_format, self.tr("Frequency"), self._settings.frequency_unit_str),
+            substitute(unit_format, self.tr("Intensity"), self._settings.intensity_unit_str),
+            substitute(unit_format, self.tr("Lower state energy"), self._settings.energy_unit_str),
         ]
 
     def update_units(self) -> None:
         unit_format: Final[str] = self.tr('{0} [{1}]', 'unit format')
-        self._header[1] = substitute(unit_format, self.tr("Frequency"), self.parent().settings.frequency_unit_str)
-        self._header[2] = substitute(unit_format, self.tr("Intensity"), self.parent().settings.intensity_unit_str)
-        self._header[3] = substitute(unit_format, self.tr("Lower state energy"), self.parent().settings.energy_unit_str)
+        self._header[1] = substitute(unit_format, self.tr("Frequency"), self._settings.frequency_unit_str)
+        self._header[2] = substitute(unit_format, self.tr("Intensity"), self._settings.intensity_unit_str)
+        self._header[3] = substitute(unit_format, self.tr("Lower state energy"), self._settings.energy_unit_str)
 
     def rowCount(self, parent: QModelIndex = ...) -> int:
         return min(len(self._data), self._rows_loaded)
@@ -111,24 +114,24 @@ class LinesListModel(QAbstractTableModel):
     def columnCount(self, parent: QModelIndex = ...) -> int:
         return len(self._header)
 
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Optional[Union[int, str, float]]:
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> int | str | float | None:
         if index.isValid():
             if role == Qt.DisplayRole:
                 data_column: Final[int] = {0: 1, 1: 2, 2: 4, 3: 6}[index.column()]
                 return self._data[index.row()][data_column]
         return None
 
-    def row(self, row_index: int) -> Tuple[int, str, float, float, float]:
+    def row(self, row_index: int) -> tuple[int, str, float, float, float]:
         return self._data[row_index]
 
-    def item(self, row_index: int, column_index: int) -> Union[int, str, float]:
+    def item(self, row_index: int, column_index: int) -> int | str | float:
         data_column: Final[int] = {0: 1, 1: 2, 2: 4, 3: 6}[column_index]
         return self._data[row_index][data_column]
 
-    def raw_item(self, row_index: int, column_index: int) -> Union[int, str, float]:
+    def raw_item(self, row_index: int, column_index: int) -> int | str | float:
         return self._data[row_index][column_index]
 
-    def headerData(self, col: int, orientation: Qt.Orientation, role: int = ...) -> Optional[str]:
+    def headerData(self, col: int, orientation: Qt.Orientation, role: int = ...) -> str | None:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self._header[col]
         return None
@@ -142,15 +145,15 @@ class LinesListModel(QAbstractTableModel):
     def clear(self) -> None:
         self.set_entries([])
 
-    def set_entries(self, new_data: List[CatalogEntry]) -> None:
-        def frequency_str(line: Dict[str, float]) -> Tuple[str, float]:
-            frequency: float = self.parent().settings.from_mhz(line[FREQUENCY])
-            frequency_suffix: int = self.parent().settings.frequency_unit
+    def set_entries(self, new_data: list[dict[str, int | str | list[dict[str, float]]]]) -> None:
+        def frequency_str(line: dict[str, float]) -> tuple[str, float]:
+            frequency: float = self._settings.from_mhz(line[FREQUENCY])
+            frequency_suffix: int = self._settings.frequency_unit
             precision: int = [4, 7, 8, 8][frequency_suffix]
             return f'{frequency:.{precision}f}', frequency
 
-        def intensity_str(line: Dict[str, float]) -> Tuple[str, float]:
-            intensity: float = self.parent().settings.from_log10_sq_nm_mhz(line[INTENSITY])
+        def intensity_str(line: dict[str, float]) -> tuple[str, float]:
+            intensity: float = self._settings.from_log10_sq_nm_mhz(line[INTENSITY])
             if intensity == 0.0:
                 return '0', intensity
             elif abs(intensity) < 0.1:
@@ -158,8 +161,8 @@ class LinesListModel(QAbstractTableModel):
             else:
                 return f'{intensity:.4f}', intensity
 
-        def lower_state_energy_str(line: Dict[str, float]) -> Tuple[str, float]:
-            lower_state_energy: float = self.parent().settings.from_rec_cm(line[LOWER_STATE_ENERGY])
+        def lower_state_energy_str(line: dict[str, float]) -> tuple[str, float]:
+            lower_state_energy: float = self._settings.from_rec_cm(line[LOWER_STATE_ENERGY])
             if lower_state_energy == 0.0:
                 return '0', lower_state_energy
             elif abs(lower_state_energy) < 0.1:
@@ -169,11 +172,11 @@ class LinesListModel(QAbstractTableModel):
 
         self.beginResetModel()
         self._entries = new_data.copy()
-        entry: CatalogEntry
+        entry: dict[str, int | str | list[dict[str, float]]]
         self._data = [
             (
                 entry[ID],
-                best_name(entry, self.parent().settings.rich_text_in_formulas),
+                best_name(entry, self._settings.rich_text_in_formulas),
                 *frequency_str(line),
                 *intensity_str(line),
                 *lower_state_energy_str(line),
@@ -219,7 +222,7 @@ class UI(QMainWindow):
         self.box_frequency: FrequencyBox = FrequencyBox(self.settings, self.central_widget)
         self.button_search: QPushButton = QPushButton(self.central_widget)
 
-        self.results_model: LinesListModel = LinesListModel(self)
+        self.results_model: LinesListModel = LinesListModel(self.settings, self)
         self.results_table: QTableView = QTableView(self.central_widget)
 
         self.menu_bar: MenuBar = MenuBar(self)
@@ -367,7 +370,7 @@ class UI(QMainWindow):
 
     def on_action_load_triggered(self) -> None:
         self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
-        new_catalog_file_names: List[str]
+        new_catalog_file_names: list[str]
         new_catalog_file_names, _ = QFileDialog.getOpenFileNames(
             self, self.tr('Load Catalog'),
             self.catalog.sources[0] if self.catalog.sources else '',
@@ -408,15 +411,15 @@ class UI(QMainWindow):
         Convert selected rows to string for copying as rich text
         :return: the rich text representation of the selected table lines
         """
-        text: List[str] = []
+        text: list[str] = []
         r: QModelIndex
-        units: Dict[int, str] = {
+        units: dict[int, str] = {
             1: self.settings.frequency_unit_str,
             2: self.settings.intensity_unit_str,
             3: self.settings.energy_unit_str,
         }
         for r in self.results_table.selectionModel().selectedRows():
-            row: Tuple[int, str, float, float, float] = self.results_model.row(r.row())
+            row: tuple[int, str, float, float, float] = self.results_model.row(r.row())
             text.append(
                 '<tr><td>' +
                 f'</td>{self.settings.csv_separator}<td>'.join(
@@ -450,10 +453,10 @@ class UI(QMainWindow):
         if col >= self.results_model.columnCount():
             return
 
-        def html_list(lines: List[str]) -> str:
+        def html_list(lines: list[str]) -> str:
             return '<ul><li>' + f'</li>{self.settings.line_end}<li>'.join(lines) + '</li></ul>'
 
-        text_to_copy: List[str] = []
+        text_to_copy: list[str] = []
         selection: QTableWidgetSelectionRange
         for row in self.results_table.selectionModel().selectedRows(col):
             text_to_copy.append(self.results_model.data(row))
@@ -536,7 +539,7 @@ class UI(QMainWindow):
 
     def load_settings(self) -> None:
         self.settings.beginGroup('search')
-        catalog_file_names: List[str] = []
+        catalog_file_names: list[str] = []
         for i in range(self.settings.beginReadArray('catalogFiles')):
             self.settings.setArrayIndex(i)
             path: str = self.settings.value('path', '', str)
@@ -636,7 +639,7 @@ class UI(QMainWindow):
         self.preset_table()
         self.results_table.setSortingEnabled(False)
 
-        entries: List[Dict[str, Union[int, str, List[Dict[str, float]]]]] = \
+        entries: list[dict[str, int | str | list[dict[str, float]]]] = \
             (sum(
                 (
                     self.catalog.filter(min_frequency=self.box_frequency.min_frequency,

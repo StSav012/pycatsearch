@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import gzip
 import json
 import math
 import os.path
 import time
 from numbers import Real
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Optional, cast
 
 from utils import *
 
@@ -15,28 +17,25 @@ __all__ = ['Catalog']
 class Catalog:
     def __init__(self, *catalog_file_names: str) -> None:
         self._data: Optional[
-            Dict[str, Union[Tuple[Tuple[float, float], ...],
-                            List[Dict[str, Union[int,
-                                                 str,
-                                                 List[Dict[str, float]]]]]]]] = None
+            dict[str, tuple[tuple[float, float], ...] | list[dict[str, int | str | list[dict[str, float]]]]]] = None
         self._min_frequency: float = math.nan
         self._max_frequency: float = math.nan
-        self._sources: List[str] = []
+        self._sources: list[str] = []
 
-        def merge_catalogs(*args: List[Dict[str, Union[int, str, List[Dict[str, float]]]]]) \
-                -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]:
+        def merge_catalogs(*args: list[dict[str, int | str | list[dict[str, float]]]]) \
+                -> list[dict[str, int | str | list[dict[str, float]]]]:
             return sum(args, [])
 
-        def merge_frequency_tuples(*args: Union[Tuple[float, float], List[Real]]) -> Tuple[Tuple[float, float], ...]:
+        def merge_frequency_tuples(*args: tuple[float, float] | list[Real]) -> tuple[tuple[float, float], ...]:
             if not args:
                 return tuple()
-            ranges: Tuple[Tuple[float, float], ...] = tuple()
+            ranges: tuple[tuple[float, float], ...] = tuple()
             skip: int = 0
             for i in range(len(args)):
                 if skip > 0:
                     skip -= 1
                     continue
-                current_range: Tuple[float, float] = (float(args[i][0]), float(args[i][-1]))
+                current_range: tuple[float, float] = (float(args[i][0]), float(args[i][-1]))
                 current_min: float = min(current_range)
                 current_max: float = max(current_range)
                 for r in args[1 + i:]:
@@ -59,8 +58,7 @@ class Catalog:
                     if isinstance(content, bytes):
                         content = content.decode()
                     try:
-                        json_data: Dict[str, Union[List[Real],
-                                                   List[Dict[str, Union[int, str, List[Dict[str, float]]]]]]] \
+                        json_data: dict[str, list[Real] | list[dict[str, int | str | list[dict[str, float]]]]] \
                             = json.loads(content)
                     except json.decoder.JSONDecodeError:
                         pass
@@ -82,15 +80,15 @@ class Catalog:
         return self._data is None
 
     @property
-    def sources(self) -> List[str]:
+    def sources(self) -> list[str]:
         return self._sources[:]
 
     @property
-    def catalog(self) -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]:
+    def catalog(self) -> list[dict[str, int | str | list[dict[str, float]]]]:
         return self._data[CATALOG] if self._data else []
 
     @property
-    def frequency_limits(self) -> Tuple[Tuple[float, float], ...]:
+    def frequency_limits(self) -> tuple[tuple[float, float], ...]:
         return self._data[FREQUENCY] if self._data else (-math.inf, math.inf)
 
     @property
@@ -120,7 +118,7 @@ class Catalog:
                state: str = '',
                degrees_of_freedom: Optional[int] = None,
                timeout: Optional[float] = None
-               ) -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]:
+               ) -> list[dict[str, int | str | list[dict[str, float]]]]:
         """
         Extract only the entries that match all the specified conditions
 
@@ -153,8 +151,8 @@ class Catalog:
         if self.is_empty:
             return []
 
-        def same_entry(entry_1: Dict[str, Union[int, str, List[Dict[str, float]]]],
-                       entry_2: Dict[str, Union[int, str, List[Dict[str, float]]]]) -> bool:
+        def same_entry(entry_1: dict[str, int | str | list[dict[str, float]]],
+                       entry_2: dict[str, int | str | list[dict[str, float]]]) -> bool:
             if len(entry_1) != len(entry_2):
                 return False
             for key, value in entry_1.items():
@@ -166,9 +164,9 @@ class Catalog:
                     return False
             return True
 
-        def filter_by_frequency_and_intensity(catalog_entry: Dict[str, Union[int, str, List[Dict[str, float]]]]) \
-                -> Dict[str, Union[int, str, List[Dict[str, float]]]]:
-            def intensity(_entry: Dict[str, float]) -> float:
+        def filter_by_frequency_and_intensity(catalog_entry: dict[str, int | str | list[dict[str, float]]]) \
+                -> dict[str, int | str | list[dict[str, float]]]:
+            def intensity(_entry: dict[str, float]) -> float:
                 if catalog_entry[DEGREES_OF_FREEDOM] >= 0 and temperature > 0. and temperature != T0:
                     return (_entry[INTENSITY]
                             + ((0.5 * catalog_entry[DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
@@ -177,7 +175,7 @@ class Catalog:
                 else:
                     return _entry[INTENSITY]
 
-            new_catalog_entry: Dict[str, Union[int, str, List[Dict[str, float]]]] = catalog_entry.copy()
+            new_catalog_entry: dict[str, int | str | list[dict[str, float]]] = catalog_entry.copy()
             if LINES in new_catalog_entry:
                 new_catalog_entry[LINES] = \
                     list(filter(lambda _e: (min_frequency <= _e[FREQUENCY] <= max_frequency
@@ -252,24 +250,24 @@ class Catalog:
                 unique_entries.append(selected_entries[i])
         return unique_entries
 
-    def print(self, **kwargs: Union[None, int, float, str]) -> None:
+    def print(self, **kwargs: None | int | float | str) -> None:
         """
         Print a table of the filtered catalog entries
 
         :param kwargs: all arguments that are valid for :func:`filter <catalog.Catalog.filter>`
         :return: nothing
         """
-        entries: List[Dict[str, Union[int, str, List[Dict[str, float]]]]] = self.filter(**kwargs)
-        names: List[str] = []
-        frequencies: List[float] = []
-        intensities: List[float] = []
+        entries: list[dict[str, int | str | list[dict[str, float]]]] = self.filter(**kwargs)
+        names: list[str] = []
+        frequencies: list[float] = []
+        intensities: list[float] = []
         for entry in entries:
-            for line in cast(List[Dict[str, float]], entry[LINES]):
+            for line in cast(list[dict[str, float]], entry[LINES]):
                 names.append(entry[NAME])
                 frequencies.append(line[FREQUENCY])
                 intensities.append(line[INTENSITY])
 
-        def max_width(items: List[Any]) -> int:
+        def max_width(items: list[Any]) -> int:
             return max(len(str(item)) for item in items)
 
         names_width: int = max_width(names)

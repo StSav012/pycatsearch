@@ -1,27 +1,28 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import os
-from typing import Any, Callable, Dict, Final, List, Tuple, Union
+from typing import Any, Callable, Final
 
 from PyQt5.QtCore import QSettings
 
 from utils import *
-
 
 __all__ = ['Settings']
 
 
 class Settings(QSettings):
     """ convenient internal representation of the application settings """
-    FREQUENCY_UNITS: Final[List[str]] = ['MHz', 'GHz', 'cm⁻¹', 'nm']
-    INTENSITY_UNITS: Final[List[str]] = ['lg(nm² × MHz)', 'nm² × MHz', 'lg(cm / molecule)', 'cm / molecule']
-    ENERGY_UNITS: Final[List[str]] = ['cm⁻¹', 'meV', 'J']
-    TEMPERATURE_UNITS: Final[List[str]] = ['K', '°C']
-    LINE_ENDS: Final[List[str]] = [r'Line Feed (\n)', r'Carriage Return (\r)', r'CR+LF (\r\n)', r'LF+CR (\n\r)']
-    _LINE_ENDS: Final[List[str]] = ['\n', '\r', '\r\n', '\n\r']
-    CSV_SEPARATORS: Final[List[str]] = [r'comma (,)', r'tab (\t)', r'semicolon (;)', r'space ( )']
-    _CSV_SEPARATORS: Final[List[str]] = [',', '\t', ';', ' ']
+    FREQUENCY_UNITS: Final[list[str]] = ['MHz', 'GHz', 'cm⁻¹', 'nm']
+    INTENSITY_UNITS: Final[list[str]] = ['lg(nm² × MHz)', 'nm² × MHz', 'lg(cm / molecule)', 'cm / molecule']
+    ENERGY_UNITS: Final[list[str]] = ['cm⁻¹', 'meV', 'J']
+    TEMPERATURE_UNITS: Final[list[str]] = ['K', '°C']
+    LINE_ENDS: Final[list[str]] = [r'Line Feed (\n)', r'Carriage Return (\r)', r'CR+LF (\r\n)', r'LF+CR (\n\r)']
+    _LINE_ENDS: Final[list[str]] = ['\n', '\r', '\r\n', '\n\r']
+    CSV_SEPARATORS: Final[list[str]] = [r'comma (,)', r'tab (\t)', r'semicolon (;)', r'space ( )']
+    _CSV_SEPARATORS: Final[list[str]] = [',', '\t', ';', ' ']
 
-    DIALOG: Dict[str, Dict[str, Tuple[Any, ...]]] = {
+    DIALOG: dict[str, dict[str, tuple[Any, ...]]] = {
         'Start': {
             'Load catalogs when the program starts': ('load_last_catalogs',),
         },
@@ -44,35 +45,35 @@ class Settings(QSettings):
         }
     }
 
-    TO_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, ghz_to_mhz, rec_cm_to_mhz, nm_to_mhz]
-    FROM_MHZ: Final[List[Callable[[float], float]]] = [lambda x: x, mhz_to_ghz, mhz_to_rec_cm, mhz_to_nm]
+    TO_MHZ: Final[list[Callable[[float], float]]] = [lambda x: x, ghz_to_mhz, rec_cm_to_mhz, nm_to_mhz]
+    FROM_MHZ: Final[list[Callable[[float], float]]] = [lambda x: x, mhz_to_ghz, mhz_to_rec_cm, mhz_to_nm]
 
-    TO_LOG10_SQ_NM_MHZ: Final[List[Callable[[float], float]]] = [
+    TO_LOG10_SQ_NM_MHZ: Final[list[Callable[[float], float]]] = [
         lambda x: x,
         sq_nm_mhz_to_log10_sq_nm_mhz,
         log10_cm_per_molecule_to_log10_sq_nm_mhz,
         cm_per_molecule_to_log10_sq_nm_mhz
     ]
-    FROM_LOG10_SQ_NM_MHZ: Final[List[Callable[[float], float]]] = [
+    FROM_LOG10_SQ_NM_MHZ: Final[list[Callable[[float], float]]] = [
         lambda x: x,
         log10_sq_nm_mhz_to_sq_nm_mhz,
         log10_sq_nm_mhz_to_log10_cm_per_molecule,
         log10_sq_nm_mhz_to_cm_per_molecule
     ]
 
-    TO_REC_CM: Final[List[Callable[[float], float]]] = [
+    TO_REC_CM: Final[list[Callable[[float], float]]] = [
         lambda x: x,
         meV_to_rec_cm,
         j_to_rec_cm
     ]
-    FROM_REC_CM: Final[List[Callable[[float], float]]] = [
+    FROM_REC_CM: Final[list[Callable[[float], float]]] = [
         lambda x: x,
         rec_cm_to_meV,
         rec_cm_to_j
     ]
 
-    TO_K: Final[List[Callable[[float], float]]] = [lambda x: x, lambda x: x + 273.15]
-    FROM_K: Final[List[Callable[[float], float]]] = [lambda x: x, lambda x: x - 273.15]
+    TO_K: Final[list[Callable[[float], float]]] = [lambda x: x, lambda x: x + 273.15]
+    FROM_K: Final[list[Callable[[float], float]]] = [lambda x: x, lambda x: x - 273.15]
 
     def __init__(self, *args: Any) -> None:
         super().__init__(*args)
@@ -85,7 +86,7 @@ class Settings(QSettings):
         return v
 
     @frequency_unit.setter
-    def frequency_unit(self, new_value: Union[int, str]) -> None:
+    def frequency_unit(self, new_value: int | str) -> None:
         self.beginGroup('frequency')
         if isinstance(new_value, str):
             new_value = self.FREQUENCY_UNITS.index(new_value)
@@ -121,7 +122,7 @@ class Settings(QSettings):
         return v
 
     @intensity_unit.setter
-    def intensity_unit(self, new_value: Union[int, str]) -> None:
+    def intensity_unit(self, new_value: int | str) -> None:
         self.beginGroup('intensity')
         if isinstance(new_value, str):
             new_value = self.INTENSITY_UNITS.index(new_value)
@@ -157,7 +158,7 @@ class Settings(QSettings):
         return v
 
     @energy_unit.setter
-    def energy_unit(self, new_value: Union[int, str]) -> None:
+    def energy_unit(self, new_value: int | str) -> None:
         self.beginGroup('energy')
         if isinstance(new_value, str):
             new_value = self.ENERGY_UNITS.index(new_value)
@@ -193,7 +194,7 @@ class Settings(QSettings):
         return v
 
     @temperature_unit.setter
-    def temperature_unit(self, new_value: Union[int, str]) -> None:
+    def temperature_unit(self, new_value: int | str) -> None:
         self.beginGroup('temperature')
         if isinstance(new_value, str):
             new_value = self.TEMPERATURE_UNITS.index(new_value)

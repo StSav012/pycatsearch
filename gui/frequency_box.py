@@ -1,27 +1,28 @@
 # -*- coding: utf-8 -*-
-import math
-from typing import Any, List
+from __future__ import annotations
+
+from math import inf
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, \
     QWidget
 
-from gui._settings import Settings
+from gui.settings import Settings
 from utils import *
 
 __all__ = ['FrequencyBox']
 
 
 class FrequencyBox(QTabWidget):
-    def __init__(self, settings: Settings, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
 
         self._settings: Settings = settings
 
-        self._frequency_from: float = -math.inf  # [MHz]
-        self._frequency_to: float = math.inf  # [MHz]
+        self._frequency_from: float = -inf  # [MHz]
+        self._frequency_to: float = inf  # [MHz]
         self._frequency_center: float = 0.0  # [MHz]
-        self._frequency_deviation: float = math.inf  # [MHz]
+        self._frequency_deviation: float = inf  # [MHz]
 
         self._page_by_range: QWidget = QWidget()
         self._layout_by_range: QFormLayout = QFormLayout(self._page_by_range)
@@ -111,7 +112,7 @@ class FrequencyBox(QTabWidget):
             return self._frequency_center + self._frequency_deviation
 
     def set_frequency_limits(self, min_value: float, max_value: float) -> None:
-        frequency_spins: List[QDoubleSpinBox] = [self._spin_frequency_from, self._spin_frequency_to,
+        frequency_spins: list[QDoubleSpinBox] = [self._spin_frequency_from, self._spin_frequency_to,
                                                  self._spin_frequency_center]
         min_value = self._settings.from_mhz(min_value)
         max_value = self._settings.from_mhz(max_value)
@@ -151,7 +152,7 @@ class FrequencyBox(QTabWidget):
             raise IndexError('Wrong frequency unit index', frequency_suffix)
         precision: int = [4, 7, 8, 8][frequency_suffix]
         step_factor: float = [2.5, 2.5, 2.5, 0.25][frequency_suffix]
-        frequency_spins: List[QDoubleSpinBox] = [self._spin_frequency_from, self._spin_frequency_to,
+        frequency_spins: list[QDoubleSpinBox] = [self._spin_frequency_from, self._spin_frequency_to,
                                                  self._spin_frequency_center, self._spin_frequency_deviation]
         for spin in frequency_spins:
             spin.setSuffix(frequency_suffix_str)

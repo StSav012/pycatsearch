@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import sys
 from pathlib import Path
-from typing import Final, List
+from typing import Final
 
 
 __author__: Final[str] = 'StSav012'
 __original_name__: Final[str] = 'pycatsearch'
 
-REQUIREMENTS: Final[List[str]] = ['PyQt5']
+REQUIREMENTS: Final[list[str]] = ['PyQt5']
 
 if __name__ == '__main__':
     if not hasattr(sys, '_MEIPASS') and not Path('.git').exists():

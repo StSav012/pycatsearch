@@ -1,35 +1,45 @@
 # -*- coding: utf-8 -*-
-from typing import Any
+from __future__ import annotations
 
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMenu, QMenuBar, QStyle
+from PyQt5.QtWidgets import QAction, QMenu, QMenuBar, QStyle, QWidget
+
+__all__ = ['MenuBar']
 
 
 class MenuBar(QMenuBar):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
         self.menu_file: QMenu = QMenu(self.tr('&File'), self)
         self.menu_help: QMenu = QMenu(self.tr('&Help'), self)
         self.menu_edit: QMenu = QMenu(self.tr('&Edit'), self)
         self.menu_columns: QMenu = QMenu(self.tr('&Columns'), self)
         self.menu_copy_only: QMenu = QMenu(self.tr('Copy &Only'), self.menu_edit)
-        self.action_load: QAction = QAction(QIcon.fromTheme('document-open'), self.tr('&Load Catalog...'),
-                                            self.menu_file)
+        self.action_load: QAction = QAction(
+            QIcon.fromTheme('document-open', self.style().standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton)),
+            self.tr('&Load Catalog...'),
+            self.menu_file)
         self.action_preferences: QAction = QAction('&Preferences...', self.menu_file)
         self.action_quit: QAction = QAction(QIcon.fromTheme('application-exit'), self.tr('&Quit'),
                                             self.menu_file)
-        self.action_about: QAction = QAction(QIcon.fromTheme('help-about'), self.tr('&About...'),
-                                             self.menu_help)
+        self.action_about: QAction = QAction(
+            QIcon.fromTheme('help-about', self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogInfoView)),
+            self.tr('&About...'),
+            self.menu_help)
         self.action_about_qt: QAction = QAction(self.style().standardIcon(QStyle.SP_TitleBarMenuButton),
                                                 self.tr('About &Qt...'), self.menu_help)
         self.action_copy: QAction = QAction(QIcon.fromTheme('edit-copy'), self.tr('Co&py Selection'),
                                             self.menu_edit)
-        self.action_clear: QAction = QAction(QIcon.fromTheme('edit-clear'), self.tr('&Clear Results'),
-                                             self.menu_edit)
+        self.action_clear: QAction = QAction(
+            QIcon.fromTheme('edit-clear', self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton)),
+            self.tr('&Clear Results'),
+            self.menu_edit)
         self.action_select_all: QAction = QAction(QIcon.fromTheme('edit-select-all'), self.tr('&Select All'),
                                                   self.menu_edit)
-        self.action_reload: QAction = QAction(QIcon.fromTheme('document-revert'), self.tr('&Reload Catalogs'),
-                                              self.menu_file)
+        self.action_reload: QAction = QAction(
+            QIcon.fromTheme('document-revert', self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload)),
+            self.tr('&Reload Catalogs'),
+            self.menu_file)
         self.action_copy_name: QAction = QAction(self.tr('&Substance Name'), self.menu_copy_only)
         self.action_copy_frequency: QAction = QAction(self.tr('&Frequency'), self.menu_copy_only)
         self.action_copy_intensity: QAction = QAction(self.tr('&Intensity'), self.menu_copy_only)

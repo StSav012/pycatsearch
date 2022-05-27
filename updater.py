@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import io
 import json
 import urllib.request
 import zipfile
 from http.client import HTTPResponse
 from pathlib import Path
-from typing import BinaryIO, Dict, Final, List, TextIO, Union, cast
+from typing import BinaryIO, Final, TextIO, cast
+
+__all__ = ['update']
 
 
 def update(user: str, repo_name: str, branch: str = 'master') -> None:
@@ -20,17 +24,11 @@ def update(user: str, repo_name: str, branch: str = 'master') -> None:
     content: bytes = r.read()
     if not content:
         return
-    d: List[Dict[str,
-                 Union[str,
-                       Dict[str,
-                            Union[str,
-                                  int,
-                                  bool,
-                                  Dict[str,
-                                       Union[None,
-                                             str,
-                                             bool]]]],
-                       List[Dict[str, str]]]]] \
+    d: list[dict[str,
+                 str | dict[str,
+                            str | int | bool | dict[str,
+                                                    None | str | bool]],
+                 list[dict[str, str]]]] \
         = json.loads(content)
     if not isinstance(d, list) or not d:
         return

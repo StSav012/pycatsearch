@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import math
-from typing import Final, List, Optional, Tuple
+from typing import Final, Optional
 
 from PyQt5.QtGui import QValidator
 from PyQt5.QtWidgets import QDoubleSpinBox, QWidget
@@ -9,7 +11,7 @@ __all__ = ['FloatSpinBox']
 
 
 class FloatSpinBox(QDoubleSpinBox):
-    MODES: Final[List[str]] = ['auto', 'fixed', 'scientific']
+    MODES: Final[list[str]] = ['auto', 'fixed', 'scientific']
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
@@ -43,7 +45,7 @@ class FloatSpinBox(QDoubleSpinBox):
         else:
             raise RuntimeError(f'Unknown mode {self._mode}')
 
-    def validate(self, text: str, pos: int) -> Tuple[QValidator.State, str, int]:
+    def validate(self, text: str, pos: int) -> tuple[QValidator.State, str, int]:
         try:
             self.valueFromText(text)
         except (ValueError, TypeError):

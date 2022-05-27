@@ -4,7 +4,9 @@ import sys
 from PyQt5.QtWidgets import QApplication
 
 from catalog import Catalog
-from gui._ui import UI
+from gui.ui import UI
+
+__all__ = ['UI', 'run']
 
 
 def run() -> None:

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import html
 import html.entities
 import math
 import os
 from numbers import Real
-from typing import Dict, Final, List, Tuple, Union, cast
+from typing import Final, cast
 
 
 __all__ = ['UPDATED',
@@ -66,7 +68,7 @@ DATE_OF_ENTRY: Final[str] = 'dateofentry'
 DEGREES_OF_FREEDOM: Final[str] = 'degreesoffreedom'
 LOWER_STATE_ENERGY: Final[str] = 'lowerstateenergy'
 
-HUMAN_READABLE: Final[Dict[str, str]] = {
+HUMAN_READABLE: Final[dict[str, str]] = {
     CATALOG: 'Catalog',
     LINES: 'Lines',
     FREQUENCY: 'Frequency',
@@ -91,13 +93,13 @@ HUMAN_READABLE: Final[Dict[str, str]] = {
 }
 
 
-def within(x: float, limits: Union[Tuple[float, float], Tuple[Tuple[float, float], ...]]) -> bool:
+def within(x: float, limits: tuple[float, float] | tuple[tuple[float, float], ...]) -> bool:
     if len(limits) < 2:
         raise ValueError('Invalid limits')
     if all(isinstance(cast(float, limit), Real) for limit in limits):
-        return min(cast(Tuple[float, float], limits)) <= x <= max(cast(Tuple[float, float], limits))
+        return min(cast(tuple[float, float], limits)) <= x <= max(cast(tuple[float, float], limits))
     elif all(isinstance(limit, tuple) for limit in limits):
-        return any(min(cast(Tuple[float, float], limit)) <= x <= max(cast(Tuple[float, float], limit))
+        return any(min(cast(tuple[float, float], limit)) <= x <= max(cast(tuple[float, float], limit))
                    for limit in limits)
     else:
         raise TypeError('Invalid limits type')
@@ -211,7 +213,7 @@ def tex_to_html_entity(s: str) -> str:
     word_started: bool = False
     backslash_found: bool = False
     _i: int = 0
-    fixes: Dict[str, str] = {
+    fixes: dict[str, str] = {
         'neq': '#8800',
     }
     while _i < len(s):
@@ -299,14 +301,14 @@ def chem_html(formula: str) -> str:
     def v(s: str) -> str:
         if '=' not in s:
             return s[0] + ' = ' + s[1:]
-        ss: List[str] = list(map(str.strip, s.split('=')))
+        ss: list[str] = list(map(str.strip, s.split('=')))
         for _i in range(len(ss)):
             if ss[_i].startswith('v'):
                 ss[_i] = ss[_i][0] + '<sub>' + ss[_i][1:] + '</sub>'
         return ' = '.join(ss)
 
     html_formula: str = html.escape(formula)
-    html_formula_pieces: List[str] = list(map(str.strip, html_formula.split(',')))
+    html_formula_pieces: list[str] = list(map(str.strip, html_formula.split(',')))
     for i in range(len(html_formula_pieces)):
         if html_formula_pieces[i].startswith('v'):
             html_formula_pieces = html_formula_pieces[:i] + [', '.join(html_formula_pieces[i:])]
@@ -327,7 +329,7 @@ def is_good_html(text: str) -> bool:
     return _1 == _2 and _1 == _3
 
 
-def best_name(entry: Dict[str, Union[int, str, List[Dict[str, float]]]],
+def best_name(entry: dict[str, int | str | list[dict[str, float]]],
               allow_html: bool = True) -> str:
     if allow_html and ISOTOPOLOG in entry and entry[ISOTOPOLOG]:
         if allow_html:
@@ -378,7 +380,7 @@ def remove_html(line: str) -> str:
 
 def wrap_in_html(text: str, line_end: str = os.linesep) -> str:
     """ Make a full HTML document out of a piece of the markup """
-    new_text: List[str] = [
+    new_text: list[str] = [
         '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">',
         '<html lang="en" xml:lang="en">',
         '<head>',
