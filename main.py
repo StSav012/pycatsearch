@@ -18,8 +18,10 @@ if __name__ == '__main__':
         except (OSError, ModuleNotFoundError):
             pass
 
-    if not hasattr(sys, '_MEIPASS'):
+    if not hasattr(sys, '_MEIPASS'):  # if not embedded into an executable
         import importlib
+
+        pip_updated: bool = False
 
         for package in REQUIREMENTS:
             try:
@@ -27,6 +29,10 @@ if __name__ == '__main__':
             except (ImportError, ModuleNotFoundError) as ex:
                 import subprocess
 
+                if not pip_updated:
+                    if subprocess.check_call((sys.executable, '-m', 'pip', 'install', '-U', 'pip')):
+                        raise ex
+                    pip_updated = True
                 if subprocess.check_call([sys.executable, '-m', 'pip', 'install', package]):
                     tb = sys.exc_info()[2]
                     print(ex.with_traceback(tb))
