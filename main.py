@@ -5,12 +5,12 @@ from typing import Final
 
 
 __author__: Final[str] = 'StSav012'
-__original_name__: Final[str] = 'pycatsearch'
+__original_name__: Final[str] = 'py''cat''search'
 
-REQUIREMENTS: Final[list[str]] = ['PyQt5']
+REQUIREMENTS: Final[list[str]] = ['PyQt5', 'pathvalidate', 'aiohttp']
 
 if __name__ == '__main__':
-    if not hasattr(sys, '_MEIPASS') and not Path('.git').exists():
+    if not hasattr(sys, '_MEI''PASS') and not Path('.git').exists():
         try:
             import updater
 
@@ -18,7 +18,7 @@ if __name__ == '__main__':
         except (OSError, ModuleNotFoundError):
             pass
 
-    if not hasattr(sys, '_MEIPASS'):  # if not embedded into an executable
+    if not hasattr(sys, '_MEI''PASS'):  # if not embedded into an executable
         import importlib
 
         pip_updated: bool = False
