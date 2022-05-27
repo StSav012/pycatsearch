@@ -19,7 +19,12 @@ class MenuBar(QMenuBar):
             QIcon.fromTheme('document-open', self.style().standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton)),
             self.tr('&Load Catalog...'),
             self.menu_file)
-        self.action_preferences: QAction = QAction('&Preferences...', self.menu_file)
+        self.action_reload: QAction = QAction(
+            QIcon.fromTheme('document-revert', self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload)),
+            self.tr('&Reload Catalogs'),
+            self.menu_file)
+        self.action_download_catalog: QAction = QAction(self.tr('&Download Catalog...'), self.menu_file)
+        self.action_preferences: QAction = QAction(self.tr('&Preferences...'), self.menu_file)
         self.action_quit: QAction = QAction(QIcon.fromTheme('application-exit'), self.tr('&Quit'),
                                             self.menu_file)
         self.action_about: QAction = QAction(
@@ -36,10 +41,6 @@ class MenuBar(QMenuBar):
             self.menu_edit)
         self.action_select_all: QAction = QAction(QIcon.fromTheme('edit-select-all'), self.tr('&Select All'),
                                                   self.menu_edit)
-        self.action_reload: QAction = QAction(
-            QIcon.fromTheme('document-revert', self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload)),
-            self.tr('&Reload Catalogs'),
-            self.menu_file)
         self.action_copy_name: QAction = QAction(self.tr('&Substance Name'), self.menu_copy_only)
         self.action_copy_frequency: QAction = QAction(self.tr('&Frequency'), self.menu_copy_only)
         self.action_copy_intensity: QAction = QAction(self.tr('&Intensity'), self.menu_copy_only)
@@ -57,6 +58,8 @@ class MenuBar(QMenuBar):
         self.action_about_qt.setMenuRole(QAction.AboutQtRole)
         self.menu_file.addAction(self.action_load)
         self.menu_file.addAction(self.action_reload)
+        self.menu_file.addSeparator()
+        self.menu_file.addAction(self.action_download_catalog)
         self.menu_file.addSeparator()
         self.menu_file.addAction(self.action_preferences)
         self.menu_file.addSeparator()

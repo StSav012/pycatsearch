@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, 
                              QTableWidgetSelectionRange, QWidget)
 
 from catalog import Catalog
+from gui.download_dialog import DownloadDialog
 from gui.float_spinbox import FloatSpinBox
 from gui.frequency_box import FrequencyBox
 from gui.menu_bar import MenuBar
@@ -331,6 +332,7 @@ class UI(QMainWindow):
         self.menu_bar.action_quit.triggered.connect(self.on_action_quit_triggered)
         self.menu_bar.action_about.triggered.connect(self.on_action_about_triggered)
         self.menu_bar.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
+        self.menu_bar.action_download_catalog.triggered.connect(self.on_action_download_catalog_triggered)
         self.menu_bar.action_preferences.triggered.connect(self.on_action_preferences_triggered)
         self.menu_bar.action_copy.triggered.connect(self.on_action_copy_triggered)
         self.menu_bar.action_select_all.triggered.connect(self.on_action_select_all_triggered)
@@ -432,6 +434,12 @@ class UI(QMainWindow):
                 '</td></tr>' + self.settings.line_end
             )
         return '<table>' + self.settings.line_end + ''.join(text) + '</table>'
+
+    def on_action_download_catalog_triggered(self) -> None:
+        downloader: DownloadDialog = DownloadDialog(
+            frequency_limits=(self.catalog.min_frequency, self.catalog.max_frequency),
+            parent=self)
+        downloader.exec()
 
     def on_action_preferences_triggered(self) -> None:
         self.preferences_dialog.exec()
