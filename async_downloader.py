@@ -6,7 +6,9 @@ import gzip
 import json
 import sys
 from math import inf
-from typing import Any, BinaryIO, cast
+from multiprocessing import Process, Queue
+from queue import Empty
+from typing import Any, BinaryIO, Final, cast
 from urllib.error import HTTPError
 from urllib.parse import urlencode
 
@@ -16,7 +18,116 @@ import aiohttp.client_exceptions
 from catalog_entry import CatalogEntry
 from utils import *
 
-__all__ = ['get_catalog', 'save_catalog']
+__all__ = ['Downloader', 'get_catalog', 'save_catalog']
+
+
+class Downloader(Process):
+    def __init__(self,
+                 frequency_limits: tuple[float, float] = (-inf, inf),
+                 state_queue: Queue[tuple[int, int]] | None = None) -> None:
+        super().__init__()
+        self._state_queue: Queue[tuple[int, int]] | None = state_queue
+        self._frequency_limits: tuple[float, float] = frequency_limits
+        self._catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
+
+    @property
+    def catalog(self) -> list[dict[str, int | str | list[dict[str, float]]]]:
+        return self._catalog.copy()
+
+    def run(self) -> None:
+        async def async_get_catalog() -> list[dict[str, int | str | list[dict[str, float]]]]:
+            # the two following variables are to protect the server (and the network channel) from overloading
+            max_get_requests: int = 1 << 32
+            get_requests: int = 0
+
+            async def get(url: str) -> str:
+                nonlocal get_requests, max_get_requests
+                async with aiohttp.ClientSession() as session:
+                    while True:
+                        try:
+                            get_requests += 1
+                            while get_requests > max_get_requests:
+                                await asyncio.sleep(1)
+                            async with session.get(url, ssl=False) as response:
+                                get_requests -= 1
+                                return (await response.read()).decode()
+                        except aiohttp.client_exceptions.ClientConnectorError as ex:
+                            get_requests -= 1
+                            max_get_requests = get_requests
+                            print(str(ex.args[1]), 'to', url, file=sys.stderr)
+                            await asyncio.sleep(1)
+
+            async def post(url: str, data: dict[str, Any]) -> str:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url, data=urlencode(data).encode()) as response:
+                        return (await response.read()).decode()
+
+            async def get_species() -> list[dict[str, int | str]]:
+                def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
+                    key: str
+                    value: None | int | str
+                    return dict((key, value) for key, value in entry.items()
+                                if value is not None and value not in ('', 'None'))
+
+                def trim_strings(entry: dict[str, None | int | str]) -> dict[str, None | int | str]:
+                    key: str
+                    for key in entry:
+                        if isinstance(entry[key], str):
+                            entry[key] = cast(str, entry[key]).strip()
+                    return entry
+
+                data: dict[str, int | str | list[dict[str, None | int | str]]] \
+                    = json.loads(await post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/',
+                                            {'database': -1}))
+                if 'species' in data:
+                    return [purge_null_data(trim_strings(s)) for s in data['species']]
+                else:
+                    return []
+
+            async def get_substance_catalog(species_entry: dict[str, int | str]) \
+                    -> dict[str, int | str | list[dict[str, float]]]:
+                if SPECIES_TAG not in species_entry:
+                    # nothing to go on with
+                    return dict()
+                species_tag: int = cast(int, species_entry[SPECIES_TAG])
+                fn: str = f'c{species_tag:06}.cat'
+                if species_tag % 1000 >= 500:
+                    fn = 'https://cdms.astro.uni-koeln.de/classic/entries/' + fn
+                else:
+                    if fn in ('c044009.cat', 'c044012.cat'):  # merged with c044004.cat — Brian J. Drouin
+                        return dict()
+                    else:
+                        fn = 'https://spec.jpl.nasa.gov/ftp/pub/catalog/' + fn
+                try:
+                    lines = (await get(fn)).splitlines()
+                except HTTPError as ex:
+                    print(str(ex), fn)
+                    return dict()
+                catalog_entries = [CatalogEntry(line) for line in lines]
+                return {
+                    **species_entry,
+                    DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
+                    LINES: [_catalog_entry.to_dict()
+                            for _catalog_entry in catalog_entries
+                            if within(_catalog_entry.frequency, self._frequency_limits)]
+                }
+
+            species: list[dict[str, int | str]] = await get_species()
+            catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
+            species_count: Final[int] = len(species)
+            catalog_entry: dict[str, int | str | list[dict[str, float]]]
+            future_entry_index: int
+            future_entry: asyncio.Future[dict[str, int | str | list[dict[str, float]]]]
+            for future_entry_index, future_entry in enumerate(asyncio.as_completed(
+                    [asyncio.create_task(get_substance_catalog(_e)) for _e in species]), start=1):
+                catalog_entry = await future_entry
+                if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]:
+                    catalog.append(catalog_entry)
+                if self._state_queue is not None:
+                    self._state_queue.put((len(catalog), species_count - future_entry_index))
+            return catalog
+
+        self._catalog = asyncio.run(async_get_catalog())
 
 
 def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
@@ -28,98 +139,20 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
     :return: a list of the spectral lines catalog entries.
     """
 
-    async def async_get_catalog() -> list[dict[str, int | str | list[dict[str, float]]]]:
-        # the two following variables are to protect the server (and the network channel) from overloading
-        max_get_requests: int = 1 << 32
-        get_requests: int = 0
+    state_queue: Queue[tuple[int, int]] = Queue()
+    downloader: Downloader = Downloader(frequency_limits=frequency_limits, state_queue=state_queue)
+    downloader.start()
+    while downloader.is_alive():
+        cataloged_species: int
+        not_yet_processed_species: int
+        try:
+            cataloged_species, not_yet_processed_species = state_queue.get(block=True, timeout=0.1)
+        except Empty:
+            continue
+        else:
+            print(f'{cataloged_species} | {not_yet_processed_species}')
 
-        async def get(url: str) -> str:
-            nonlocal get_requests, max_get_requests
-            async with aiohttp.ClientSession() as session:
-                while True:
-                    try:
-                        get_requests += 1
-                        while get_requests > max_get_requests:
-                            await asyncio.sleep(1)
-                        async with session.get(url, ssl=False) as response:
-                            get_requests -= 1
-                            return (await response.read()).decode()
-                    except aiohttp.client_exceptions.ClientConnectorError as ex:
-                        get_requests -= 1
-                        max_get_requests = get_requests
-                        print(str(ex.args[1]), 'to', url)
-                        await asyncio.sleep(1)
-
-        async def post(url: str, data: dict[str, Any]) -> str:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, data=urlencode(data).encode()) as response:
-                    return (await response.read()).decode()
-
-        async def get_species() -> list[dict[str, int | str]]:
-            def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
-                key: str
-                value: None | int | str
-                return dict((key, value) for key, value in entry.items()
-                            if value is not None and value not in ('', 'None'))
-
-            def trim_strings(entry: dict[str, None | int | str]) -> dict[str, None | int | str]:
-                key: str
-                for key in entry:
-                    if isinstance(entry[key], str):
-                        entry[key] = cast(str, entry[key]).strip()
-                return entry
-
-            data: dict[str, int | str | list[dict[str, None | int | str]]] \
-                = json.loads(await post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/',
-                                        {'database': -1}))
-            if 'species' in data:
-                return [purge_null_data(trim_strings(s)) for s in data['species']]
-            else:
-                return []
-
-        async def get_substance_catalog(species_entry: dict[str, int | str]) \
-                -> dict[str, int | str | list[dict[str, float]]]:
-            if SPECIES_TAG not in species_entry:
-                # nothing to go on with
-                return dict()
-            species_tag: int = cast(int, species_entry[SPECIES_TAG])
-            fn: str = f'c{species_tag:06}.cat'
-            if species_tag % 1000 >= 500:
-                fn = 'https://cdms.astro.uni-koeln.de/classic/entries/' + fn
-            else:
-                if fn in ('c044009.cat', 'c044012.cat'):  # merged with c044004.cat — Brian J. Drouin
-                    return dict()
-                else:
-                    fn = 'https://spec.jpl.nasa.gov/ftp/pub/catalog/' + fn
-            try:
-                lines = (await get(fn)).splitlines()
-            except HTTPError as ex:
-                print(str(ex), fn)
-                return dict()
-            catalog_entries = [CatalogEntry(line) for line in lines]
-            return {
-                **species_entry,
-                DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
-                LINES: [_catalog_entry.to_dict()
-                        for _catalog_entry in catalog_entries
-                        if within(_catalog_entry.frequency, frequency_limits)]
-            }
-
-        species: list[dict[str, int | str]] = await get_species()
-        catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
-        species_count: int = len(species)
-        catalog_entry: dict[str, int | str | list[dict[str, float]]]
-        future_entry: asyncio.Future[dict[str, int | str | list[dict[str, float]]]]
-        for future_entry in asyncio.as_completed([asyncio.create_task(get_substance_catalog(_e)) for _e in species]):
-            catalog_entry = await future_entry
-            if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]:
-                catalog.append(catalog_entry)
-                print(f'{len(catalog)} / {species_count} ')
-            else:
-                species_count -= 1
-        return catalog
-
-    return asyncio.run(async_get_catalog())
+    return downloader.catalog
 
 
 def save_catalog(filename: str,

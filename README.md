@@ -82,8 +82,11 @@ downloader.save_catalog('catalog.json.gz', (115000, 178000), qt_json_filename='c
   The parameter `frequency_limits` is the frequency range of the catalog entries to keep.
   By default, there are no limits.
 - `save_catalog(filename: str, frequency_limits: Tuple[float, float] = (-math.inf, math.inf), *,
-  qt_json_filename: str = '', qt_json_zipped: bool = True)` downloads and saves the spectral lines catalog data.
-  Inside, the `get_catalog` function is called.
+  qt_json_filename: str = '', qt_json_zipped: bool = True) -> bool` downloads and saves the spectral lines catalog data.
+  Inside, `get_catalog` function is called.
+  The function returns `True` if something got downloaded, `False` otherwise.
+  The function fails with an error if `get_catalog` raises an error, 
+  or if the result can not be stored in the specified file.
   The parameters of `save_catalog` are the following:
     - `str filename`: the name of the file to save the downloaded catalog to.
       It should end with `'.json.gz'`, otherwise `'.json.gz'` is appended to it.
@@ -100,18 +103,48 @@ This is just like `downloader`, but much, much faster.
 The download speed is limited by the remote servers.
 Most of the time, it takes no more than 90 seconds to load all the data.
 
-Requires `aiohttp`
+Requires `aiohttp`.
 
+###### Functions:
+- `get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) ->
+  List[Dict[str, Union[int, str, List[Dict[str, float]]]]]`
+- `save_catalog(filename: str, frequency_limits: Tuple[float, float] = (-math.inf, math.inf), *,
+  qt_json_filename: str = '', qt_json_zipped: bool = True) -> bool`
+
+The functions behave _almost_ exactly like their namesakes from `downloader`.
+`get_catalog` prints out the progress described in two numbers:
+- the number of species, for which the data has already been downloaded
+  and contains spectral lines within the specified frequency range, and
+- the number of species yet to be downloaded and processed.
+
+###### `Downloader` class
+An instance of `Downloader` class is created in `get_catalog` function.
+Then, a separate process takes care of the downloading.
+If the process fails, `get_catalog` returns an empty list, almost never raising an exception.
+
+The class constructor accepts the frequency limits, just like `get_catalog` function.
+
+One also may provide the constructor with a `multiprocessing.Queue[Tuple[int, int]]`
+to see the downloading progress.
+The first number of the tuple is the number of the species,
+for which the data has already been downloaded
+and contains spectral lines within the specified frequency range.
+The second one is the number of species yet to be downloaded and processed.
+The numbers are the same as what `get_catalog` function types.
+      
 ### `gui`
 
 This is the graphical interface built with `PyQt5`. Just run `main.py` and see for yourself.
 
 ### Requirements
 
-The code is developed under `python 3.10`. It should work under `python 3.8` but not tested.
+The code is developed under `python 3.10`. It should work under `python 3.8` but merely tested.
 
 If you want to save the catalog as a [Qt JSON Document](https://doc.qt.io/qt-5/qjsondocument.html),
-then `PyQt5` is needed. Otherwise, only the built-ins are used.
+then `PyQt5` is needed.
+If you want to download the catalog data faster, consider `async_downloader` module;
+it requires `aiohttp`.
+Otherwise, only the built-ins are used.
 
 ## File Format
 
