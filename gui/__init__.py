@@ -13,7 +13,7 @@ def run() -> None:
     app: QApplication = QApplication(sys.argv)
     window: UI = UI(Catalog(*sys.argv[1:]))
     window.show()
-    app.exec()
+    sys.exit(app.exec())
 
 
 if __name__ == '__main__':
