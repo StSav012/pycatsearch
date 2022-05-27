@@ -4,10 +4,11 @@ from __future__ import annotations
 import asyncio
 import gzip
 import json
+import random
 import sys
 from math import inf
-from multiprocessing import Process, Queue
-from queue import Empty
+from queue import Empty, Queue
+from threading import Thread
 from typing import Any, BinaryIO, Final, cast
 from urllib.error import HTTPError
 from urllib.parse import urlencode
@@ -21,7 +22,7 @@ from utils import *
 __all__ = ['Downloader', 'get_catalog', 'save_catalog']
 
 
-class Downloader(Process):
+class Downloader(Thread):
     def __init__(self,
                  frequency_limits: tuple[float, float] = (-inf, inf),
                  state_queue: Queue[tuple[int, int]] | None = None) -> None:
@@ -36,26 +37,15 @@ class Downloader(Process):
 
     def run(self) -> None:
         async def async_get_catalog() -> list[dict[str, int | str | list[dict[str, float]]]]:
-            # the two following variables are to protect the server (and the network channel) from overloading
-            max_get_requests: int = 1 << 32
-            get_requests: int = 0
-
             async def get(url: str) -> str:
-                nonlocal get_requests, max_get_requests
                 async with aiohttp.ClientSession() as session:
                     while True:
                         try:
-                            get_requests += 1
-                            while get_requests > max_get_requests:
-                                await asyncio.sleep(1)
                             async with session.get(url, ssl=False) as response:
-                                get_requests -= 1
                                 return (await response.read()).decode()
                         except aiohttp.client_exceptions.ClientConnectorError as ex:
-                            get_requests -= 1
-                            max_get_requests = get_requests
                             print(str(ex.args[1]), 'to', url, file=sys.stderr)
-                            await asyncio.sleep(1)
+                            await asyncio.sleep(random.random())
 
             async def post(url: str, data: dict[str, Any]) -> str:
                 async with aiohttp.ClientSession() as session:
@@ -127,7 +117,10 @@ class Downloader(Process):
                     self._state_queue.put((len(catalog), species_count - future_entry_index))
             return catalog
 
-        self._catalog = asyncio.run(async_get_catalog())
+        try:
+            self._catalog = asyncio.run(async_get_catalog())
+        except RuntimeError:  # it might be “cannot schedule new futures after shutdown”
+            pass
 
 
 def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
