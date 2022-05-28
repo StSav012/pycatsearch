@@ -90,7 +90,7 @@ class DownloadConfirmationPage(QWizardPage):
 
     def initializePage(self) -> None:
         super(DownloadConfirmationPage, self).initializePage()
-        self.setButtonText(QWizard.WizardButton.CommitButton, self.tr('Start'))
+        self.setButtonText(QWizard.WizardButton.CommitButton, self.tr('&Start'))
         self._label.setText(self.tr('Click {} to start the download')
                             .format(self.buttonText(QWizard.WizardButton.CommitButton).replace('&', '')))
 
@@ -151,7 +151,7 @@ class SummaryPage(QWizardPage):
         super(SummaryPage, self).initializePage()
         if cast(DownloadDialog, self.wizard()).catalog:
             self.setTitle(self.tr('Success'))
-            self.setButtonText(QWizard.WizardButton.FinishButton, self.tr('Save'))
+            self.setButtonText(QWizard.WizardButton.FinishButton, self.tr('&Save'))
             self._label.setText(self.tr('Click {} to save the catalog into {}')
                                 .format(self.buttonText(QWizard.WizardButton.FinishButton).replace('&', ''),
                                         cast(DownloadDialog, self.wizard()).settings_page.path_entry.path))
