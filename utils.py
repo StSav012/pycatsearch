@@ -97,10 +97,9 @@ def within(x: float, limits: tuple[float, float] | tuple[tuple[float, float], ..
     if len(limits) < 2:
         raise ValueError('Invalid limits')
     if all(isinstance(cast(float, limit), Real) for limit in limits):
-        return min(cast(tuple[float, float], limits)) <= x <= max(cast(tuple[float, float], limits))
+        return min(limits) <= x <= max(limits)
     elif all(isinstance(limit, tuple) for limit in limits):
-        return any(min(cast(tuple[float, float], limit)) <= x <= max(cast(tuple[float, float], limit))
-                   for limit in limits)
+        return any(min(limit) <= x <= max(limit) for limit in limits)
     else:
         raise TypeError('Invalid limits type')
 
