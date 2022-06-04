@@ -43,7 +43,7 @@ class Downloader(Thread):
                         try:
                             async with session.get(url, ssl=False) as response:
                                 return (await response.read()).decode()
-                        except aiohttp.client_exceptions.ClientConnectorError as ex:
+                        except aiohttp.client_exceptions.ClientError as ex:
                             print(str(ex.args[1]), 'to', url, file=sys.stderr)
                             await asyncio.sleep(random.random())
 
