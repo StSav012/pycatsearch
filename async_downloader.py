@@ -38,7 +38,7 @@ class Downloader(Thread):
     def run(self) -> None:
         async def async_get_catalog() -> list[dict[str, int | str | list[dict[str, float]]]]:
             async def get(url: str) -> str:
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession(trust_env=True) as session:
                     while True:
                         try:
                             async with session.get(url, ssl=False) as response:
@@ -48,7 +48,7 @@ class Downloader(Thread):
                             await asyncio.sleep(random.random())
 
             async def post(url: str, data: dict[str, Any]) -> str:
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession(trust_env=True) as session:
                     async with session.post(url, data=urlencode(data).encode()) as response:
                         return (await response.read()).decode()
 
