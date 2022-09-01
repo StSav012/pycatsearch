@@ -31,21 +31,41 @@ class Downloader(Thread):
         self._frequency_limits: tuple[float, float] = frequency_limits
         self._catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
 
+        self._sem: asyncio.BoundedSemaphore = asyncio.BoundedSemaphore(128)
+        self._run: bool = False
+
     @property
     def catalog(self) -> list[dict[str, int | str | list[dict[str, float]]]]:
         return self._catalog.copy()
 
+    def join(self, timeout: float | None = ...) -> None:
+        self._run = False
+        try:
+            while self._sem:
+                self._sem.release()
+        except ValueError:
+            pass
+
+        super().join(timeout=timeout)
+
     def run(self) -> None:
+        self._run = True
+
         async def async_get_catalog() -> list[dict[str, int | str | list[dict[str, float]]]]:
             async def get(url: str) -> str:
-                async with aiohttp.ClientSession(trust_env=True) as session:
-                    while True:
-                        try:
-                            async with session.get(url, ssl=False) as response:
-                                return (await response.read()).decode()
-                        except aiohttp.client_exceptions.ClientError as ex:
-                            print(str(ex.args[1]), 'to', url, file=sys.stderr)
-                            await asyncio.sleep(random.random())
+                try:
+                    async with self._sem, aiohttp.ClientSession(trust_env=True) as session:
+                        while self._run:
+                            try:
+                                async with session.get(url, ssl=False) as response:
+                                    return (await response.read()).decode()
+                            except aiohttp.client_exceptions.ClientError as ex:
+                                print(str(ex.args[1]), 'to', url, file=sys.stderr)
+                                await asyncio.sleep(random.random())
+                except ValueError as ex:  # may come from `self._sem.release()`
+                    if self._run:
+                        raise ex
+                return ''
 
             async def post(url: str, data: dict[str, Any]) -> str:
                 async with aiohttp.ClientSession(trust_env=True) as session:
@@ -94,6 +114,8 @@ class Downloader(Thread):
                     print(str(ex), fn)
                     return dict()
                 catalog_entries = [CatalogEntry(line) for line in lines]
+                if not catalog_entries:
+                    return dict()
                 return {
                     **species_entry,
                     DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
