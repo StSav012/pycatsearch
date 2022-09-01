@@ -62,9 +62,9 @@ class Downloader(Thread):
                             except aiohttp.client_exceptions.ClientError as ex:
                                 print(str(ex.args[1]), 'to', url, file=sys.stderr)
                                 await asyncio.sleep(random.random())
-                except ValueError as ex:  # may come from `self._sem.release()`
+                except ValueError:  # may come from `self._sem.release()`
                     if self._run:
-                        raise ex
+                        raise
                 return ''
 
             async def post(url: str, data: dict[str, Any]) -> str:
