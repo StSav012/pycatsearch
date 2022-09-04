@@ -245,7 +245,7 @@ class UI(QMainWindow):
             self.setWindowIcon(QIcon(window_icon))
 
             if UPDATED:
-                self.setWindowTitle(self.tr('PyQtCatSearch') + self.tr(' (as of {0})').format(UPDATED))
+                self.setWindowTitle(self.tr('PyQtCatSearch (as of {0})').format(UPDATED))
             else:
                 self.setWindowTitle(self.tr('PyQtCatSearch'))
             self.setCentralWidget(self.central_widget)
