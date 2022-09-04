@@ -32,7 +32,7 @@ class Downloader(Thread):
         self._frequency_limits: tuple[float, float] = frequency_limits
         self._catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
 
-        self._sem: asyncio.BoundedSemaphore = asyncio.BoundedSemaphore(128)
+        self._sem: asyncio.BoundedSemaphore | None = None
         self._run: bool = False
 
     @property
@@ -51,6 +51,8 @@ class Downloader(Thread):
         self._run = True
 
         async def async_get_catalog() -> list[dict[str, int | str | list[dict[str, float]]]]:
+            self._sem = asyncio.BoundedSemaphore(128)  # init the semaphore _inside_ the event loop
+
             async def get(url: str) -> str:
                 try:
                     async with self._sem, aiohttp.ClientSession(trust_env=True) as session:
