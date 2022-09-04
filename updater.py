@@ -5,6 +5,7 @@ import io
 import json
 import urllib.request
 import zipfile
+from contextlib import suppress
 from http.client import HTTPResponse
 from pathlib import Path
 from typing import BinaryIO, Final, TextIO, cast
@@ -33,18 +34,13 @@ def update(user: str, repo_name: str, branch: str = 'master') -> None:
     if not isinstance(d, list) or not d:
         return
     date: Final[str] = cast(str, d[0].get('commit', dict()).get('author', dict()).get('date', ''))
-    ft_out: TextIO
-    fb_out: BinaryIO
     if (extraction_root / Path('version.py')).exists():
-        try:
+        with suppress(OSError, ImportError, ModuleNotFoundError):
             import version
 
             if version.UPDATED == f'{date}':
                 return
-        except (OSError, ImportError, ModuleNotFoundError):
-            pass
-    with (extraction_root / Path('version.py')).open('wt') as ft_out:
-        ft_out.write(f'UPDATED: str = "{date}"\n')
+    (extraction_root / Path('version.py')).write_text(f'UPDATED: str = "{date}"\n')
 
     url = f'https://github.com/{user}/{repo_name}/archive/{branch}.zip'
     r = urllib.request.urlopen(url, timeout=1)
@@ -58,5 +54,4 @@ def update(user: str, repo_name: str, branch: str = 'master') -> None:
                 continue
             content = inner_zip.read(member)
             (extraction_root / Path(member.filename).relative_to(root)).parent.mkdir(parents=True, exist_ok=True)
-            with (extraction_root / Path(member.filename).relative_to(root)).open('wb') as fb_out:
-                fb_out.write(content)
+            (extraction_root / Path(member.filename).relative_to(root)).write_bytes(content)

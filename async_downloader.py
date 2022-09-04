@@ -6,6 +6,7 @@ import gzip
 import json
 import random
 import sys
+from contextlib import suppress
 from math import inf
 from queue import Empty, Queue
 from threading import Thread
@@ -40,11 +41,9 @@ class Downloader(Thread):
 
     def join(self, timeout: float | None = ...) -> None:
         self._run = False
-        try:
+        with suppress(ValueError):
             while self._sem:
-                self._sem.release()
-        except ValueError:
-            pass
+                self._sem.release()  # let all the threads finish
 
         super().join(timeout=timeout)
 
@@ -139,10 +138,8 @@ class Downloader(Thread):
                     self._state_queue.put((len(catalog), species_count - future_entry_index))
             return catalog
 
-        try:
+        with suppress(RuntimeError):  # it might be “cannot schedule new futures after shutdown”
             self._catalog = asyncio.run(async_get_catalog())
-        except RuntimeError:  # it might be “cannot schedule new futures after shutdown”
-            pass
 
 
 def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
