@@ -4,8 +4,8 @@ from __future__ import annotations
 import asyncio
 import gzip
 import json
+import logging
 import random
-import sys
 from contextlib import suppress
 from math import inf
 from queue import Empty, Queue
@@ -59,7 +59,7 @@ class Downloader(Thread):
                                 async with session.get(url, ssl=False) as response:
                                     return (await response.read()).decode()
                             except aiohttp.client_exceptions.ClientError as ex:
-                                print(str(ex.args[1]), 'to', url, file=sys.stderr)
+                                logging.warning(f'{str(ex.args[1])} to {url}')
                                 await asyncio.sleep(random.random())
                 except ValueError:  # may come from `self._sem.release()`
                     if self._run:
@@ -110,7 +110,7 @@ class Downloader(Thread):
                 try:
                     lines = (await get(fn)).splitlines()
                 except HTTPError as ex:
-                    print(str(ex), fn)
+                    logging.error(fn, exc_info=ex)
                     return dict()
                 catalog_entries = [CatalogEntry(line) for line in lines]
                 if not catalog_entries:
@@ -162,7 +162,7 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
         except Empty:
             continue
         else:
-            print(f'{cataloged_species} | {not_yet_processed_species}')
+            logging.debug(f'{cataloged_species} | {not_yet_processed_species}')
 
     return downloader.catalog
 
@@ -218,7 +218,7 @@ def save_catalog(filename: str,
                         FREQUENCY: frequency_limits
                     }).toBinaryData().data())
         else:
-            print('No Qt realization found', file=sys.stderr)
+            logging.error('No Qt realization found')
     return True
 
 

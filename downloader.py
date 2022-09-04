@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import gzip
 import json
-import sys
+import logging
 from http.client import HTTPResponse
 from math import inf
 from typing import Any, BinaryIO, cast
@@ -70,7 +70,7 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) -> \
         try:
             lines = get(fn).splitlines()
         except HTTPError as ex:
-            print(str(ex), fn)
+            logging.error(fn, exc_info=ex)
             return dict()
         catalog_entries = [CatalogEntry(line) for line in lines]
         return {
@@ -137,7 +137,7 @@ def save_catalog(filename: str,
                         FREQUENCY: frequency_limits
                     }).toBinaryData().data())
         else:
-            print('No Qt realization found', file=sys.stderr)
+            logging.error('No Qt realization found')
     return True
 
 
