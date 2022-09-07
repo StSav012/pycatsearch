@@ -108,18 +108,21 @@ class Downloader(Thread):
 
             async def get_substance_catalog(species_entry: dict[str, int | str]) \
                     -> dict[str, int | str | list[dict[str, float]]]:
+                def entry_url(species_tag: int) -> str:
+                    entry_filename: str = f'c{species_tag:06}.cat'
+                    if entry_filename in ('c044009.cat', 'c044012.cat'):  # merged with c044004.cat — Brian J. Drouin
+                        return ''
+                    if species_tag % 1000 > 500:
+                        return 'https://cdms.astro.uni-koeln.de/classic/entries/' + entry_filename
+                    else:
+                        return 'https://spec.jpl.nasa.gov/ftp/pub/catalog/' + entry_filename
+
                 if SPECIES_TAG not in species_entry:
                     # nothing to go on with
                     return dict()
-                species_tag: int = cast(int, species_entry[SPECIES_TAG])
-                fn: str = f'c{species_tag:06}.cat'
-                if species_tag % 1000 >= 500:
-                    fn = 'https://cdms.astro.uni-koeln.de/classic/entries/' + fn
-                else:
-                    if fn in ('c044009.cat', 'c044012.cat'):  # merged with c044004.cat — Brian J. Drouin
-                        return dict()
-                    else:
-                        fn = 'https://spec.jpl.nasa.gov/ftp/pub/catalog/' + fn
+                fn: str = entry_url(species_tag=cast(int, species_entry[SPECIES_TAG]))
+                if not fn:  # no need to download a file for the species tag
+                    return dict()
                 try:
                     lines = (await get(fn)).splitlines()
                 except HTTPError as ex:
