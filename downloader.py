@@ -76,6 +76,9 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) -> \
             logger.error(fn, exc_info=ex)
             return dict()
         catalog_entries = [CatalogEntry(line) for line in lines]
+        if not catalog_entries:
+            logger.warning('no entries in the catalog')
+            return dict()
         return {
             **species_entry,
             DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
