@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QGroupBox, \
-    QSpinBox, QVBoxLayout, QWidget
-
+from gui.qt.core import Qt
+from gui.qt.widgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QGroupBox,
+                            QSpinBox, QVBoxLayout, QWidget)
 from gui.settings import Settings
 
 __all__ = ['Preferences']
@@ -13,9 +12,8 @@ __all__ = ['Preferences']
 class Preferences(QDialog):
     """ GUI preferences dialog """
 
-    def __init__(self, settings: Settings, parent: QWidget | None = None,
-                 flags: Qt.WindowFlags = Qt.WindowFlags()) -> None:
-        super().__init__(parent, flags)
+    def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
 
         self.settings: Settings = settings
         self.setModal(True)
@@ -96,7 +94,7 @@ class Preferences(QDialog):
                     # no else
                 # no else
                 layout.addWidget(box)
-        buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.Close, self)
+        buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 

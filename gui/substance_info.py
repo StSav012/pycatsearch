@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QWidget
-
 from catalog import Catalog
+from gui.qt.core import Qt
+from gui.qt.widgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QWidget
 from utils import *
 
 __all__ = ['SubstanceInfo']
@@ -12,9 +11,8 @@ __all__ = ['SubstanceInfo']
 
 class SubstanceInfo(QDialog):
     """ simple dialog that displays the information about a substance from the loaded catalog """
-    def __init__(self, catalog: Catalog, entry_id: int, parent: QWidget | None = None,
-                 flags: Qt.WindowFlags = Qt.WindowFlags()) -> None:
-        super().__init__(parent, flags)
+    def __init__(self, catalog: Catalog, entry_id: int, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle(self.tr('Substance Info'))
         if parent is not None:
@@ -35,8 +33,8 @@ class SubstanceInfo(QDialog):
                         label.setOpenExternalLinks(True)
                     else:
                         label = QLabel(str(entry[key]), self)
-                    label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+                    label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
                     layout.addRow(self.tr(HUMAN_READABLE[key]), label)
-        buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.Close, self)
+        buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)

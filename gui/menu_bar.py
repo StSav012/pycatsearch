@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMenu, QMenuBar, QStyle, QWidget
+from gui.qt.gui import QAction, QIcon
+from gui.qt.widgets import QMenu, QMenuBar, QStyle, QWidget
 
 __all__ = ['MenuBar']
 
@@ -31,7 +31,7 @@ class MenuBar(QMenuBar):
             QIcon.fromTheme('help-about', self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogInfoView)),
             self.tr('&About...'),
             self.menu_help)
-        self.action_about_qt: QAction = QAction(self.style().standardIcon(QStyle.SP_TitleBarMenuButton),
+        self.action_about_qt: QAction = QAction(self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarMenuButton),
                                                 self.tr('About &Qt...'), self.menu_help)
         self.action_copy: QAction = QAction(QIcon.fromTheme('edit-copy'), self.tr('Co&py Selection'),
                                             self.menu_edit)
@@ -52,10 +52,10 @@ class MenuBar(QMenuBar):
                                                                self.menu_columns)
         self.action_substance_info: QAction = QAction(self.tr('Substance &Info'), self.menu_edit)
 
-        self.action_preferences.setMenuRole(QAction.PreferencesRole)
-        self.action_quit.setMenuRole(QAction.QuitRole)
-        self.action_about.setMenuRole(QAction.AboutRole)
-        self.action_about_qt.setMenuRole(QAction.AboutQtRole)
+        self.action_preferences.setMenuRole(QAction.MenuRole.PreferencesRole)
+        self.action_quit.setMenuRole(QAction.MenuRole.QuitRole)
+        self.action_about.setMenuRole(QAction.MenuRole.AboutRole)
+        self.action_about_qt.setMenuRole(QAction.MenuRole.AboutQtRole)
         self.menu_file.addAction(self.action_load)
         self.menu_file.addAction(self.action_reload)
         self.menu_file.addSeparator()

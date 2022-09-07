@@ -2,17 +2,18 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable
 
 import pathvalidate
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QLineEdit, QToolButton, QStyle, QWidget
+
+from gui.qt.core import Signal
+from gui.qt.widgets import QFileDialog, QHBoxLayout, QLabel, QLineEdit, QStyle, QToolButton, QWidget
 
 _all__ = ['SaveFilePathEntry']
 
 
 class SaveFilePathEntry(QWidget):
-    pathChanged: pyqtSignal = pyqtSignal(name='pathChanged')
+    pathChanged: Signal = Signal(name='pathChanged')
 
     def __init__(self, initial_file_path: str = '',
                  filters: str | Iterable[str] = '', initial_filter: str = '',
@@ -20,7 +21,7 @@ class SaveFilePathEntry(QWidget):
         super().__init__(parent)
 
         self._path: Path | None = None
-        self.filters: str | Sequence[str] = (filters, ) if isinstance(filters, str) else filters
+        self.filters: str | list[str] = [filters] if isinstance(filters, str) else list(filters)
         self.initial_filter: str = initial_filter or self.filters[0]
 
         layout: QHBoxLayout = QHBoxLayout()
@@ -62,7 +63,8 @@ class SaveFilePathEntry(QWidget):
         self._text.setToolTip(text)
 
         if not text:
-            self._status.setPixmap(self.style().standardIcon(QStyle.SP_MessageBoxCritical).pixmap(self._text.height()))
+            self._status.setPixmap(self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxCritical)
+                                   .pixmap(self._text.height()))
             self._status.setVisible(True)
             self.path = None
             return
@@ -70,12 +72,14 @@ class SaveFilePathEntry(QWidget):
         path: Path = Path(text).resolve()
 
         if path.is_dir():
-            self._status.setPixmap(self.style().standardIcon(QStyle.SP_MessageBoxCritical).pixmap(self._text.height()))
+            self._status.setPixmap(self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxCritical)
+                                   .pixmap(self._text.height()))
             self._status.setVisible(True)
             self.path = None
             return
         if path.exists():
-            self._status.setPixmap(self.style().standardIcon(QStyle.SP_MessageBoxWarning).pixmap(self._text.height()))
+            self._status.setPixmap(self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
+                                   .pixmap(self._text.height()))
             self._status.setVisible(True)
             self.path = path
             return
@@ -83,7 +87,8 @@ class SaveFilePathEntry(QWidget):
             pathvalidate.validate_filepath(path, platform='auto')
         except pathvalidate.error.ValidationError as ex:
             print(ex.description)
-            self._status.setPixmap(self.style().standardIcon(QStyle.SP_MessageBoxCritical).pixmap(self._text.height()))
+            self._status.setPixmap(self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxCritical)
+                                   .pixmap(self._text.height()))
             self._status.setVisible(True)
             self.path = None
         else:

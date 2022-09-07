@@ -4,19 +4,18 @@ from __future__ import annotations
 import math
 from typing import Any, Final
 
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
-from PyQt5.QtGui import QAbstractTextDocumentLayout, QCloseEvent, QIcon, QPainter, QPixmap, QTextDocument
-from PyQt5.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDesktopWidget, QDoubleSpinBox,
-                             QFileDialog, QFormLayout, QGridLayout, QHeaderView, QMainWindow, QMessageBox, QPushButton,
-                             QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView,
-                             QTableWidgetSelectionRange, QWidget)
-
 from catalog import Catalog
 from gui.download_dialog import DownloadDialog
 from gui.float_spinbox import FloatSpinBox
 from gui.frequency_box import FrequencyBox
 from gui.menu_bar import MenuBar
 from gui.preferences import Preferences
+from gui.qt.core import QAbstractTableModel, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
+from gui.qt.gui import QAbstractTextDocumentLayout, QCloseEvent, QIcon, QPainter, QPixmap, QScreen, QTextDocument
+from gui.qt.widgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox,
+                            QFileDialog, QFormLayout, QGridLayout, QHeaderView, QMainWindow, QMessageBox, QPushButton,
+                            QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView,
+                            QTableWidgetSelectionRange, QWidget)
 from gui.settings import Settings
 from gui.substance_info import SubstanceInfo
 from gui.substances_box import SubstancesBox
@@ -26,8 +25,8 @@ __all__ = ['UI']
 
 
 def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.PlainText) -> None:
-    from PyQt5.QtGui import QClipboard
-    from PyQt5.QtCore import QMimeData
+    from gui.qt.gui import QClipboard
+    from gui.qt.core import QMimeData
 
     clipboard: QClipboard = QApplication.clipboard()
     mime_data: QMimeData = QMimeData()
@@ -38,7 +37,7 @@ def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.
         mime_data.setText(remove_html(text))
     else:
         mime_data.setText(text)
-    clipboard.setMimeData(mime_data, QClipboard.Clipboard)
+    clipboard.setMimeData(mime_data, QClipboard.Mode.Clipboard)
 
 
 def substitute(fmt: str, *args: Any) -> str:
@@ -66,9 +65,9 @@ class HTMLDelegate(QStyledItemDelegate):
         doc: QTextDocument = QTextDocument()
         doc.setHtml(option.text)
         option.text = ''
-        style.drawControl(QStyle.CE_ItemViewItem, option, painter)
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, option, painter)
         ctx: QAbstractTextDocumentLayout.PaintContext = QAbstractTextDocumentLayout.PaintContext()
-        text_rect: QRect = style.subElementRect(QStyle.SE_ItemViewItemText, option)
+        text_rect: QRect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, option)
         painter.save()
         painter.translate(text_rect.topLeft())
         painter.setClipRect(text_rect.translated(-text_rect.topLeft()))
@@ -115,9 +114,9 @@ class LinesListModel(QAbstractTableModel):
     def columnCount(self, parent: QModelIndex = ...) -> int:
         return len(self._header)
 
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> int | str | float | None:
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> int | str | float | None:
         if index.isValid():
-            if role == Qt.DisplayRole:
+            if role == Qt.ItemDataRole.DisplayRole:
                 data_column: Final[int] = {0: 1, 1: 2, 2: 4, 3: 6}[index.column()]
                 return self._data[index.row()][data_column]
         return None
@@ -133,12 +132,14 @@ class LinesListModel(QAbstractTableModel):
         return self._data[row_index][column_index]
 
     def headerData(self, col: int, orientation: Qt.Orientation, role: int = ...) -> str | None:
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self._header[col]
         return None
 
     def setHeaderData(self, section: int, orientation: Qt.Orientation, value: str, role: int = ...) -> bool:
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole and 0 <= section < len(self._header):
+        if (orientation == Qt.Orientation.Horizontal
+                and role == Qt.ItemDataRole.DisplayRole
+                and 0 <= section < len(self._header)):
             self._header[section] = value
             return True
         return False
@@ -188,10 +189,10 @@ class LinesListModel(QAbstractTableModel):
         self._rows_loaded = self.ROW_BATCH_COUNT
         self.endResetModel()
 
-    def sort(self, column: int, order: Qt.SortOrder = Qt.AscendingOrder) -> None:
+    def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
         self.beginResetModel()
         data_column: Final[int] = {0: 1, 1: 3, 2: 5, 3: 7}[column]
-        self._data.sort(key=lambda l: l[data_column], reverse=bool(order != Qt.AscendingOrder))
+        self._data.sort(key=lambda l: l[data_column], reverse=bool(order != Qt.SortOrder.AscendingOrder))
         self.endResetModel()
 
     def canFetchMore(self, index: QModelIndex = QModelIndex()) -> bool:
@@ -207,8 +208,9 @@ class LinesListModel(QAbstractTableModel):
 
 
 class UI(QMainWindow):
-    def __init__(self, catalog: Catalog, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, catalog: Catalog,
+                 parent: QWidget = None) -> None:
+        super().__init__(parent)
         self.catalog: Catalog = catalog
         self.settings: Settings = Settings('SavSoft', 'CatSearch', self)
 
@@ -255,20 +257,20 @@ class UI(QMainWindow):
             self.results_table.setModel(self.results_model)
             self.results_table.setItemDelegateForColumn(0, HTMLDelegate())
             self.results_table.setMouseTracking(True)
-            self.results_table.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.results_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.results_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            self.results_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             self.results_table.setDropIndicatorShown(False)
             self.results_table.setDragDropOverwriteMode(False)
-            self.results_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            self.results_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
             self.results_table.setCornerButtonEnabled(False)
             self.results_table.setSortingEnabled(True)
             self.results_table.setAlternatingRowColors(True)
             self.results_table.horizontalHeader().setDefaultSectionSize(180)
             self.results_table.horizontalHeader().setHighlightSections(False)
-            self.results_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-            self.results_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
-            self.results_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-            self.results_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
+            self.results_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+            self.results_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+            self.results_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+            self.results_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
             self.results_table.verticalHeader().setVisible(False)
             self.results_table.verticalHeader().setHighlightSections(False)
             self.layout_main.addWidget(self.results_table, 4, 0, 1, 3)
@@ -279,8 +281,10 @@ class UI(QMainWindow):
             # frequency limits
             self.layout_main.addWidget(self.box_frequency, 0, 1, 2, 1)
 
-            self.spin_intensity.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-            self.spin_intensity.setButtonSymbols(QAbstractSpinBox.NoButtons)
+            self.spin_intensity.setAlignment(Qt.AlignmentFlag.AlignRight
+                                             | Qt.AlignmentFlag.AlignTrailing
+                                             | Qt.AlignmentFlag.AlignVCenter)
+            self.spin_intensity.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
             self.spin_intensity.setDecimals(2)
             self.spin_intensity.setMinimum(-math.inf)
             self.spin_intensity.setMaximum(math.inf)
@@ -288,8 +292,10 @@ class UI(QMainWindow):
             self.spin_intensity.setValue(-6.54)
             self.spin_intensity.setStatusTip(self.spin_intensity.tr('Limit shown spectral lines'))
             self.layout_options.addRow(self.layout_options.tr('Minimal Intensity:'), self.spin_intensity)
-            self.spin_temperature.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-            self.spin_temperature.setButtonSymbols(QAbstractSpinBox.NoButtons)
+            self.spin_temperature.setAlignment(Qt.AlignmentFlag.AlignRight
+                                               | Qt.AlignmentFlag.AlignTrailing
+                                               | Qt.AlignmentFlag.AlignVCenter)
+            self.spin_temperature.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
             self.spin_temperature.setMaximum(999.99)
             self.spin_temperature.setValue(300.0)
             self.spin_temperature.setStatusTip(self.spin_temperature.tr('Temperature to calculate intensity'))
@@ -469,9 +475,9 @@ class UI(QMainWindow):
         for row in self.results_table.selectionModel().selectedRows(col):
             text_to_copy.append(self.results_model.data(row))
         if col == 0:
-            copy_to_clipboard(html_list(text_to_copy), Qt.RichText)
+            copy_to_clipboard(html_list(text_to_copy), Qt.TextFormat.RichText)
         else:
-            copy_to_clipboard(self.settings.line_end.join(text_to_copy), Qt.PlainText)
+            copy_to_clipboard(self.settings.line_end.join(text_to_copy), Qt.TextFormat.PlainText)
 
     def on_action_copy_name_triggered(self) -> None:
         self.copy_selected_items(0)
@@ -486,7 +492,7 @@ class UI(QMainWindow):
         self.copy_selected_items(3)
 
     def on_action_copy_triggered(self) -> None:
-        copy_to_clipboard(self.stringify_selection_html(), Qt.RichText)
+        copy_to_clipboard(self.stringify_selection_html(), Qt.TextFormat.RichText)
 
     def on_action_select_all_triggered(self) -> None:
         self.results_table.selectAll()
@@ -568,9 +574,10 @@ class UI(QMainWindow):
         self.toggle_results_table_column_visibility(3, self.menu_bar.action_show_lower_state_energy.isChecked())
         self.settings.endGroup()
         self.settings.beginGroup('window')
-        desktop: QDesktopWidget = QApplication.desktop()
-        self.move(round(0.5 * (desktop.width() - self.size().width())),
-                  round(0.5 * (desktop.height() - self.size().height())))  # Fallback: Center the window
+        screens: list[QScreen] = QApplication.screens()
+        if screens:
+            self.move(round(0.5 * (screens[0].size().width() - self.size().width())),
+                      round(0.5 * (screens[0].size().height() - self.size().height())))  # Fallback: Center the window
         window_settings = self.settings.value('geometry')
         if window_settings is not None:
             self.restoreGeometry(window_settings)

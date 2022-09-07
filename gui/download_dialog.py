@@ -8,11 +8,10 @@ from pathlib import Path
 from queue import Queue
 from typing import BinaryIO, TextIO, cast
 
-from PyQt5.QtCore import QJsonDocument, QTimer, Qt, qCompress
-from PyQt5.QtWidgets import (QDoubleSpinBox, QFormLayout, QLabel, QProgressBar, QVBoxLayout, QWidget, QWizard,
-                             QWizardPage)
-
 from async_downloader import Downloader
+from gui.qt.core import QJsonDocument, QTimer, Qt, qCompress
+from gui.qt.widgets import (QDoubleSpinBox, QFormLayout, QLabel, QProgressBar, QVBoxLayout, QWidget, QWizard,
+                            QWizardPage)
 from gui.save_file_path_entry import SaveFilePathEntry
 
 __all__ = ['DownloadDialog']
@@ -51,8 +50,14 @@ class SettingsPage(QWizardPage):
         self.path_entry.pathChanged.connect(self.completeChanged.emit)
         layout.addRow(self.tr('Save catalog to'), self.path_entry)
 
-        self.registerField('min_frequency', self.spin_min_frequency, 'value', self.spin_min_frequency.valueChanged)
-        self.registerField('max_frequency', self.spin_max_frequency, 'value', self.spin_max_frequency.valueChanged)
+        try:
+            self.registerField('min_frequency', self.spin_min_frequency, 'value', self.spin_min_frequency.valueChanged)
+            self.registerField('max_frequency', self.spin_max_frequency, 'value', self.spin_max_frequency.valueChanged)
+        except TypeError:  # PySide2
+            self.registerField('min_frequency', self.spin_min_frequency,
+                               'value', 'self.spin_min_frequency.valueChanged')
+            self.registerField('max_frequency', self.spin_max_frequency,
+                               'value', 'self.spin_max_frequency.valueChanged')
 
     @property
     def frequency_limits(self) -> tuple[float, float]:
@@ -131,13 +136,13 @@ class ProgressPage(QWizardPage):
             cataloged_species, not_yet_processed_species = self.state_queue.get(block=False)
             self.progress_bar.setValue(cataloged_species)
             self.progress_bar.setMaximum(cataloged_species + not_yet_processed_species)
-        if not self.downloader.is_alive():
+        if self.downloader is None or not self.downloader.is_alive():
             self.timer.stop()
             self.completeChanged.emit()
 
     def isComplete(self) -> bool:
         self.wizard().catalog = self.downloader.catalog
-        return not self.downloader.is_alive()
+        return self.downloader is not None and not self.downloader.is_alive()
 
 
 class SummaryPage(QWizardPage):
@@ -164,9 +169,8 @@ class DownloadDialog(QWizard):
     """ GUI for `async_downloader.Downloader` """
 
     def __init__(self, frequency_limits: tuple[float, float] = (-inf, inf),
-                 parent: QWidget | None = None,
-                 flags: Qt.WindowFlags = Qt.WindowFlags()) -> None:
-        super().__init__(parent, flags)
+                 parent: QWidget | None = None) -> None:
+        super().__init__(parent)
 
         self.catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
 
@@ -198,7 +202,7 @@ class DownloadDialog(QWizard):
             self.progress_page.downloader.join(0.1)
         super(DownloadDialog, self).restart()
 
-    def done(self, exit_code: bool) -> None:
+    def done(self, exit_code: int) -> None:
         if self.progress_page.downloader is not None and self.progress_page.downloader.is_alive():
             self.progress_page.downloader.join(0.1)
         if exit_code and self.catalog:

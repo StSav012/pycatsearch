@@ -3,10 +3,8 @@ from __future__ import annotations
 
 from math import inf
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, \
-    QWidget
-
+from gui.qt.core import Qt
+from gui.qt.widgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, QWidget
 from gui.settings import Settings
 from utils import *
 
@@ -33,17 +31,21 @@ class FrequencyBox(QTabWidget):
         self._spin_frequency_center: QDoubleSpinBox = QDoubleSpinBox(self._page_by_center)
         self._spin_frequency_deviation: QDoubleSpinBox = QDoubleSpinBox(self._page_by_center)
 
-        self._layout_by_range.setLabelAlignment(Qt.AlignLeft)
-        self._spin_frequency_from.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-        self._spin_frequency_from.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self._layout_by_range.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
+        self._spin_frequency_from.setAlignment(Qt.AlignmentFlag.AlignRight
+                                               | Qt.AlignmentFlag.AlignTrailing
+                                               | Qt.AlignmentFlag.AlignVCenter)
+        self._spin_frequency_from.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self._spin_frequency_from.setAccelerated(True)
         self._spin_frequency_from.setDecimals(4)
         self._spin_frequency_from.setMaximum(9999999.9999)
         self._spin_frequency_from.setValue(118747.341)
         self._spin_frequency_from.setSuffix(self._spin_frequency_from.tr(' MHz'))
         self._layout_by_range.addRow(self._layout_by_range.tr('From:'), self._spin_frequency_from)
-        self._spin_frequency_to.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-        self._spin_frequency_to.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self._spin_frequency_to.setAlignment(Qt.AlignmentFlag.AlignRight
+                                             | Qt.AlignmentFlag.AlignTrailing
+                                             | Qt.AlignmentFlag.AlignVCenter)
+        self._spin_frequency_to.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self._spin_frequency_to.setAccelerated(True)
         self._spin_frequency_to.setDecimals(4)
         self._spin_frequency_to.setMaximum(9999999.9999)
@@ -52,16 +54,20 @@ class FrequencyBox(QTabWidget):
         self._layout_by_range.addRow(self._layout_by_range.tr('To:'), self._spin_frequency_to)
         self.addTab(self._page_by_range, self.tr('Range'))
 
-        self._spin_frequency_center.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-        self._spin_frequency_center.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self._spin_frequency_center.setAlignment(Qt.AlignmentFlag.AlignRight
+                                                 | Qt.AlignmentFlag.AlignTrailing
+                                                 | Qt.AlignmentFlag.AlignVCenter)
+        self._spin_frequency_center.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self._spin_frequency_center.setAccelerated(True)
         self._spin_frequency_center.setDecimals(4)
         self._spin_frequency_center.setMaximum(9999999.9999)
         self._spin_frequency_center.setValue(118750.341)
         self._spin_frequency_center.setSuffix(self._spin_frequency_center.tr(' MHz'))
         self._layout_by_center.addRow(self._layout_by_center.tr('Center:'), self._spin_frequency_center)
-        self._spin_frequency_deviation.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-        self._spin_frequency_deviation.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self._spin_frequency_deviation.setAlignment(Qt.AlignmentFlag.AlignRight
+                                                    | Qt.AlignmentFlag.AlignTrailing
+                                                    | Qt.AlignmentFlag.AlignVCenter)
+        self._spin_frequency_deviation.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self._spin_frequency_deviation.setDecimals(4)
         self._spin_frequency_deviation.setMaximum(99.9999)
         self._spin_frequency_deviation.setSingleStep(0.1)

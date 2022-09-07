@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget,
-                             QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
-
 from catalog import Catalog
+from gui.qt.core import Qt
+from gui.qt.widgets import (QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget,
+                            QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
 from gui.settings import Settings
 from utils import *
 
@@ -31,11 +30,11 @@ class SubstancesBox(QGroupBox):
         self._text_substance.setClearButtonEnabled(True)
         self._text_substance.setPlaceholderText(self._text_substance.tr('Filter'))
         self._layout_substance.addWidget(self._text_substance)
-        self._list_substance.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self._list_substance.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self._list_substance.setDropIndicatorShown(False)
         self._list_substance.setAlternatingRowColors(True)
-        self._list_substance.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self._list_substance.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self._list_substance.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self._list_substance.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._list_substance.setSortingEnabled(False)
         self._layout_substance.addWidget(self._list_substance)
         self._check_keep_selection.setStatusTip(
@@ -56,7 +55,7 @@ class SubstancesBox(QGroupBox):
         if self.isChecked():
             for i in range(self._list_substance.count()):
                 item: QListWidgetItem = self._list_substance.item(i)
-                if item.checkState() == Qt.Checked:
+                if item.checkState() == Qt.CheckState.Checked:
                     self._selected_substances.add(item.text())
                 else:
                     self._selected_substances.discard(item.text())
@@ -103,8 +102,10 @@ class SubstancesBox(QGroupBox):
 
         for text in self.filter_substances_list(filter_text):
             new_item: QListWidgetItem = QListWidgetItem(text)
-            new_item.setFlags(int(new_item.flags()) | Qt.ItemIsUserCheckable)
-            new_item.setCheckState(Qt.Checked if text in self._selected_substances else Qt.Unchecked)
+            new_item.setFlags(new_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            new_item.setCheckState(Qt.CheckState.Checked
+                                   if text in self._selected_substances
+                                   else Qt.CheckState.Unchecked)
             self._list_substance.addItem(new_item)
 
     def on_text_changed(self, current_text: str) -> None:
@@ -117,7 +118,7 @@ class SubstancesBox(QGroupBox):
 
     def on_button_select_none_clicked(self) -> None:
         for i in range(self._list_substance.count()):
-            self._list_substance.item(i).setCheckState(Qt.Unchecked)
+            self._list_substance.item(i).setCheckState(Qt.CheckState.Unchecked)
         self._selected_substances.clear()
 
     def load_settings(self) -> None:

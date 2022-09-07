@@ -9,8 +9,8 @@ from typing import Final, Sequence
 __author__: Final[str] = 'StSav012'
 __original_name__: Final[str] = 'py''cat''search'
 
-REQUIREMENTS: Final[list[str]] = [('PyQt5.QtCore', 'PySide6.QtCore', 'PyQt6.QtCore', 'PySide2.QtCore'),
-                                  'pathvalidate', 'aiohttp']
+REQUIREMENTS: Final[list[str | Sequence[str]]] = [('PyQt5.QtCore', 'PySide6.QtCore', 'PyQt6.QtCore', 'PySide2.QtCore'),
+                                                  'pathvalidate', 'aiohttp']
 
 if __name__ == '__main__':
     def update() -> None:

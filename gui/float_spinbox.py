@@ -4,8 +4,8 @@ from __future__ import annotations
 import math
 from typing import Final, Optional
 
-from PyQt5.QtGui import QValidator
-from PyQt5.QtWidgets import QDoubleSpinBox, QWidget
+from gui.qt.gui import QValidator
+from gui.qt.widgets import QDoubleSpinBox, QWidget
 
 __all__ = ['FloatSpinBox']
 
@@ -49,9 +49,9 @@ class FloatSpinBox(QDoubleSpinBox):
         try:
             self.valueFromText(text)
         except (ValueError, TypeError):
-            return QValidator.Invalid, text, pos
+            return QValidator.State.Invalid, text, pos
         else:
-            return QValidator.Acceptable, text, pos
+            return QValidator.State.Acceptable, text, pos
 
     def fixup(self, text: str) -> str:
         for word in text.split():
