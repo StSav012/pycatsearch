@@ -130,6 +130,7 @@ class Downloader(Thread):
                     return dict()
                 catalog_entries = [CatalogEntry(line) for line in lines]
                 if not catalog_entries:
+                    logger.warning('no entries in the catalog')
                     return dict()
                 return {
                     **species_entry,
