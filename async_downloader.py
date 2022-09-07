@@ -12,7 +12,7 @@ from queue import Empty, Queue
 from threading import Thread
 from typing import Any, BinaryIO, Final, cast
 from urllib.error import HTTPError
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import aiohttp
 import aiohttp.client_exceptions
@@ -32,7 +32,6 @@ class Downloader(Thread):
         self._frequency_limits: tuple[float, float] = frequency_limits
         self._catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
 
-        self._sem: asyncio.BoundedSemaphore | None = None
         self._run: bool = False
 
     @property
@@ -41,37 +40,43 @@ class Downloader(Thread):
 
     def join(self, timeout: float | None = ...) -> None:
         self._run = False
-        with suppress(ValueError):
-            while self._sem:
-                self._sem.release()  # let all the threads finish
-
         super().join(timeout=timeout)
 
     def run(self) -> None:
         self._run = True
 
         async def async_get_catalog() -> list[dict[str, int | str | list[dict[str, float]]]]:
-            self._sem = asyncio.BoundedSemaphore(128)  # init the semaphore _inside_ the event loop
+
+            sessions: dict[str, aiohttp.ClientSession] = dict()
+
+            def session_for_url(url: str) -> aiohttp.ClientSession:
+                domain: str = urlparse(url).netloc
+                if domain not in sessions:
+                    sessions[domain] = aiohttp.ClientSession(trust_env=True)
+                return sessions[domain]
+
+            async def close_all_sessions() -> None:
+                domain: str
+                session: aiohttp.ClientSession
+                for domain, session in sessions.items():
+                    if not session.closed:
+                        await session.close()
 
             async def get(url: str) -> str:
-                try:
-                    async with self._sem, aiohttp.ClientSession(trust_env=True) as session:
-                        while self._run:
-                            try:
-                                async with session.get(url, ssl=False) as response:
-                                    return (await response.read()).decode()
-                            except aiohttp.client_exceptions.ClientError as ex:
-                                logging.warning(f'{str(ex.args[1])} to {url}')
-                                await asyncio.sleep(random.random())
-                except ValueError:  # may come from `self._sem.release()`
-                    if self._run:
-                        raise
+                session: aiohttp.ClientSession = session_for_url(url)
+                while self._run:
+                    try:
+                        async with session.get(url, ssl=False) as response:
+                            return (await response.read()).decode()
+                    except aiohttp.client_exceptions.ClientError as ex:
+                        logging.warning(f'{str(ex.args[1])} to {url}')
+                    await asyncio.sleep(random.random())
                 return ''
 
             async def post(url: str, data: dict[str, Any]) -> str:
-                async with aiohttp.ClientSession(trust_env=True) as session:
-                    async with session.post(url, data=urlencode(data).encode()) as response:
-                        return (await response.read()).decode()
+                session: aiohttp.ClientSession = session_for_url(url)
+                async with session.post(url, data=urlencode(data).encode()) as response:
+                    return (await response.read()).decode()
 
             async def get_species() -> list[dict[str, int | str]]:
                 def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
@@ -138,6 +143,9 @@ class Downloader(Thread):
                     catalog.append(catalog_entry)
                 if self._state_queue is not None:
                     self._state_queue.put((len(catalog), species_count - future_entry_index))
+
+            await close_all_sessions()
+
             return catalog
 
         with suppress(RuntimeError):  # it might be “cannot schedule new futures after shutdown”
