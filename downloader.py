@@ -16,6 +16,8 @@ from utils import *
 
 __all__ = ['get_catalog', 'save_catalog']
 
+logger: logging.Logger = logging.getLogger('downloader')
+
 
 def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) -> \
         list[dict[str, int | str | list[dict[str, float]]]]:
@@ -68,9 +70,10 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) -> \
             else:
                 fn = 'https://spec.jpl.nasa.gov/ftp/pub/catalog/' + fn
         try:
+            logger.debug(f'getting {fn}')
             lines = get(fn).splitlines()
         except HTTPError as ex:
-            logging.error(fn, exc_info=ex)
+            logger.error(fn, exc_info=ex)
             return dict()
         catalog_entries = [CatalogEntry(line) for line in lines]
         return {
@@ -137,9 +140,10 @@ def save_catalog(filename: str,
                         FREQUENCY: frequency_limits
                     }).toBinaryData().data())
         else:
-            logging.error('No Qt realization found')
+            logger.error('No Qt realization found')
     return True
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     save_catalog('catalog.json.gz', (115000, 178000))

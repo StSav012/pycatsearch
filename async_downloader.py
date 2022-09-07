@@ -22,6 +22,8 @@ from utils import *
 
 __all__ = ['Downloader', 'get_catalog', 'save_catalog']
 
+logger: logging.Logger = logging.getLogger('async_downloader')
+
 
 class Downloader(Thread):
     def __init__(self,
@@ -68,8 +70,12 @@ class Downloader(Thread):
                     try:
                         async with session.get(url, ssl=False) as response:
                             return (await response.read()).decode()
+                    except aiohttp.client_exceptions.ServerDisconnectedError as ex:
+                        logger.warning(f'{url}: {str(ex.message)}')
+                    except aiohttp.client_exceptions.ClientConnectorError as ex:
+                        logger.warning(f'{str(ex.args[1])} to {url}')
                     except aiohttp.client_exceptions.ClientError as ex:
-                        logging.warning(f'{str(ex.args[1])} to {url}')
+                        logger.warning(f'{url}: ClientError', exc_info=ex)
                     await asyncio.sleep(random.random())
                 return ''
 
@@ -117,7 +123,7 @@ class Downloader(Thread):
                 try:
                     lines = (await get(fn)).splitlines()
                 except HTTPError as ex:
-                    logging.error(fn, exc_info=ex)
+                    logger.error(fn, exc_info=ex)
                     return dict()
                 catalog_entries = [CatalogEntry(line) for line in lines]
                 if not catalog_entries:
@@ -172,7 +178,7 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
         except Empty:
             continue
         else:
-            logging.debug(f'{cataloged_species} | {not_yet_processed_species}')
+            logger.info(f'got {cataloged_species} entries, {not_yet_processed_species} left')
 
     return downloader.catalog
 
@@ -228,13 +234,14 @@ def save_catalog(filename: str,
                         FREQUENCY: frequency_limits
                     }).toBinaryData().data())
         else:
-            logging.error('No Qt realization found')
+            logger.error('No Qt realization found')
     return True
 
 
 if __name__ == '__main__':
     from datetime import datetime
 
+    logging.basicConfig(level=logging.DEBUG)
     print(datetime.now())
     save_catalog('catalog_110-170.json.gz', (110000, 170000))
     print(datetime.now())
