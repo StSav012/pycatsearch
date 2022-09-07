@@ -15,7 +15,7 @@ REQUIREMENTS: Final[list[str]] = [('PyQt5.QtCore', 'PySide6.QtCore', 'PyQt6.QtCo
 if __name__ == '__main__':
     def update() -> None:
         """ Download newer files from GitHub and replace the existing ones """
-        with suppress(OSError, ModuleNotFoundError):
+        with suppress(BaseException):  # ignore really all exceptions, for there are dozens of the sources
             import updater
 
             updater.update(__author__, __original_name__)
