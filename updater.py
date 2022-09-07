@@ -5,7 +5,7 @@ import logging
 import urllib.request
 from http.client import HTTPResponse
 from pathlib import Path
-from typing import Final, cast
+from typing import Final
 
 __all__ = ['update']
 
@@ -38,7 +38,26 @@ def get_github_date(user: str, repo_name: str, branch: str = 'master') -> str:
     if not isinstance(d, list) or not d:
         logger.warning(f'Malformed JSON received: {d}')
         return ''
-    return cast(str, d[0].get('commit', dict()).get('author', dict()).get('date', ''))
+    d_0: dict[str,
+              str
+              |
+              dict[str,
+                   str | int | bool | dict[str,
+                                           None | str | bool]]
+              |
+              list[dict[str, str]]] = d[0]
+    commit: dict[str,
+                 str | int | dict[str,
+                                  None | str | bool]] \
+        = d_0.get('commit', dict())
+    if not isinstance(commit, dict):
+        logger.warning(f'Malformed commit info received: {commit}')
+        return ''
+    author: dict[str, str] = commit.get('author', dict())
+    if not isinstance(author, dict):
+        logger.warning(f'Malformed commit author info received: {author}')
+        return ''
+    return author.get('date', '')
 
 
 def get_current_version_date(root_path: Path) -> str:
