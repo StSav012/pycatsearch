@@ -10,6 +10,7 @@ from contextlib import suppress
 from math import inf
 from queue import Empty, Queue
 from threading import Thread
+from types import ModuleType
 from typing import Any, BinaryIO, Final, cast
 from urllib.error import HTTPError
 from urllib.parse import urlencode
@@ -221,16 +222,7 @@ def save_catalog(filename: str,
             FREQUENCY: frequency_limits
         }, indent=4).encode())
     if qt_json_filename:
-        import importlib
-
-        qt_core = None
-        for qt in ('PySide6', 'PyQt6', 'PyQt5', 'PySide2'):
-            try:
-                qt_core = importlib.import_module(f'{qt}.QtCore')
-            except (ImportError, ModuleNotFoundError):
-                pass
-            else:
-                break
+        qt_core: ModuleType | None = find_qt_core()
         if qt_core is not None:
             with open(qt_json_filename, 'wb') as f:
                 if qt_json_zipped:
