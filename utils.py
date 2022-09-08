@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import gzip
 import html
 import html.entities
+import json
 import math
 import os
 from numbers import Real
-from typing import Final, cast
-
+from pathlib import Path
+from types import ModuleType
+from typing import BinaryIO, Final, TextIO, cast
 
 __all__ = ['UPDATED',
            'M_LOG10E',
@@ -27,7 +30,9 @@ __all__ = ['UPDATED',
            'sq_nm_mhz_to_log10_sq_nm_mhz',
            'log10_cm_per_molecule_to_log10_sq_nm_mhz',
            'cm_per_molecule_to_log10_sq_nm_mhz',
-           'within', 'chem_html', 'best_name', 'remove_html', 'wrap_in_html']
+           'within', 'chem_html', 'best_name', 'remove_html', 'wrap_in_html',
+           'find_qt_core',
+           'save_catalog_to_file']
 
 try:
     import version
@@ -36,7 +41,6 @@ except ImportError:
     UPDATED: Final[str] = ''
 else:
     UPDATED: Final[str] = version.UPDATED
-
 
 M_LOG10E: Final[float] = math.log10(math.e)
 
@@ -392,3 +396,49 @@ def wrap_in_html(text: str, line_end: str = os.linesep) -> str:
     ]
 
     return line_end.join(new_text)
+
+
+def find_qt_core() -> ModuleType | None:
+    import importlib
+
+    qt_core = None
+    for qt in ('PySide6', 'PyQt6', 'PyQt5', 'PySide2'):
+        try:
+            qt_core = importlib.import_module(f'{qt}.QtCore')
+        except (ImportError, ModuleNotFoundError):
+            pass
+        else:
+            break
+    return qt_core
+
+
+def save_catalog_to_file(saving_path: str | Path,
+                         catalog: list[dict[str, int | str | list[dict[str, float]]]],
+                         frequency_limits: tuple[float, float]) -> bool:
+    saving_path: Path = Path(saving_path)
+    data: dict[str, list[dict[str, int | str | list[dict[str, float]]]] | list[float]] = {
+        CATALOG: catalog,
+        FREQUENCY: list(frequency_limits)
+    }
+    f: TextIO | BinaryIO | gzip.GzipFile
+    if saving_path.suffix.casefold() == '.json':
+        with saving_path.open('wt') as f:
+            f.write(json.dumps(data, indent=4).encode())
+    elif saving_path.name.casefold().endswith('.json.gz'):
+        with gzip.open(saving_path, 'wb') as f:
+            f.write(json.dumps(data, indent=4).encode())
+    elif saving_path.suffix.casefold() in ('.qb''json', '.qb''js'):
+        qt_core: ModuleType | None = find_qt_core()
+        if qt_core is None:
+            return False
+        with saving_path.open('wb') as f:
+            f.write(qt_core.QJsonDocument(data).toBinaryData().data())
+    elif saving_path.suffix == '.qb''jsz':
+        qt_core: ModuleType | None = find_qt_core()
+        if qt_core is None:
+            return False
+        with saving_path.open('wb') as f:
+            f.write(qt_core.qCompress(qt_core.QJsonDocument(data).toBinaryData()).data())
+    else:
+        raise ValueError(f'Do not know what to save into {saving_path}')
+    return True
