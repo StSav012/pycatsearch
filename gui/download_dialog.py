@@ -9,6 +9,7 @@ from async_downloader import Downloader
 from gui.qt.core import QTimer
 from gui.qt.widgets import (QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel, QProgressBar, QVBoxLayout,
                             QWidget, QWizard, QWizardPage)
+from gui.waiting_screen import WaitingScreen
 
 __all__ = ['DownloadDialog']
 
@@ -204,8 +205,14 @@ class DownloadDialog(QWizard):
             if not save_file_name:
                 return
 
-            save_catalog_to_file(saving_path=save_file_name,
-                                 catalog=self.catalog,
-                                 frequency_limits=(self.field('min_frequency'), self.field('max_frequency')))
+            ws = WaitingScreen(self,
+                               label=self.tr('Please wait...'),
+                               target=save_catalog_to_file,
+                               kwargs={
+                                   'saving_path': save_file_name,
+                                   'catalog': self.catalog,
+                                   'frequency_limits': (self.field('min_frequency'), self.field('max_frequency'))
+                               })
+            ws.exec()
 
         super(DownloadDialog, self).done(exit_code)
