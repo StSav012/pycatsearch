@@ -134,7 +134,8 @@ The numbers are the same as what `get_catalog` function types.
       
 ### `gui`
 
-This is the graphical interface built with `PyQt5`. Just run `main.py` and see for yourself.
+This is the graphical interface built with Python bindings for Qt (`PyQt5`, `PySide6`, `PyQt6`, or `PySide2`).
+Just run `main.py` and see for yourself.
 
 ### Requirements
 
@@ -142,12 +143,12 @@ The code is developed under `python 3.10`. It should work under `python 3.8` but
 
 The non-GUI parts require absolute minimum of non-standard modules.
 If you want to save the catalog as a [Qt JSON Document](https://doc.qt.io/qt-5/qjsondocument.html),
-then `PyQt5` is needed.
+then a Qt binding to Python is needed.
 If you want to download the catalog data faster, consider `async_downloader` module;
 it requires `aiohttp`.
 Otherwise, only the built-ins are used.
 
-The GUI requires `PyQt5`, `pathvalidate`, and `aiohttp`.
+The GUI requires Python bindings for Qt (`PyQt5`, `PySide6`, `PyQt6`, or `PySide2`), `pathvalidate`, and `aiohttp`.
 
 ## File Format
 
