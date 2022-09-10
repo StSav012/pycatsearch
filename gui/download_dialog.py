@@ -37,8 +37,16 @@ class SettingsPage(QWizardPage):
         layout.addRow(self.tr('Minimal frequency:'), self.spin_min_frequency)
         layout.addRow(self.tr('Maximal frequency:'), self.spin_max_frequency)
 
-        self.registerField('min_frequency', self.spin_min_frequency, 'value', 'self.spin_min_frequency.valueChanged')
-        self.registerField('max_frequency', self.spin_max_frequency, 'value', 'self.spin_max_frequency.valueChanged')
+        try:  # PyQt*
+            self.registerField('min_frequency', self.spin_min_frequency,
+                               'value', self.spin_min_frequency.valueChanged)
+            self.registerField('max_frequency', self.spin_max_frequency,
+                               'value', self.spin_max_frequency.valueChanged)
+        except TypeError:  # PySide*
+            self.registerField('min_frequency', self.spin_min_frequency,
+                               'value', 'self.spin_min_frequency.valueChanged')
+            self.registerField('max_frequency', self.spin_max_frequency,
+                               'value', 'self.spin_max_frequency.valueChanged')
 
     @property
     def frequency_limits(self) -> tuple[float, float]:
