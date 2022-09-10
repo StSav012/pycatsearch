@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import platform
 import sys
 from contextlib import suppress
 from pathlib import Path
@@ -9,7 +10,28 @@ from typing import Final, Sequence
 __author__: Final[str] = 'StSav012'
 __original_name__: Final[str] = 'py''cat''search'
 
-REQUIREMENTS: Final[list[str | Sequence[str]]] = [('PyQt5.QtCore', 'PySide6.QtCore', 'PyQt6.QtCore', 'PySide2.QtCore'),
+
+def _version_tuple(version_string: str) -> tuple[int | str, ...]:
+    result: tuple[int | str, ...] = tuple()
+    part: str
+    for part in version_string.split('.'):
+        try:
+            result += (int(part),)
+        except ValueError:
+            result += (part,)
+    return result
+
+
+qt_list: Sequence[str]
+uname: platform.uname_result = platform.uname()
+if ((uname.system == 'Windows'
+     and _version_tuple(uname.version) < _version_tuple('10.0.19044'))  # Windows 10 21H2 or later required
+        or uname.machine not in ('x86_64', 'AMD64')):
+    qt_list = ('PyQt5', 'PySide2')  # Qt6 does not support the OSes
+else:
+    qt_list = ('PyQt6', 'PySide6', 'PyQt5', 'PySide2')
+
+REQUIREMENTS: Final[list[str | Sequence[str]]] = [[qt + '.QtCore' for qt in qt_list],
                                                   'pathvalidate', 'aiohttp']
 
 if __name__ == '__main__':
