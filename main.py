@@ -32,7 +32,7 @@ else:
     qt_list = ('PyQt6', 'PySide6', 'PyQt5', 'PySide2')
 
 REQUIREMENTS: Final[list[str | Sequence[str]]] = [[qt + '.QtCore' for qt in qt_list],
-                                                  'pathvalidate', 'aiohttp']
+                                                  'aiohttp']
 
 if __name__ == '__main__':
     def update() -> None:
