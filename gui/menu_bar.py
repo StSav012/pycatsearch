@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from gui.qt.gui import QAction, QIcon
-from gui.qt.widgets import QMenu, QMenuBar, QStyle, QWidget
+from qtpy.QtGui import QAction, QIcon
+from qtpy.QtWidgets import QMenu, QMenuBar, QStyle, QWidget
 
 __all__ = ['MenuBar']
 

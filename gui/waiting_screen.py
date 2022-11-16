@@ -4,8 +4,8 @@ from __future__ import annotations
 from threading import Thread
 from typing import Any, Callable, Mapping, Sequence
 
-from gui.qt.core import QCoreApplication, Qt
-from gui.qt.widgets import QGridLayout, QLabel, QWidget
+from qtpy.QtCore import QCoreApplication, Qt
+from qtpy.QtWidgets import QGridLayout, QLabel, QWidget
 
 __all__ = ['WaitingScreen']
 

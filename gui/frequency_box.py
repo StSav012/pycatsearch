@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from math import inf
 
-from gui.qt.core import Qt
-from gui.qt.widgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, QWidget
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, QWidget
+
 from gui.settings import Settings
 from utils import *
 

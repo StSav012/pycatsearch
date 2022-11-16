@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 
-from gui.qt.widgets import QApplication
+from qtpy.QtWidgets import QApplication
 
 from catalog import Catalog
 from gui.ui import UI

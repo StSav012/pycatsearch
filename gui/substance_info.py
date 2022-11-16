@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QWidget
+
 from catalog import Catalog
-from gui.qt.core import Qt
-from gui.qt.widgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QWidget
 from utils import *
 
 __all__ = ['SubstanceInfo']

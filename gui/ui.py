@@ -4,18 +4,19 @@ from __future__ import annotations
 import math
 from typing import Any, Final
 
+from qtpy.QtCore import QAbstractTableModel, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
+from qtpy.QtGui import QAbstractTextDocumentLayout, QCloseEvent, QIcon, QPainter, QPixmap, QScreen, QTextDocument
+from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox,
+                            QFileDialog, QFormLayout, QGridLayout, QHeaderView, QMainWindow, QMessageBox, QPushButton,
+                            QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView,
+                            QTableWidgetSelectionRange, QWidget)
+
 from catalog import Catalog
 from gui.download_dialog import DownloadDialog
 from gui.float_spinbox import FloatSpinBox
 from gui.frequency_box import FrequencyBox
 from gui.menu_bar import MenuBar
 from gui.preferences import Preferences
-from gui.qt.core import QAbstractTableModel, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
-from gui.qt.gui import QAbstractTextDocumentLayout, QCloseEvent, QIcon, QPainter, QPixmap, QScreen, QTextDocument
-from gui.qt.widgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox,
-                            QFileDialog, QFormLayout, QGridLayout, QHeaderView, QMainWindow, QMessageBox, QPushButton,
-                            QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView,
-                            QTableWidgetSelectionRange, QWidget)
 from gui.settings import Settings
 from gui.substance_info import SubstanceInfo
 from gui.substances_box import SubstancesBox

@@ -4,7 +4,8 @@ from __future__ import annotations
 import os
 from typing import Any, Callable, Final
 
-from gui.qt.core import QSettings
+from qtpy.QtCore import QSettings
+
 from utils import *
 
 __all__ = ['Settings']

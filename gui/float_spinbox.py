@@ -4,8 +4,8 @@ from __future__ import annotations
 import math
 from typing import Final, Optional
 
-from gui.qt.gui import QValidator
-from gui.qt.widgets import QDoubleSpinBox, QWidget
+from qtpy.QtGui import QValidator
+from qtpy.QtWidgets import QDoubleSpinBox, QWidget
 
 __all__ = ['FloatSpinBox']
 

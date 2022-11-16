@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from catalog import Catalog
-from gui.qt.core import Qt
-from gui.qt.widgets import (QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget,
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import (QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget,
                             QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
+
+from catalog import Catalog
 from gui.settings import Settings
 from utils import *
 

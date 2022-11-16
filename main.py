@@ -31,7 +31,8 @@ if ((uname.system == 'Windows'
 else:
     qt_list = ('PyQt6', 'PySide6', 'PyQt5', 'PySide2')
 
-REQUIREMENTS: Final[list[str | Sequence[str]]] = [[qt + '.QtCore' for qt in qt_list],
+REQUIREMENTS: Final[list[str | Sequence[str]]] = ['QtPy',
+                                                  [qt + '.QtCore' for qt in qt_list],
                                                   'aiohttp']
 
 if __name__ == '__main__':

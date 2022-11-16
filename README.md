@@ -139,7 +139,7 @@ Just run `main.py` and see for yourself.
 
 ### Requirements
 
-The code is developed under `python 3.10`. It should work under `python 3.8` but merely tested.
+The code is developed under `python 3.11`. It should work under `python 3.8` but merely tested.
 
 The non-GUI parts require absolute minimum of non-standard modules.
 If you want to save the catalog as a [Qt JSON Document](https://doc.qt.io/qt-5/qjsondocument.html),
@@ -148,7 +148,7 @@ If you want to download the catalog data faster, consider `async_downloader` mod
 it requires `aiohttp`.
 Otherwise, only the built-ins are used.
 
-The GUI requires Python bindings for Qt (`PyQt5`, `PySide6`, `PyQt6`, or `PySide2`), `pathvalidate`, and `aiohttp`.
+The GUI requires Python bindings for Qt (`PyQt5`, `PySide6`, `PyQt6`, or `PySide2`), picked by `QtPy`, and `aiohttp`.
 
 ## File Format
 
