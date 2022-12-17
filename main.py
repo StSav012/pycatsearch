@@ -27,9 +27,11 @@ uname: platform.uname_result = platform.uname()
 if ((uname.system == 'Windows'
      and _version_tuple(uname.version) < _version_tuple('10.0.19044'))  # Windows 10 21H2 or later required
         or uname.machine not in ('x86_64', 'AMD64')):
-    qt_list = ('PyQt5', 'PySide2')  # Qt6 does not support the OSes
+    qt_list = ('PyQt5',)  # Qt6 does not support the OSes
 else:
-    qt_list = ('PyQt6', 'PySide6', 'PyQt5', 'PySide2')
+    qt_list = ('PyQt6', 'PySide6', 'PyQt5')
+if sys.version_info < (3, 11):  # PySide2 does not support Python 3.11 and newer
+    qt_list = *qt_list, 'PySide2'
 
 REQUIREMENTS: Final[list[str | Sequence[str]]] = ['qtpy',
                                                   [qt + '.QtCore' for qt in qt_list],
