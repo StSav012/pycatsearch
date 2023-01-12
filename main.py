@@ -34,8 +34,7 @@ if sys.version_info < (3, 11):  # PySide2 does not support Python 3.11 and newer
     qt_list = *qt_list, 'PySide2'
 
 REQUIREMENTS: Final[list[str | Sequence[str]]] = ['qtpy',
-                                                  [qt + '.QtCore' for qt in qt_list],
-                                                  'aiohttp']
+                                                  [qt + '.QtCore' for qt in qt_list]]
 
 if __name__ == '__main__':
     def update() -> None:
