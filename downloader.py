@@ -4,24 +4,159 @@ from __future__ import annotations
 import gzip
 import json
 import logging
-from http.client import HTTPResponse
+from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from math import inf
+from queue import Empty, Queue
+from threading import Thread
 from types import ModuleType
-from typing import Any, BinaryIO, cast
+from typing import Any, BinaryIO, Final, cast
 from urllib.error import HTTPError
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.parse import ParseResult, urlencode, urlparse
 
 from catalog_entry import CatalogEntry
 from utils import *
 
-__all__ = ['get_catalog', 'save_catalog']
+__all__ = ['Downloader', 'get_catalog', 'save_catalog']
 
 logger: logging.Logger = logging.getLogger('downloader')
 
 
-def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) -> \
-        list[dict[str, int | str | list[dict[str, float]]]]:
+class Downloader(Thread):
+    def __init__(self,
+                 frequency_limits: tuple[float, float] = (-inf, inf),
+                 state_queue: Queue[tuple[int, int]] | None = None) -> None:
+        super().__init__()
+        self._state_queue: Queue[tuple[int, int]] | None = state_queue
+        self._frequency_limits: tuple[float, float] = frequency_limits
+        self._catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
+
+        self._run: bool = False
+        self._sessions: dict[tuple[str, str], HTTPConnection | HTTPSConnection] = dict()
+
+    def __del__(self) -> None:
+        self._run = False
+        session: HTTPConnection | HTTPSConnection
+        for session in self._sessions.values():
+            session.close()
+
+    @property
+    def catalog(self) -> list[dict[str, int | str | list[dict[str, float]]]]:
+        return self._catalog.copy()
+
+    def join(self, timeout: float | None = ...) -> None:
+        self._run = False
+        session: HTTPConnection | HTTPSConnection
+        for session in self._sessions.values():
+            session.close()
+        super().join(timeout=timeout)
+
+    def run(self) -> None:
+        self._run = True
+
+        def session_for_url(scheme: str, location: str) -> HTTPConnection | HTTPSConnection:
+            if (scheme, location) not in self._sessions:
+                if scheme == 'http':
+                    self._sessions[(scheme, location)] = HTTPConnection(location)
+                elif scheme == 'https':
+                    self._sessions[(scheme, location)] = HTTPSConnection(location)
+                else:
+                    raise ValueError(f'Unknown scheme: {scheme}')
+            return self._sessions[(scheme, location)]
+
+        def get(url: str) -> str:
+            parse_result: ParseResult = urlparse(url)
+            session: HTTPConnection | HTTPSConnection = session_for_url(parse_result.scheme, parse_result.netloc)
+            session.request(method='GET', url=parse_result.path)
+            response: HTTPResponse = session.getresponse()
+            if response.closed:
+                return ''
+            return response.read().decode()
+
+        def post(url: str, data: dict[str, Any]) -> str:
+            parse_result: ParseResult = urlparse(url)
+            session: HTTPConnection | HTTPSConnection = session_for_url(parse_result.scheme, parse_result.netloc)
+            session.request(method='POST', url=parse_result.path, body=urlencode(data))
+            response: HTTPResponse = session.getresponse()
+            if response.closed:
+                return ''
+            return response.read().decode()
+
+        def get_species() -> list[dict[str, int | str]]:
+            def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
+                key: str
+                value: None | int | str
+                return dict(
+                    (key, value) for key, value in entry.items() if value is not None and value not in ('', 'None'))
+
+            def trim_strings(entry: dict[str, None | int | str]) -> dict[str, None | int | str]:
+                key: str
+                for key in entry:
+                    if isinstance(entry[key], str):
+                        entry[key] = cast(str, entry[key]).strip()
+                return entry
+
+            data: dict[str, int | str | list[dict[str, None | int | str]]] \
+                = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1}))
+            if 'species' in data:
+                return [purge_null_data(trim_strings(s)) for s in data['species']]
+            else:
+                return []
+
+        def get_substance_catalog(species_entry: dict[str, int | str]) -> dict[str, int | str | list[dict[str, float]]]:
+            if not self._run:
+                return dict()  # quickly exit the function
+
+            def entry_url(species_tag: int) -> str:
+                entry_filename: str = f'c{species_tag:06}.cat'
+                if entry_filename in ('c044009.cat', 'c044012.cat'):  # merged with c044004.cat — Brian J. Drouin
+                    return ''
+                if species_tag % 1000 > 500:
+                    return 'https://cdms.astro.uni-koeln.de/classic/entries/' + entry_filename
+                else:
+                    return 'https://spec.jpl.nasa.gov/ftp/pub/catalog/' + entry_filename
+
+            if SPECIES_TAG not in species_entry:
+                # nothing to go on with
+                return dict()
+            fn: str = entry_url(species_tag=cast(int, species_entry[SPECIES_TAG]))
+            if not fn:  # no need to download a file for the species tag
+                return dict()
+            try:
+                logger.debug(f'getting {fn}')
+                lines = get(fn).splitlines()
+            except HTTPError as ex:
+                logger.error(fn, exc_info=ex)
+                return dict()
+            catalog_entries = [CatalogEntry(line) for line in lines]
+            if not catalog_entries:
+                logger.warning('no entries in the catalog')
+                return dict()
+            return {
+                **species_entry,
+                DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
+                LINES: [_catalog_entry.to_dict()
+                        for _catalog_entry in catalog_entries
+                        if within(_catalog_entry.frequency, self._frequency_limits)]
+            }
+
+        species: list[dict[str, int | str]] = get_species()
+        catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
+        species_count: Final[int] = len(species)
+        catalog_entry: dict[str, int | str | list[dict[str, float]]]
+        entry_index: int
+        _e: dict[str, int | str]
+        for entry_index, _e in enumerate(species):
+            catalog_entry = get_substance_catalog(_e)
+            if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]:
+                catalog.append(catalog_entry)
+            if self._state_queue is not None:
+                self._state_queue.put((len(catalog), species_count - entry_index))
+
+        self._catalog = catalog
+
+
+def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
+        -> list[dict[str, int | str | list[dict[str, float]]]]:
     """
     Download the spectral lines catalog data
 
@@ -29,71 +164,22 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) -> \
     :return: a list of the spectral lines catalog entries.
     """
 
-    def get(url: str) -> str:
-        response: HTTPResponse = urlopen(url)
-        return response.read().decode()
-
-    def post(url: str, data: dict[str, Any]) -> str:
-        response: HTTPResponse = urlopen(Request(url, data=urlencode(data).encode()))
-        return response.read().decode()
-
-    def get_species() -> list[dict[str, int | str]]:
-        def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
-            key: str
-            value: None | int | str
-            return dict((key, value) for key, value in entry.items() if value is not None and value not in ('', 'None'))
-
-        def trim_strings(entry: dict[str, None | int | str]) -> dict[str, None | int | str]:
-            key: str
-            for key in entry:
-                if isinstance(entry[key], str):
-                    entry[key] = cast(str, entry[key]).strip()
-            return entry
-
-        data: dict[str, int | str | list[dict[str, None | int | str]]] \
-            = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1}))
-        if 'species' in data:
-            return [purge_null_data(trim_strings(s)) for s in data['species']]
-        else:
-            return []
-
-    def get_substance_catalog(species_entry: dict[str, int | str]) -> dict[str, int | str | list[dict[str, float]]]:
-        def entry_url(species_tag: int) -> str:
-            entry_filename: str = f'c{species_tag:06}.cat'
-            if entry_filename in ('c044009.cat', 'c044012.cat'):  # merged with c044004.cat — Brian J. Drouin
-                return ''
-            if species_tag % 1000 > 500:
-                return 'https://cdms.astro.uni-koeln.de/classic/entries/' + entry_filename
-            else:
-                return 'https://spec.jpl.nasa.gov/ftp/pub/catalog/' + entry_filename
-
-        if SPECIES_TAG not in species_entry:
-            # nothing to go on with
-            return dict()
-        fn: str = entry_url(species_tag=cast(int, species_entry[SPECIES_TAG]))
-        if not fn:  # no need to download a file for the species tag
-            return dict()
+    state_queue: Queue[tuple[int, int]] = Queue()
+    downloader: Downloader = Downloader(frequency_limits=frequency_limits, state_queue=state_queue)
+    downloader.start()
+    while downloader.is_alive():
+        cataloged_species: int
+        not_yet_processed_species: int
         try:
-            logger.debug(f'getting {fn}')
-            lines = get(fn).splitlines()
-        except HTTPError as ex:
-            logger.error(fn, exc_info=ex)
-            return dict()
-        catalog_entries = [CatalogEntry(line) for line in lines]
-        if not catalog_entries:
-            logger.warning('no entries in the catalog')
-            return dict()
-        return {
-            **species_entry,
-            DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
-            LINES: [catalog_entry.to_dict()
-                    for catalog_entry in catalog_entries
-                    if within(catalog_entry.frequency, frequency_limits)]
-        }
+            cataloged_species, not_yet_processed_species = state_queue.get(block=True, timeout=0.1)
+        except Empty:
+            continue
+        except KeyboardInterrupt:
+            downloader.join(0.1)
+        else:
+            logger.info(f'got {cataloged_species} entries, {not_yet_processed_species} left')
 
-    catalog: list[dict[str, int | str | list[dict[str, float]]]] = [get_substance_catalog(_e) for _e in get_species()]
-    return [catalog_entry for catalog_entry in catalog
-            if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]]
+    return downloader.catalog
 
 
 def save_catalog(filename: str,
@@ -143,5 +229,9 @@ def save_catalog(filename: str,
 
 
 if __name__ == '__main__':
+    from datetime import datetime
+
     logging.basicConfig(level=logging.DEBUG)
-    save_catalog('catalog.json.gz', (115000, 178000))
+    print(datetime.now())
+    save_catalog('catalog_110-170.json.gz', (110000, 170000))
+    print(datetime.now())
