@@ -148,7 +148,7 @@ If you want to download the catalog data faster, consider `async_downloader` mod
 it requires `aiohttp`.
 Otherwise, only the built-ins are used.
 
-The GUI requires Python bindings for Qt (`PyQt5`, `PySide6`, `PyQt6`, or `PySide2`), picked by `QtPy`, and `aiohttp`.
+The GUI requires Python bindings for Qt (`PyQt5`, `PySide6`, `PyQt6`, or `PySide2`), picked by `QtPy`.
 
 ## File Format
 

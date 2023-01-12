@@ -9,7 +9,10 @@ from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import (QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel, QProgressBar, QVBoxLayout,
                             QWidget, QWizard, QWizardPage)
 
-from async_downloader import Downloader
+try:
+    from async_downloader import Downloader
+except (SyntaxError, ImportError, ModuleNotFoundError):
+    from downloader import Downloader
 from gui.waiting_screen import WaitingScreen
 
 __all__ = ['DownloadDialog']
