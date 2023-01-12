@@ -6,8 +6,9 @@ from queue import Queue
 from typing import cast
 
 from qtpy.QtCore import QTimer
-from qtpy.QtWidgets import (QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel, QProgressBar, QVBoxLayout,
+from qtpy.QtWidgets import (QDialog, QDoubleSpinBox, QFormLayout, QLabel, QProgressBar, QVBoxLayout,
                             QWidget, QWizard, QWizardPage)
+from qtpy.compat import getsavefilename
 
 try:
     from async_downloader import Downloader
@@ -210,10 +211,9 @@ class DownloadDialog(QWizard):
                 f"{self.tr('Compressed Binary Qt JSON')} (*.qb""jsz)",
             )
             save_file_name: str
-            save_file_name, _ = QFileDialog.getSaveFileName(
-                self, self.tr('Save As...'),
-                '',
-                ';;'.join(filters), filters[1])
+            save_file_name, _ = getsavefilename(
+                parent=self, caption=self.tr('Save As...'),
+                filters=';;'.join(filters), selectedfilter=filters[1])
             if not save_file_name:
                 return
 
