@@ -4,8 +4,9 @@ from __future__ import annotations
 import math
 from typing import Any, Final
 
-from qtpy.QtCore import QAbstractTableModel, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
-from qtpy.QtGui import QAbstractTextDocumentLayout, QCloseEvent, QIcon, QPainter, QPixmap, QScreen, QTextDocument
+from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
+from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QIcon, QPainter, QPixmap, QScreen,
+                        QTextDocument)
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox,
                             QFileDialog, QFormLayout, QGridLayout, QHeaderView, QMainWindow, QMessageBox, QPushButton,
                             QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView,
@@ -26,9 +27,6 @@ __all__ = ['UI']
 
 
 def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.PlainText) -> None:
-    from gui.qt.gui import QClipboard
-    from gui.qt.core import QMimeData
-
     clipboard: QClipboard = QApplication.clipboard()
     mime_data: QMimeData = QMimeData()
     if isinstance(text_type, str):
