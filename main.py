@@ -87,9 +87,19 @@ if __name__ == '__main__':
 
         for package in REQUIREMENTS:
             pip_updated = not ensure_package(package, upgrade_pip=not pip_updated)
+
     try:
         import gui
-    except SyntaxError:
-        print('Get a newer Python!')
+    except Exception as ex:
+        import tkinter.messagebox
+        import traceback
+
+        traceback.print_exception(ex)
+        if isinstance(ex, SyntaxError):
+            tkinter.messagebox.showerror(title='Syntax Error',
+                                         message=('Python ' + platform.python_version() + ' is not supported.\n' +
+                                                  'Get a newer Python!'))
+        else:
+            tkinter.messagebox.showerror(title='Error', message=str(ex))
     else:
         gui.run()
