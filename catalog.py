@@ -258,6 +258,10 @@ class Catalog:
         :return: nothing
         """
         entries: list[dict[str, int | str | list[dict[str, float]]]] = self.filter(**kwargs)
+        if not entries:
+            print('nothing found')
+            return
+
         names: list[str] = []
         frequencies: list[float] = []
         intensities: list[float] = []
