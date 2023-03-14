@@ -381,7 +381,7 @@ class UI(QMainWindow):
         new_catalog_file_names, _ = QFileDialog.getOpenFileNames(
             self, self.tr('Load Catalog'),
             self.catalog.sources[0] if self.catalog.sources else '',
-            '{0} (*.json.gz);;{1} (*.json);;{2} (*.*)'.format(
+            '{0}(*.json.gz);;{1}(*.json);;{2}(*.*)'.format(
                 self.tr('Compressed JSON'),
                 self.tr('JSON'),
                 self.tr('All Files')))
