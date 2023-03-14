@@ -52,8 +52,8 @@ c.print(min_frequency=140141, max_frequency=140142)
     - `str any_name`: a string to match the ``trivialname`` or the ``name`` field.
     - `str any_formula`: a string to match the ``structuralformula``, ``moleculesymbol``,
       ``stoichiometricformula``, or ``isotopolog`` field.
-    - `str any_name_or_formula`: a string to match any field used by :param:any_name and :param:any_formula.
-    - `str species_tag`: a number to match the ``speciestag`` field.
+    - `str any_name_or_formula`: a string to match any field used by `any_name` and `any_formula`.
+    - `int species_tag`: a number to match the ``speciestag`` field.
     - `str inchi`: a string to match the ``inchikey`` field.
       See https://iupac.org/who-we-are/divisions/division-details/inchi/ for more.
     - `str trivial_name`: a string to match the ``trivialname`` field.
@@ -61,7 +61,7 @@ c.print(min_frequency=140141, max_frequency=140142)
     - `str name`: a string to match the ``name`` field.
     - `str stoichiometric_formula`: a string to match the ``stoichiometricformula`` field.
     - `str isotopolog`: a string to match the ``isotopolog`` field.
-    - `str state`: a string to match the ``isotopolog`` or the ``state_html`` field.
+    - `str state`: a string to match the ``state`` or the ``state_html`` field.
     - `int degrees_of_freedom`: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
     - `float timeout`: maximum time span for the filtering to take.
 - `print(**kwargs)` prints a table of the filtered catalog entries.

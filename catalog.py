@@ -132,7 +132,7 @@ class Catalog:
         :param str any_formula: a string to match the ``structuralformula``, ``moleculesymbol``,
                                 ``stoichiometricformula``, or ``isotopolog`` field.
         :param str any_name_or_formula: a string to match any field used by :param:any_name and :param:any_formula.
-        :param str species_tag: a number to match the ``speciestag`` field.
+        :param int species_tag: a number to match the ``speciestag`` field.
         :param str inchi: a string to match the ``inchikey`` field.
                           See https://iupac.org/who-we-are/divisions/division-details/inchi/ for more.
         :param str trivial_name: a string to match the ``trivialname`` field.
@@ -140,7 +140,7 @@ class Catalog:
         :param str name: a string to match the ``name`` field.
         :param str stoichiometric_formula: a string to match the ``stoichiometricformula`` field.
         :param str isotopolog: a string to match the ``isotopolog`` field.
-        :param str state: a string to match the ``isotopolog`` or the ``state_html`` field.
+        :param str state: a string to match the ``state`` or the ``state_html`` field.
         :param int degrees_of_freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
         :param float timeout: if positive, the maximum time [seconds] for filtering.
         :raises: :class:`ValueError`: Invalid frequency range
