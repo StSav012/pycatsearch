@@ -198,10 +198,10 @@ class Catalog:
                 if ((not species_tag or (SPECIES_TAG in entry and entry[SPECIES_TAG] == species_tag))
                         and (not inchi or (INCHI_KEY in entry and entry[INCHI_KEY] == inchi))
                         and (not trivial_name
-                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME] == trivial_name))
+                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME].casefold() == trivial_name.casefold()))
                         and (not structural_formula
                              or (STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == structural_formula))
-                        and (not name or (NAME in entry and entry[NAME] == name))
+                        and (not name or (NAME in entry and entry[NAME].casefold() == name.casefold()))
                         and (not stoichiometric_formula
                              or (STOICHIOMETRIC_FORMULA in entry
                                  and entry[STOICHIOMETRIC_FORMULA] == stoichiometric_formula))
@@ -212,16 +212,16 @@ class Catalog:
                         and (degrees_of_freedom is None
                              or (DEGREES_OF_FREEDOM in entry and entry[DEGREES_OF_FREEDOM] == degrees_of_freedom))
                         and (not any_name
-                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME] == any_name)
-                             or (NAME in entry and entry[NAME] == any_name))
+                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME].casefold() == any_name.casefold())
+                             or (NAME in entry and entry[NAME].casefold() == any_name.casefold()))
                         and (not any_formula
                              or (STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == any_formula)
                              or (MOLECULE_SYMBOL in entry and entry[MOLECULE_SYMBOL] == any_formula)
                              or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == any_formula)
                              or (ISOTOPOLOG in entry and entry[ISOTOPOLOG] == any_formula))
                         and (not any_name_or_formula
-                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME] == any_name_or_formula)
-                             or (NAME in entry and entry[NAME] == any_name_or_formula)
+                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME].casefold() == any_name_or_formula.casefold())
+                             or (NAME in entry and entry[NAME].casefold() == any_name_or_formula.casefold())
                              or (STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == any_name_or_formula)
                              or (MOLECULE_SYMBOL in entry and entry[MOLECULE_SYMBOL] == any_name_or_formula)
                              or (STOICHIOMETRIC_FORMULA in entry
