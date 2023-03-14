@@ -7,7 +7,7 @@ import math
 import os.path
 import time
 from numbers import Real
-from typing import Any, Optional, cast
+from typing import Any, BinaryIO, Optional, cast
 
 from utils import *
 
@@ -51,12 +51,11 @@ class Catalog:
 
         for filename in catalog_file_names:
             if os.path.exists(filename) and os.path.isfile(filename):
+                f_in: BinaryIO | gzip.GzipFile
                 with (gzip.GzipFile(filename, 'rb')
                       if filename.casefold().endswith('.json.gz')
-                      else open(filename, 'r')) as fin:
-                    content = fin.read()
-                    if isinstance(content, bytes):
-                        content = content.decode()
+                      else open(filename, 'rb')) as f_in:
+                    content: bytes = f_in.read()
                     try:
                         json_data: dict[str, list[Real] | list[dict[str, int | str | list[dict[str, float]]]]] \
                             = json.loads(content)
