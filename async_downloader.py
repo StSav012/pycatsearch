@@ -11,7 +11,7 @@ from math import inf
 from queue import Empty, Queue
 from threading import Thread
 from types import ModuleType
-from typing import Any, BinaryIO, Final, cast
+from typing import Any, BinaryIO, Final, Mapping, cast
 from urllib.error import HTTPError
 from urllib.parse import urlencode
 
@@ -66,11 +66,11 @@ class Downloader(Thread):
             session: aiohttp.ClientSession
             async with aiohttp.ClientSession(trust_env=True) as session:
 
-                async def get(url: str) -> bytes:
+                async def get(url: str, headers: Mapping[str, str] | None = None) -> bytes:
                     response: aiohttp.ClientResponse
                     while self._run:
                         try:
-                            async with session.get(url) as response:
+                            async with session.get(url, headers=headers) as response:
                                 return await response.read()
                         except asyncio.exceptions.CancelledError as ex:
                             if self._run:
@@ -87,8 +87,8 @@ class Downloader(Thread):
                             await asyncio.sleep(random.random())
                     return bytes()
 
-                async def post(url: str, data: dict[str, Any]) -> str:
-                    async with session.post(url, data=urlencode(data).encode()) as response:
+                async def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> str:
+                    async with session.post(url, data=urlencode(data).encode(), headers=headers) as response:
                         return (await response.read()).decode()
 
                 async def get_species() -> list[dict[str, int | str]]:
@@ -107,7 +107,8 @@ class Downloader(Thread):
 
                     data: dict[str, int | str | list[dict[str, None | int | str]]] \
                         = json.loads(await post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/',
-                                                {'database': -1}))
+                                                {'database': -1},
+                                                headers={'Content-Type': 'application/x-www-form-urlencoded'}))
                     if 'species' in data:
                         return [purge_null_data(trim_strings(s)) for s in data['species']]
                     else:

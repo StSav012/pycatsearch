@@ -9,7 +9,7 @@ from math import inf
 from queue import Empty, Queue
 from threading import Thread
 from types import ModuleType
-from typing import Any, BinaryIO, Final, cast
+from typing import Any, BinaryIO, Final, Mapping, cast
 from urllib.error import HTTPError
 from urllib.parse import ParseResult, urlencode, urlparse
 
@@ -63,19 +63,19 @@ class Downloader(Thread):
                     raise ValueError(f'Unknown scheme: {scheme}')
             return self._sessions[(scheme, location)]
 
-        def get(url: str) -> str:
+        def get(url: str, headers: Mapping[str, str] | None = None) -> str:
             parse_result: ParseResult = urlparse(url)
             session: HTTPConnection | HTTPSConnection = session_for_url(parse_result.scheme, parse_result.netloc)
-            session.request(method='GET', url=parse_result.path)
+            session.request(method='GET', url=parse_result.path, headers=(headers or dict()))
             response: HTTPResponse = session.getresponse()
             if response.closed:
                 return ''
             return response.read().decode()
 
-        def post(url: str, data: dict[str, Any]) -> str:
+        def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> str:
             parse_result: ParseResult = urlparse(url)
             session: HTTPConnection | HTTPSConnection = session_for_url(parse_result.scheme, parse_result.netloc)
-            session.request(method='POST', url=parse_result.path, body=urlencode(data))
+            session.request(method='POST', url=parse_result.path, body=urlencode(data), headers=(headers or dict()))
             response: HTTPResponse = session.getresponse()
             if response.closed:
                 return ''
@@ -96,7 +96,8 @@ class Downloader(Thread):
                 return entry
 
             data: dict[str, int | str | list[dict[str, None | int | str]]] \
-                = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1}))
+                = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1},
+                                  headers={'Content-Type': 'application/x-www-form-urlencoded'}))
             if 'species' in data:
                 return [purge_null_data(trim_strings(s)) for s in data['species']]
             else:
