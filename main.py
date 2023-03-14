@@ -99,6 +99,12 @@ if __name__ == '__main__':
             tkinter.messagebox.showerror(title='Syntax Error',
                                          message=('Python ' + platform.python_version() + ' is not supported.\n' +
                                                   'Get a newer Python!'))
+        elif isinstance(ex, ImportError):
+            tkinter.messagebox.showerror(title='Package Missing',
+                                         message=('Module ' + repr(ex.name) +
+                                                  ' is either missing from the system ' +
+                                                  'or cannot be loaded for another reason.\n' +
+                                                  'Try to install or reinstall it.'))
         else:
             tkinter.messagebox.showerror(title='Error', message=str(ex))
     else:
