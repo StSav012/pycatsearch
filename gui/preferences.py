@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+from functools import partial
+
 from qtpy.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QGroupBox,
                             QSpinBox, QVBoxLayout, QWidget)
 
@@ -36,7 +38,7 @@ class Preferences(QDialog):
                         check_box = QCheckBox(self.tr(key2), box)
                         setattr(check_box, 'callback', value2[-1])
                         check_box.setChecked(getattr(self.settings, value2[-1]))
-                        check_box.toggled.connect(lambda *args, sender=check_box: self._on_event(*args, sender))
+                        check_box.toggled.connect(partial(self._on_event, sender=check_box))
                         box_layout.addWidget(check_box)
                     elif len(value2) == 2:
                         value3 = value2[0]
@@ -47,8 +49,7 @@ class Preferences(QDialog):
                                 combo_box.addItem(self.tr(item))
                             combo_box.setCurrentIndex(getattr(self.settings, value2[-1]))
                             combo_box.currentIndexChanged.connect(
-                                lambda *args, sender=combo_box:
-                                self._on_combo_box_current_index_changed(*args, sender))
+                                partial(self._on_combo_box_current_index_changed, sender=combo_box))
                             box_layout.addRow(self.tr(key2), combo_box)
                         # no else
                     elif len(value2) == 3:
@@ -61,8 +62,7 @@ class Preferences(QDialog):
                                 combo_box.addItem(self.tr(item), value3b[index])
                             combo_box.setCurrentIndex(value3b.index(getattr(self.settings, value2[-1])))
                             combo_box.currentIndexChanged.connect(
-                                lambda *args, sender=combo_box:
-                                self._on_combo_box_current_index_changed(*args, sender))
+                                partial(self._on_combo_box_current_index_changed, sender=combo_box))
                             box_layout.addRow(self.tr(key2), combo_box)
                         elif (isinstance(value3a, slice)
                               and isinstance(getattr(self.settings, value2[-1]), (int, float))
@@ -88,7 +88,7 @@ class Preferences(QDialog):
                             elif len(value3b) == 1:
                                 spin_box.setSuffix(str(value3b[0]))
                             # no else
-                            spin_box.valueChanged.connect(lambda *args, sender=spin_box: self._on_event(*args, sender))
+                            spin_box.valueChanged.connect(partial(self._on_event, sender=spin_box))
                             box_layout.addRow(self.tr(key2), spin_box)
                         # no else
                     # no else
