@@ -243,9 +243,28 @@ def save_catalog(filename: str,
 
 
 if __name__ == '__main__':
+    import argparse
     from datetime import datetime
 
+    ap: argparse.ArgumentParser = argparse.ArgumentParser(
+        allow_abbrev=True,
+        description='Download JPL and CDMS spectroscopy catalogs for offline search.\n'
+                    'Find more at https://github.com/StSav012/pycatsearch.')
+    ap.add_argument('catalog', type=str, help='the catalog location to save into (required)')
+    ap.add_argument('-f''min', '--min-frequency', type=float, help='the lower frequency [MHz] to take', default=-inf)
+    ap.add_argument('-f''max', '--max-frequency', type=float, help='the upper frequency [MHz] to take', default=+inf)
+    ap_group = ap.add_mutually_exclusive_group()
+    ap_group.add_argument('--qt-json', type=str, default='',
+                          help='the catalog location to save into '
+                               'as the binary representation of `QJsonDocument`')
+    ap_group.add_argument('--qt-json-zipped', type=str, default='',
+                          help='the catalog location to save into '
+                               'as the compressed binary representation of `QJsonDocument`')
+    args: argparse.Namespace = ap.parse_intermixed_args()
+
     logging.basicConfig(level=logging.DEBUG)
-    print(datetime.now())
-    save_catalog('catalog_110-170.json.gz', (110000, 170000))
-    print(datetime.now())
+    logger.info(f'started at {datetime.now()}')
+    save_catalog(args.catalog, (args.min_frequency, args.max_frequency),
+                 qt_json_filename=(args.qt_json or args.qt_json_zipped),
+                 qt_json_zipped=bool(args.qt_json_zipped))
+    logger.info(f'finished at {datetime.now()}')
