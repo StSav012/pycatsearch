@@ -64,7 +64,8 @@ class Downloader(Thread):
         async def async_get_catalog() -> list[dict[str, int | str | list[dict[str, float]]]]:
 
             session: aiohttp.ClientSession
-            async with aiohttp.ClientSession(trust_env=True) as session:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(),  # disable timeout checks
+                                             trust_env=True) as session:
 
                 async def get(url: str, headers: Mapping[str, str] | None = None) -> bytes:
                     response: aiohttp.ClientResponse
