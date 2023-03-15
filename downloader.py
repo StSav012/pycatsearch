@@ -4,6 +4,8 @@ from __future__ import annotations
 import gzip
 import json
 import logging
+import random
+import time
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from math import inf
 from queue import Empty, Queue
@@ -66,20 +68,40 @@ class Downloader(Thread):
         def get(url: str, headers: Mapping[str, str] | None = None) -> str:
             parse_result: ParseResult = urlparse(url)
             session: HTTPConnection | HTTPSConnection = session_for_url(parse_result.scheme, parse_result.netloc)
-            session.request(method='GET', url=parse_result.path, headers=(headers or dict()))
-            response: HTTPResponse = session.getresponse()
+            response: HTTPResponse
+            while True:
+                try:
+                    session.request(method='GET', url=parse_result.path, headers=(headers or dict()))
+                    response = session.getresponse()
+                except ConnectionResetError:
+                    time.sleep(random.random())
+                else:
+                    break
             if response.closed:
                 return ''
-            return response.read().decode()
+            try:
+                return response.read().decode()
+            except AttributeError:  # `response.fp` became `None` before socket began closing
+                return ''
 
         def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> str:
             parse_result: ParseResult = urlparse(url)
             session: HTTPConnection | HTTPSConnection = session_for_url(parse_result.scheme, parse_result.netloc)
-            session.request(method='POST', url=parse_result.path, body=urlencode(data), headers=(headers or dict()))
-            response: HTTPResponse = session.getresponse()
+            response: HTTPResponse
+            while True:
+                try:
+                    session.request(method='POST', url=parse_result.path, body=urlencode(data), headers=(headers or dict()))
+                    response = session.getresponse()
+                except ConnectionResetError:
+                    time.sleep(random.random())
+                else:
+                    break
             if response.closed:
                 return ''
-            return response.read().decode()
+            try:
+                return response.read().decode()
+            except AttributeError:  # `response.fp` became `None` before socket began closing
+                return ''
 
         def get_species() -> list[dict[str, int | str]]:
             def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
