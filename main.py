@@ -58,7 +58,14 @@ if __name__ == '__main__':
 
 
     def ensure_package(package_name: str | Sequence[str], upgrade_pip: bool = False) -> bool:
-        """ Install packages if missing """
+        """
+        Install packages if missing
+
+        :param package_name: a package name or a sequence of the names of alternative packages;
+                             if none of the packages installed beforehand, install the first one given
+        :param upgrade_pip: upgrade `pip` before installing the package (if necessary)
+        :returns bool: True if a package is importable, False when an attempt to install the package made
+        """
 
         if not package_name:
             raise ValueError('No package name given')
@@ -89,8 +96,8 @@ if __name__ == '__main__':
     ap: argparse.ArgumentParser = argparse.ArgumentParser(
         allow_abbrev=True,
         description='Yet another implementation of JPL and CDMS spectroscopy catalogs offline search.\n'
-                    'Find more at https://github.com/StSav012/pycatsearch.')
-    ap.add_argument('catalog', type=str, help='the catalog location to load (required)',
+                    f'Find more at https://github.com/{__author__}/{__original_name__}.')
+    ap.add_argument('catalog', type=str, help='the catalog location to load',
                     nargs=argparse.ZERO_OR_MORE)
     ap_group = ap.add_argument_group(title='Search options',
                                      description='If any of the following arguments specified, a search conducted.')
