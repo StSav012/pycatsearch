@@ -44,7 +44,7 @@ class SubstanceInfoSelector(QDialog):
     def _on_list_selection_changed(self) -> None:
         self._buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(bool(self._list_box.selectedIndexes()))
 
-    @Slot()
+    @Slot(QModelIndex)
     def _on_list_double_clicked(self, index: QModelIndex) -> None:
         self.hide()
         item: QListWidgetItem = self._list_box.item(index.row())
