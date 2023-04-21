@@ -240,10 +240,14 @@ if __name__ == '__main__':
 
             import gui
         except Exception as ex:
+            import tkinter
             import tkinter.messagebox
             import traceback
 
             traceback.print_exc()
+
+            root: tkinter.Tk = tkinter.Tk()
+            root.withdraw()
             if isinstance(ex, SyntaxError):
                 tkinter.messagebox.showerror(title='Syntax Error',
                                              message=('Python ' + platform.python_version() + ' is not supported.\n' +
@@ -256,6 +260,7 @@ if __name__ == '__main__':
                                                       'Try to install or reinstall it.'))
             else:
                 tkinter.messagebox.showerror(title='Error', message=str(ex))
+            root.destroy()
         else:
             gui.run()
 
