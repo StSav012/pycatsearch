@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QModelIndex
 from qtpy.QtWidgets import (QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget,
                             QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
 
 from catalog import Catalog
 from gui.settings import Settings
+from gui.substance_info import SubstanceInfo, SubstanceInfoSelector
 from utils import *
 
 __all__ = ['SubstancesBox']
@@ -49,6 +50,7 @@ class SubstancesBox(QGroupBox):
         self._text_substance.textChanged.connect(self.on_text_changed)
         self._check_keep_selection.toggled.connect(self.on_check_save_selection_toggled)
         self._button_select_none.clicked.connect(self.on_button_select_none_clicked)
+        self._list_substance.doubleClicked.connect(self.on_list_substance_double_clicked)
 
         self.load_settings()
 
@@ -63,8 +65,8 @@ class SubstancesBox(QGroupBox):
         else:
             self._selected_substances.clear()
 
-    def filter_substances_list(self, filter_text: str) -> list[str]:
-        list_items: list[str] = []
+    def filter_substances_list(self, filter_text: str) -> dict[str, set[int]]:
+        list_items: dict[str, set[int]] = dict()
         plain_text_name: str
         if filter_text:
             filter_text_lowercase: str = filter_text.casefold()
@@ -75,9 +77,10 @@ class SubstancesBox(QGroupBox):
                     if (name_key in entry
                             and (plain_text_name.startswith(filter_text)
                                  or (name_key in (NAME, TRIVIAL_NAME)
-                                     and plain_text_name.casefold().startswith(filter_text_lowercase)))
-                            and plain_text_name not in list_items):
-                        list_items.append(plain_text_name)
+                                     and plain_text_name.casefold().startswith(filter_text_lowercase)))):
+                        if plain_text_name not in list_items:
+                            list_items[plain_text_name] = set()
+                        list_items[plain_text_name].add(entry[ID])
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                 for entry in self._catalog.catalog:
@@ -85,21 +88,26 @@ class SubstancesBox(QGroupBox):
                     if (name_key in entry
                             and (filter_text in plain_text_name
                                  or (name_key in (NAME, TRIVIAL_NAME)
-                                     and filter_text_lowercase in plain_text_name.casefold()))
-                            and plain_text_name not in list_items):
-                        list_items.append(plain_text_name)
+                                     and filter_text_lowercase in plain_text_name.casefold()))):
+                        if plain_text_name not in list_items:
+                            list_items[plain_text_name] = set()
+                        list_items[plain_text_name].add(entry[ID])
             if filter_text.isdecimal():
                 for entry in self._catalog.catalog:
-                    if SPECIES_TAG in entry and str(entry[SPECIES_TAG]).startswith(filter_text):
-                        list_items.append(str(entry[SPECIES_TAG]))
+                    plain_text_name = str(entry[SPECIES_TAG])
+                    if SPECIES_TAG in entry and plain_text_name.startswith(filter_text):
+                        if plain_text_name not in list_items:
+                            list_items[plain_text_name] = set()
+                        list_items[plain_text_name].add(entry[ID])
         else:
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                 for entry in self._catalog.catalog:
                     plain_text_name = remove_html(str(entry[name_key]))
                     if plain_text_name not in list_items:
-                        list_items.append(plain_text_name)
-            list_items = sorted(list_items)
+                        list_items[plain_text_name] = set()
+                    list_items[plain_text_name].add(entry[ID])
+            list_items = dict(sorted(list_items.items()))
         return list_items
 
     def fill_substances_list(self, filter_text: str | None = None) -> None:
@@ -109,8 +117,11 @@ class SubstancesBox(QGroupBox):
         self.update_selected_substances()
         self._list_substance.clear()
 
-        for text in self.filter_substances_list(filter_text):
+        text: str
+        ids: set[int]
+        for text, ids in self.filter_substances_list(filter_text).items():
             new_item: QListWidgetItem = QListWidgetItem(text)
+            new_item.setData(Qt.ItemDataRole.UserRole, ids)
             new_item.setFlags(new_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             new_item.setCheckState(Qt.CheckState.Checked
                                    if text in self._selected_substances
@@ -129,6 +140,16 @@ class SubstancesBox(QGroupBox):
         for i in range(self._list_substance.count()):
             self._list_substance.item(i).setCheckState(Qt.CheckState.Unchecked)
         self._selected_substances.clear()
+
+    def on_list_substance_double_clicked(self, index: QModelIndex) -> None:
+        item: QListWidgetItem = self._list_substance.item(index.row())
+        ids: set[int] = item.data(Qt.ItemDataRole.UserRole)
+        if len(ids) > 1:
+            sis: SubstanceInfoSelector = SubstanceInfoSelector(self.catalog, ids, parent=self)
+            sis.exec()
+        elif ids:  # if not empty
+            syn: SubstanceInfo = SubstanceInfo(self.catalog, ids.pop(), parent=self)
+            syn.exec()
 
     def load_settings(self) -> None:
         self._settings.beginGroup('search')
