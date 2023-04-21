@@ -168,7 +168,7 @@ if __name__ == '__main__':
         import tkinter.messagebox
         import traceback
 
-        traceback.print_exception(ex)
+        traceback.print_exc()
         if isinstance(ex, SyntaxError):
             tkinter.messagebox.showerror(title='Syntax Error',
                                          message=('Python ' + platform.python_version() + ' is not supported.\n' +
