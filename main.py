@@ -11,10 +11,11 @@ if sys.version_info < (3, 8):
 
     try:
         import tkinter
-        import tkinter.messagebox
-    except ModuleNotFoundError:
+    except ImportError:
         pass
     else:
+        import tkinter.messagebox
+
         _root = tkinter.Tk()
         _root.withdraw()
         tkinter.messagebox.showerror(title='Outdated Python', message=message)
