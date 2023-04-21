@@ -5,8 +5,8 @@ from __future__ import annotations
 import sys
 
 if sys.version_info < (3, 8):
-    message=('The Python version ' + '.'.join(map(str, sys.version_info[:3])) + ' is not supported.\n' +
-             'Use Python 3.8 or newer.')
+    message = ('The Python version ' + '.'.join(map(str, sys.version_info[:3])) + ' is not supported.\n' +
+               'Use Python 3.8 or newer.')
     print(message, file=sys.stderr)
 
     try:
