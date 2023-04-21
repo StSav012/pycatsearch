@@ -2,12 +2,26 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import sys
+
+if sys.version_info < (3, 8):
+    import tkinter, tkinter.messagebox
+
+    _root = tkinter.Tk()
+    _root.withdraw()
+    tkinter.messagebox.showerror(
+        title='Outdated Python',
+        message=('The Python version ' + '.'.join(map(str, sys.version_info[:3])) + ' is not supported.\n' +
+                 'Use Python 3.8 or newer.'))
+    _root.destroy()
+    exit(1)
+
 from typing import Final
 
 __author__: Final[str] = 'StSav012'
 __original_name__: Final[str] = 'py''cat''search'
 
-del Final
+del Final, sys
 
 if __name__ == '__main__':
     import argparse
