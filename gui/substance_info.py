@@ -36,6 +36,7 @@ class SubstanceInfo(QDialog):
                         label = QLabel(str(entry[key]), self)
                     label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
                     layout.addRow(self.tr(HUMAN_READABLE[key]), label)
+                break
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
