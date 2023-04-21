@@ -14,8 +14,9 @@ if __name__ == '__main__':
     import platform
     import sys
     from contextlib import suppress
+    from datetime import datetime, timedelta, timezone
     from pathlib import Path
-    from typing import Final, Sequence
+    from typing import Final, NamedTuple, Sequence
 
     from catalog import Catalog
 
@@ -31,6 +32,17 @@ if __name__ == '__main__':
         return result
 
 
+    class PackageRequirement(NamedTuple):
+        package_name: str
+        import_name: str
+        min_version: str = ''
+
+        def __str__(self) -> str:
+            if self.min_version:
+                return self.package_name + '>=' + self.min_version
+            return self.package_name
+
+
     def update() -> None:
         """ Download newer files from GitHub and replace the existing ones """
         with suppress(BaseException):  # ignore really all exceptions, for there are dozens of the sources
@@ -39,61 +51,114 @@ if __name__ == '__main__':
             updater.update(__author__, __original_name__)
 
 
-    def is_package_importable(package_name: str) -> bool:
+    def is_package_importable(package_requirement: PackageRequirement) -> bool:
+        from importlib import import_module
+        from importlib.metadata import version
+
         try:
-            __import__(package_name, locals=locals(), globals=globals())
+            import_module(package_requirement.import_name)
         except (ModuleNotFoundError,):
             return False
+        else:
+            if (package_requirement.min_version
+                    and (_version_tuple(version(package_requirement.package_name))
+                         < _version_tuple(package_requirement.min_version))):
+                return False
         return True
 
 
-    def ensure_package(package_name: str | Sequence[str], upgrade_pip: bool = False) -> bool:
+    def ensure_package(package_requirement: PackageRequirement | Sequence[PackageRequirement],
+                       upgrade_pip: bool = False) -> bool:
         """
         Install packages if missing
 
-        :param package_name: a package name or a sequence of the names of alternative packages;
+        :param package_requirement: a package name or a sequence of the names of alternative packages;
                              if none of the packages installed beforehand, install the first one given
         :param upgrade_pip: upgrade `pip` before installing the package (if necessary)
         :returns bool: True if a package is importable, False when an attempt to install the package made
         """
 
-        if not package_name:
-            raise ValueError('No package name given')
+        if not package_requirement:
+            raise ValueError('No package requirements given')
 
-        if isinstance(package_name, str) and is_package_importable(package_name):
+        if not sys.executable:
+            return False  # nothing to do
+
+        if isinstance(package_requirement, PackageRequirement) and is_package_importable(package_requirement):
             return True
 
-        if not isinstance(package_name, str) and isinstance(package_name, Sequence):
-            for _package_name in package_name:
-                if is_package_importable(_package_name):
+        if not isinstance(package_requirement, PackageRequirement) and isinstance(package_requirement, Sequence):
+            for _package_requirement in package_requirement:
+                if is_package_importable(_package_requirement):
                     return True
 
         import subprocess
 
-        if not isinstance(package_name, str) and isinstance(package_name, Sequence):
-            package_name = package_name[0]
+        if isinstance(package_requirement, Sequence):
+            package_requirement = package_requirement[0]
         if upgrade_pip:
-            subprocess.check_call((sys.executable, '-m', 'pip', 'install', '-U', 'pip'))
-        if '.' in package_name:  # take only the root part of the package path
-            package_name = package_name.split('.', maxsplit=1)[0]
-        subprocess.check_call((sys.executable, '-m', 'pip', 'install', package_name))
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U', 'pip'])
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U', str(package_requirement)])
         return False
 
 
+    def warn_about_outdated_package(package_name: str, package_version: str, release_time: datetime) -> None:
+        """ Display a warning about an outdated package a year after the package released """
+        if datetime.utcnow().replace(tzinfo=timezone(timedelta())) - release_time > timedelta(days=366):
+            import tkinter.messagebox
+            tkinter.messagebox.showwarning(
+                title='Package Outdated',
+                message=f'Please update {package_name} package to {package_version} or newer')
+
+
+    def make_old_qt_compatible_again() -> None:
+        from qtpy import QT6, PYSIDE2
+        from qtpy.QtCore import QLibraryInfo, Qt
+        from qtpy.QtWidgets import QApplication, QDialog
+
+        if PYSIDE2:
+            QApplication.exec = QApplication.exec_
+            QDialog.exec = QDialog.exec_
+
+        if not QT6:
+            QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
+            QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
+
+        from qtpy import __version__
+
+        if _version_tuple(__version__) < _version_tuple('2.3.1'):
+            warn_about_outdated_package(package_name='QtPy', package_version='2.3.1',
+                                        release_time=datetime.fromisoformat('2023-03-28T23:06:05Z'))
+            if QT6:
+                QLibraryInfo.LibraryLocation = QLibraryInfo.LibraryPath
+        if _version_tuple(__version__) < _version_tuple('2.4.0'):
+            # 2.4.0 is not released yet, so no warning until there is the release time
+            if not QT6:
+                QLibraryInfo.path = lambda *args, **kwargs: QLibraryInfo.location(*args, **kwargs)
+                QLibraryInfo.LibraryPath = QLibraryInfo.LibraryLocation
+
+
     def main() -> None:
-        qt_list: Sequence[str]
+        qt_list: list[PackageRequirement]
         uname: platform.uname_result = platform.uname()
         if ((uname.system == 'Windows'
              and _version_tuple(uname.version) < _version_tuple('10.0.19044'))  # Windows 10 21H2 or later required
                 or uname.machine not in ('x86_64', 'AMD64')):
-            qt_list = ('PyQt5',)  # Qt6 does not support the OSes
+            # Qt6 does not support the OSes
+            qt_list = [PackageRequirement(package_name='PyQt5', import_name='PyQt5.QtCore')]
         else:
-            qt_list = ('PyQt6', 'PySide6', 'PyQt5')
-        if sys.version_info < (3, 11):  # PySide2 does not support Python 3.11 and newer
-            qt_list = *qt_list, 'PySide2'
+            qt_list = [
+                PackageRequirement(package_name='PySide6-Essentials', import_name='PySide6.QtCore'),
+                PackageRequirement(package_name='PyQt6', import_name='PyQt6.QtCore'),
+                PackageRequirement(package_name='PyQt5', import_name='PyQt5.QtCore'),
+            ]
+        if sys.version_info < (3, 11):  # PySide2 from pypi is not available for Python 3.11 and newer
+            qt_list.append(PackageRequirement(package_name='PySide2', import_name='PySide2.QtCore'))
 
-        requirements: Final[list[str | Sequence[str]]] = ['qtpy',
-                                                          [qt + '.QtCore' for qt in qt_list]]
+        requirements: Final[list[PackageRequirement | Sequence[PackageRequirement]]] = [
+            PackageRequirement(package_name='qtpy', import_name='qtpy', min_version='2.3.1'),
+            qt_list,
+        ]
 
         update_by_default: bool = (uname.system == 'Windows'
                                    and not hasattr(sys, '_MEI''PASS')
@@ -171,6 +236,8 @@ if __name__ == '__main__':
             exit(0)
 
         try:
+            make_old_qt_compatible_again()
+
             import gui
         except Exception as ex:
             import tkinter.messagebox
