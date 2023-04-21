@@ -11,7 +11,7 @@ __all__ = ['SubstanceInfo']
 
 
 class SubstanceInfo(QDialog):
-    """ simple dialog that displays the information about a substance from the loaded catalog """
+    """ A simple dialog that displays the information about a substance from the loaded catalog """
     def __init__(self, catalog: Catalog, entry_id: int, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setModal(True)
