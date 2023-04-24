@@ -29,9 +29,11 @@ class SubstanceInfoSelector(QDialog):
         layout.addWidget(self._list_box)
         for entry in catalog.catalog:
             if entry[ID] in entry_ids:
-                item: QListWidgetItem = QListWidgetItem(self._list_box)
+                # don't specify the parent here: https://t.me/qtforpython/20950
+                item: QListWidgetItem = QListWidgetItem()
                 item.setData(Qt.ItemDataRole.ToolTipRole, str(entry[SPECIES_TAG]))
                 item.setData(Qt.ItemDataRole.UserRole, entry[ID])
+                self._list_box.addItem(item)
                 self._list_box.setItemWidget(item, QLabel(best_name(entry, allow_html=allow_html)))
         self._buttons: QDialogButtonBox = QDialogButtonBox(
             (QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Close), self)
