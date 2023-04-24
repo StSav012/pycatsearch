@@ -7,19 +7,20 @@ import sys
 if sys.version_info < (3, 8):
     message = ('The Python version ' + '.'.join(map(str, sys.version_info[:3])) + ' is not supported.\n' +
                'Use Python 3.8 or newer.')
-    print(message, file=sys.stderr)
-
     try:
         import tkinter
     except ImportError:
-        pass
+        input(message)  # wait for the user to see the text
     else:
+        print(message, file=sys.stderr)
+
         import tkinter.messagebox
 
         _root = tkinter.Tk()
         _root.withdraw()
         tkinter.messagebox.showerror(title='Outdated Python', message=message)
         _root.destroy()
+
     exit(1)
 
 from typing import Final
@@ -265,25 +266,33 @@ if __name__ == '__main__':
 
             traceback.print_exc()
 
-            with suppress(ModuleNotFoundError):
+            error_message: str
+            if isinstance(ex, SyntaxError):
+                error_message = ('Python ' + platform.python_version() + ' is not supported.\n' +
+                                 'Get a newer Python!')
+            elif isinstance(ex, ImportError):
+                error_message = ('Module ' + repr(ex.name) +
+                                 ' is either missing from the system or cannot be loaded for another reason.\n' +
+                                 'Try to install or reinstall it.')
+            else:
+                error_message = str(ex)
+
+            try:
                 import tkinter
                 import tkinter.messagebox
+            except ModuleNotFoundError:
+                input(error_message)
+            else:
+                print(error_message, file=sys.stderr)
 
                 root: tkinter.Tk = tkinter.Tk()
                 root.withdraw()
                 if isinstance(ex, SyntaxError):
-                    tkinter.messagebox.showerror(title='Syntax Error',
-                                                 message=('Python ' + platform.python_version() +
-                                                          ' is not supported.\n' +
-                                                          'Get a newer Python!'))
+                    tkinter.messagebox.showerror(title='Syntax Error', message=error_message)
                 elif isinstance(ex, ImportError):
-                    tkinter.messagebox.showerror(title='Package Missing',
-                                                 message=('Module ' + repr(ex.name) +
-                                                          ' is either missing from the system ' +
-                                                          'or cannot be loaded for another reason.\n' +
-                                                          'Try to install or reinstall it.'))
+                    tkinter.messagebox.showerror(title='Package Missing', message=error_message)
                 else:
-                    tkinter.messagebox.showerror(title='Error', message=str(ex))
+                    tkinter.messagebox.showerror(title='Error', message=error_message)
                 root.destroy()
         else:
             gui.run()
