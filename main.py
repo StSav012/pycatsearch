@@ -49,7 +49,8 @@ if __name__ == '__main__':
             try:
                 result += (int(part),)
             except ValueError:
-                result += (part,)
+                # follow `pkg_resources` version 0.6a9: remove dashes to sort letters after digits
+                result += (part.replace('-', ''),)
         return result
 
 
