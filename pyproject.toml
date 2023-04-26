@@ -48,4 +48,4 @@ pycatsearch = 'pycatsearch:main'
 'Bug Tracker' = 'https://github.com/StSav012/pycatsearch/issues'
 
 [tool.setuptools_scm]
-write_to = 'src/pycatsearch/version.py'
+write_to = 'src/pycatsearch/_version.py'
