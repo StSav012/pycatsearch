@@ -19,7 +19,7 @@ In a code:
 
 ```python
 # coding=utf-8
-from catalog import Catalog
+from pycatsearch.catalog import Catalog
 
 c = Catalog('catalog.json.gz')
 c.print(min_frequency=140141, max_frequency=140142)
@@ -95,7 +95,7 @@ In a code:
 
 ```python
 # coding=utf-8
-import downloader
+from pycatsearch import downloader
 
 downloader.save_catalog('catalog.json.gz', (115000, 178000), qt_json_filename='catalog.qbjsz', qt_json_zipped=True)
 ```

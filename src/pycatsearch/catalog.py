@@ -9,7 +9,7 @@ import time
 from numbers import Real
 from typing import Any, BinaryIO, Optional, cast
 
-from utils import *
+from .utils import *
 
 __all__ = ['Catalog']
 

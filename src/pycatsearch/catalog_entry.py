@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 
-from utils import *
+from .utils import *
 
 __all__ = ['CatalogEntry']
 

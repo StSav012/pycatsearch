@@ -12,16 +12,17 @@ from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, Q
                             QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView,
                             QTableWidgetSelectionRange, QWidget)
 
-from catalog import Catalog
-from gui.download_dialog import DownloadDialog
-from gui.float_spinbox import FloatSpinBox
-from gui.frequency_box import FrequencyBox
-from gui.menu_bar import MenuBar
-from gui.preferences import Preferences
-from gui.settings import Settings
-from gui.substance_info import SubstanceInfo
-from gui.substances_box import SubstancesBox
-from utils import *
+from .download_dialog import DownloadDialog
+from .float_spinbox import FloatSpinBox
+from .frequency_box import FrequencyBox
+from .menu_bar import MenuBar
+from .preferences import Preferences
+from .settings import Settings
+from .substance_info import SubstanceInfo
+from .substances_box import SubstancesBox
+from .. import __version__
+from ..catalog import Catalog
+from ..utils import *
 
 __all__ = ['UI']
 
@@ -245,8 +246,8 @@ class UI(QMainWindow):
             </svg>''')
             self.setWindowIcon(QIcon(window_icon))
 
-            if UPDATED:
-                self.setWindowTitle(self.tr('PyQtCatSearch (as of {0})').format(UPDATED))
+            if __version__:
+                self.setWindowTitle(self.tr('PyQtCatSearch (version {0})').format(__version__))
             else:
                 self.setWindowTitle(self.tr('PyQtCatSearch'))
             self.setCentralWidget(self.central_widget)

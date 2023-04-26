@@ -6,7 +6,7 @@ from typing import Any, Callable, Final
 
 from qtpy.QtCore import QSettings
 
-from utils import *
+from ..utils import *
 
 __all__ = ['Settings']
 
