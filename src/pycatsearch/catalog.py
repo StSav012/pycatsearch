@@ -9,7 +9,7 @@ import time
 from numbers import Real
 from typing import Any, BinaryIO, Optional, cast
 
-from utils import *
+from .utils import *
 
 __all__ = ['Catalog']
 
@@ -177,9 +177,9 @@ class Catalog:
             new_catalog_entry: dict[str, int | str | list[dict[str, float]]] = catalog_entry.copy()
             if LINES in new_catalog_entry:
                 new_catalog_entry[LINES] = \
-                    list(filter(lambda _e: (min_frequency <= _e[FREQUENCY] <= max_frequency
-                                            and min_intensity <= intensity(_e) <= max_intensity),
-                                catalog_entry[LINES]))
+                    [_e for _e in catalog_entry[LINES]
+                     if (min_frequency <= _e[FREQUENCY] <= max_frequency
+                         and min_intensity <= intensity(_e) <= max_intensity)]
             else:
                 new_catalog_entry[LINES] = []
             return new_catalog_entry

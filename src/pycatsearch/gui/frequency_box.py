@@ -6,8 +6,8 @@ from math import inf
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, QWidget
 
-from gui.settings import Settings
-from utils import *
+from .settings import Settings
+from ..utils import *
 
 __all__ = ['FrequencyBox']
 

@@ -18,8 +18,8 @@ from urllib.parse import urlencode
 import aiohttp
 import aiohttp.client_exceptions
 
-from catalog_entry import CatalogEntry
-from utils import *
+from .catalog_entry import CatalogEntry
+from .utils import *
 
 __all__ = ['Downloader', 'get_catalog', 'save_catalog']
 

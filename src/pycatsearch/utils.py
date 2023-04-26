@@ -12,8 +12,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import BinaryIO, Final, TextIO, cast
 
-__all__ = ['UPDATED',
-           'M_LOG10E',
+__all__ = ['M_LOG10E',
            'T0', 'c', 'h', 'k', 'e',
            'CATALOG', 'LINES', 'FREQUENCY', 'INTENSITY', 'ID', 'STRUCTURAL_FORMULA', 'STOICHIOMETRIC_FORMULA',
            'MOLECULE', 'MOLECULE_SYMBOL', 'SPECIES_TAG', 'NAME', 'TRIVIAL_NAME', 'ISOTOPOLOG', 'STATE', 'STATE_HTML',
@@ -33,14 +32,6 @@ __all__ = ['UPDATED',
            'within', 'chem_html', 'best_name', 'remove_html', 'wrap_in_html',
            'find_qt_core',
            'save_catalog_to_file']
-
-try:
-    import version
-except ImportError:
-    version = None
-    UPDATED: Final[str] = ''
-else:
-    UPDATED: Final[str] = version.UPDATED
 
 M_LOG10E: Final[float] = math.log10(math.e)
 

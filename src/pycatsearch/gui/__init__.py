@@ -3,8 +3,8 @@ import sys
 
 from qtpy.QtWidgets import QApplication
 
-from catalog import Catalog
-from gui.ui import UI
+from ..catalog import Catalog
+from .ui import UI
 
 __all__ = ['UI', 'run']
 

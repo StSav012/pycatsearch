@@ -7,8 +7,8 @@ from qtpy.QtCore import QModelIndex, Qt, Slot
 from qtpy.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLabel, QListWidget, QListWidgetItem, QVBoxLayout,
                             QWidget)
 
-from catalog import Catalog
-from utils import *
+from ..catalog import Catalog
+from ..utils import *
 
 __all__ = ['SubstanceInfoSelector', 'SubstanceInfo']
 

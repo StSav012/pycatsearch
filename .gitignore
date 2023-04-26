@@ -4,3 +4,7 @@
 *.qbjs
 *.qbjsz
 typograph.py
+_version.py
+/dist/
+/build/
+/src/pycatsearch.egg-info/

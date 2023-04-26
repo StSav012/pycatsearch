@@ -15,8 +15,8 @@ from typing import Any, BinaryIO, Final, Mapping, cast
 from urllib.error import HTTPError
 from urllib.parse import ParseResult, urlencode, urlparse
 
-from catalog_entry import CatalogEntry
-from utils import *
+from .catalog_entry import CatalogEntry
+from .utils import *
 
 __all__ = ['Downloader', 'get_catalog', 'save_catalog']
 

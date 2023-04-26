@@ -6,7 +6,7 @@ from functools import partial
 from qtpy.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QGroupBox,
                             QSpinBox, QVBoxLayout, QWidget)
 
-from gui.settings import Settings
+from .settings import Settings
 
 __all__ = ['Preferences']
 
