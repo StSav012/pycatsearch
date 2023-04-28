@@ -48,3 +48,6 @@ pycatsearch = 'pycatsearch:main'
 
 [tool.setuptools_scm]
 write_to = 'src/pycatsearch/_version.py'
+
+[tool.setuptools.dynamic]
+version = {attr = 'pycatsearch._version.__version__'}
