@@ -73,15 +73,15 @@ def required_packages() -> list[str]:
             or uname.machine not in ('x86_64', 'AMD64')):
         # Qt6 does not support the OSes
         qt_list = [
-            PackageRequirement(package_name='PyQt5', min_version='5.12.0'),
-            PackageRequirement(package_name='PySide2', min_version='5.12.0'),
+            PackageRequirement(package_name='PyQt5', min_version='5.15.0'),
+            PackageRequirement(package_name='PySide2', min_version='5.15.0'),
         ]
     else:
         qt_list = [
             PackageRequirement(package_name='PySide6-Essentials', min_version='6.2.0'),
             PackageRequirement(package_name='PyQt6', min_version='6.2.0'),
-            PackageRequirement(package_name='PyQt5', min_version='5.12.0'),
-            PackageRequirement(package_name='PySide2', min_version='5.12.0'),
+            PackageRequirement(package_name='PyQt5', min_version='5.15.0'),
+            PackageRequirement(package_name='PySide2', min_version='5.15.0'),
         ]
 
     requirements: list[PackageRequirement | Sequence[PackageRequirement]] = [
