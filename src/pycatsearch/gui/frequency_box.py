@@ -12,6 +12,21 @@ from ..utils import *
 __all__ = ['FrequencyBox']
 
 
+class FrequencySpinBox(QDoubleSpinBox):
+    """`QDoubleSpinBox` with altered defaults"""
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setAlignment(Qt.AlignmentFlag.AlignRight
+                          | Qt.AlignmentFlag.AlignTrailing
+                          | Qt.AlignmentFlag.AlignVCenter)
+        self.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.setAccelerated(True)
+        self.setDecimals(4)
+        self.setMaximum(9999999.9999)
+        self.setSuffix(self.tr(' MHz'))
+        self.setCorrectionMode(QAbstractSpinBox.CorrectionMode.CorrectToNearestValue)
+
+
 class FrequencyBox(QTabWidget):
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -25,55 +40,25 @@ class FrequencyBox(QTabWidget):
 
         self._page_by_range: QWidget = QWidget()
         self._layout_by_range: QFormLayout = QFormLayout(self._page_by_range)
-        self._spin_frequency_from: QDoubleSpinBox = QDoubleSpinBox(self._page_by_range)
-        self._spin_frequency_to: QDoubleSpinBox = QDoubleSpinBox(self._page_by_range)
+        self._spin_frequency_from: FrequencySpinBox = FrequencySpinBox(self._page_by_range)
+        self._spin_frequency_to: FrequencySpinBox = FrequencySpinBox(self._page_by_range)
         self._page_by_center: QWidget = QWidget()
         self._layout_by_center: QFormLayout = QFormLayout(self._page_by_center)
-        self._spin_frequency_center: QDoubleSpinBox = QDoubleSpinBox(self._page_by_center)
-        self._spin_frequency_deviation: QDoubleSpinBox = QDoubleSpinBox(self._page_by_center)
+        self._spin_frequency_center: FrequencySpinBox = FrequencySpinBox(self._page_by_center)
+        self._spin_frequency_deviation: FrequencySpinBox = FrequencySpinBox(self._page_by_center)
 
         self._layout_by_range.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
-        self._spin_frequency_from.setAlignment(Qt.AlignmentFlag.AlignRight
-                                               | Qt.AlignmentFlag.AlignTrailing
-                                               | Qt.AlignmentFlag.AlignVCenter)
-        self._spin_frequency_from.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self._spin_frequency_from.setAccelerated(True)
-        self._spin_frequency_from.setDecimals(4)
-        self._spin_frequency_from.setMaximum(9999999.9999)
         self._spin_frequency_from.setValue(118747.341)
-        self._spin_frequency_from.setSuffix(self._spin_frequency_from.tr(' MHz'))
         self._layout_by_range.addRow(self._layout_by_range.tr('From:'), self._spin_frequency_from)
-        self._spin_frequency_to.setAlignment(Qt.AlignmentFlag.AlignRight
-                                             | Qt.AlignmentFlag.AlignTrailing
-                                             | Qt.AlignmentFlag.AlignVCenter)
-        self._spin_frequency_to.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self._spin_frequency_to.setAccelerated(True)
-        self._spin_frequency_to.setDecimals(4)
-        self._spin_frequency_to.setMaximum(9999999.9999)
         self._spin_frequency_to.setValue(118753.341)
-        self._spin_frequency_to.setSuffix(self._spin_frequency_to.tr(' MHz'))
         self._layout_by_range.addRow(self._layout_by_range.tr('To:'), self._spin_frequency_to)
         self.addTab(self._page_by_range, self.tr('Range'))
 
-        self._spin_frequency_center.setAlignment(Qt.AlignmentFlag.AlignRight
-                                                 | Qt.AlignmentFlag.AlignTrailing
-                                                 | Qt.AlignmentFlag.AlignVCenter)
-        self._spin_frequency_center.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self._spin_frequency_center.setAccelerated(True)
-        self._spin_frequency_center.setDecimals(4)
-        self._spin_frequency_center.setMaximum(9999999.9999)
         self._spin_frequency_center.setValue(118750.341)
-        self._spin_frequency_center.setSuffix(self._spin_frequency_center.tr(' MHz'))
         self._layout_by_center.addRow(self._layout_by_center.tr('Center:'), self._spin_frequency_center)
-        self._spin_frequency_deviation.setAlignment(Qt.AlignmentFlag.AlignRight
-                                                    | Qt.AlignmentFlag.AlignTrailing
-                                                    | Qt.AlignmentFlag.AlignVCenter)
-        self._spin_frequency_deviation.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self._spin_frequency_deviation.setDecimals(4)
         self._spin_frequency_deviation.setMaximum(99.9999)
         self._spin_frequency_deviation.setSingleStep(0.1)
         self._spin_frequency_deviation.setValue(0.4)
-        self._spin_frequency_deviation.setSuffix(self._spin_frequency_deviation.tr(' MHz'))
         self._layout_by_center.addRow(self._layout_by_center.tr('Deviation:'), self._spin_frequency_deviation)
         self.addTab(self._page_by_center, self.tr('Center'))
 
