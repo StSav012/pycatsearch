@@ -142,8 +142,6 @@ class Catalog:
         :param str state: a string to match the ``state`` or the ``state_html`` field.
         :param int degrees_of_freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
         :param float timeout: if positive, the maximum time [seconds] for filtering.
-        :raises: :class:`ValueError`: Invalid frequency range
-                 if the specified frequency range does not intersect with the catalog one.
         :return: a list of substances with non-empty lists of absorption lines that match all the conditions.
         """
 
@@ -187,7 +185,7 @@ class Catalog:
         if (min_frequency > max_frequency
                 or min_frequency > self._max_frequency
                 or max_frequency < self._min_frequency):
-            raise ValueError('Invalid frequency range')
+            return []
         start_time: float = time.monotonic()
         if (species_tag or inchi or trivial_name or structural_formula or name or stoichiometric_formula
                 or isotopolog or state or degrees_of_freedom or any_name or any_formula or any_name_or_formula):
