@@ -15,10 +15,10 @@ from typing import BinaryIO, Final, TextIO, cast
 __all__ = ['UPDATED',
            'M_LOG10E',
            'T0', 'c', 'h', 'k', 'e',
-           'CATALOG', 'LINES', 'FREQUENCY', 'INTENSITY', 'ID', 'STRUCTURAL_FORMULA', 'STOICHIOMETRIC_FORMULA',
-           'MOLECULE', 'MOLECULE_SYMBOL', 'SPECIES_TAG', 'NAME', 'TRIVIAL_NAME', 'ISOTOPOLOG', 'STATE', 'STATE_HTML',
-           'INCHI_KEY', 'DEGREES_OF_FREEDOM', 'LOWER_STATE_ENERGY', 'CONTRIBUTOR', 'VERSION', 'DATE_OF_ENTRY',
-           'HUMAN_READABLE',
+           'CATALOG', 'BUILD_TIME', 'LINES', 'FREQUENCY', 'INTENSITY', 'ID', 'STRUCTURAL_FORMULA',
+           'STOICHIOMETRIC_FORMULA', 'MOLECULE', 'MOLECULE_SYMBOL', 'SPECIES_TAG', 'NAME', 'TRIVIAL_NAME', 'ISOTOPOLOG',
+           'STATE', 'STATE_HTML', 'INCHI_KEY', 'DEGREES_OF_FREEDOM', 'LOWER_STATE_ENERGY', 'CONTRIBUTOR', 'VERSION',
+           'DATE_OF_ENTRY', 'HUMAN_READABLE',
            'ghz_to_mhz', 'ghz_to_nm', 'ghz_to_rec_cm',
            'mhz_to_ghz', 'mhz_to_nm', 'mhz_to_rec_cm',
            'nm_to_ghz', 'nm_to_mhz', 'nm_to_rec_cm',
@@ -51,6 +51,7 @@ e: Final[float] = 1.602176634e-19  # https://physics.nist.gov/cgi-bin/cuu/Value?
 c: Final[float] = 299792458.00000  # https://physics.nist.gov/cgi-bin/cuu/Value?c
 
 CATALOG: Final[str] = 'catalog'
+BUILD_TIME: Final[str] = 'build_time'
 LINES: Final[str] = 'lines'
 FREQUENCY: Final[str] = 'frequency'
 INTENSITY: Final[str] = 'intensity'
