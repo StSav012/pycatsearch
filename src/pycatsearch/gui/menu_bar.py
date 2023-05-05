@@ -44,11 +44,11 @@ class MenuBar(QMenuBar):
         self.action_copy_name: QAction = QAction(self.tr('&Substance Name'), self.menu_copy_only)
         self.action_copy_frequency: QAction = QAction(self.tr('&Frequency'), self.menu_copy_only)
         self.action_copy_intensity: QAction = QAction(self.tr('&Intensity'), self.menu_copy_only)
-        self.action_copy_lower_state_energy: QAction = QAction(self.menu_copy_only.tr('&Lower state energy'),
+        self.action_copy_lower_state_energy: QAction = QAction(self.menu_copy_only.tr('&Lower State Energy'),
                                                                self.menu_copy_only)
         self.action_show_frequency: QAction = QAction(self.tr('&Frequency'), self.menu_columns)
         self.action_show_intensity: QAction = QAction(self.tr('&Intensity'), self.menu_columns)
-        self.action_show_lower_state_energy: QAction = QAction(self.tr('&Lower state energy'),
+        self.action_show_lower_state_energy: QAction = QAction(self.tr('&Lower State Energy'),
                                                                self.menu_columns)
         self.action_substance_info: QAction = QAction(self.tr('Substance &Info'), self.menu_edit)
 
