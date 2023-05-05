@@ -6,26 +6,28 @@ import json
 import math
 import os.path
 import time
+from datetime import datetime
 from numbers import Real
-from typing import Any, BinaryIO, Optional, cast
+from typing import Any, BinaryIO, NamedTuple, Optional, cast
 
 from .utils import *
 
-__all__ = ['Catalog']
+__all__ = ['Catalog', 'CatalogSourceInfo']
 
 
-class Catalog:
-    def __init__(self, *catalog_file_names: str) -> None:
-        self._data: Optional[
-            dict[str, tuple[tuple[float, float], ...] | list[dict[str, int | str | list[dict[str, float]]]]]] = None
-        self._min_frequency: float = math.nan
-        self._max_frequency: float = math.nan
-        self._sources: list[str] = []
+class CatalogSourceInfo(NamedTuple):
+    filename: str
+    build_datetime: datetime | None = None
 
-        def merge_catalogs(*args: list[dict[str, int | str | list[dict[str, float]]]]) \
-                -> list[dict[str, int | str | list[dict[str, float]]]]:
-            return sum(args, [])
 
+class CatalogData:
+    def __init__(self) -> None:
+        self.catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
+        self.frequency_limits: tuple[tuple[float, float], ...] = ()
+
+    def append(self,
+               catalog: list[dict[str, int | str | list[dict[str, float]]]],
+               frequency_limits: tuple[float, float]) -> None:
         def merge_frequency_tuples(*args: tuple[float, float] | list[Real]) -> tuple[tuple[float, float], ...]:
             if not args:
                 return tuple()
@@ -43,18 +45,23 @@ class Catalog:
                         current_max = max(current_max, *r)
                         skip += 1
                 ranges += ((current_min, current_max),)
-                if math.isnan(self._min_frequency) or self._min_frequency > current_min:
-                    self._min_frequency = current_min
-                if math.isnan(self._max_frequency) or self._max_frequency < current_max:
-                    self._max_frequency = current_max
             return ranges
+
+        self.catalog.extend(catalog)
+        self.frequency_limits = merge_frequency_tuples(*self.frequency_limits, frequency_limits)
+
+
+class Catalog:
+    def __init__(self, *catalog_file_names: str) -> None:
+        self._data: CatalogData = CatalogData()
+        self._sources: list[CatalogSourceInfo] = []
 
         for filename in catalog_file_names:
             if os.path.exists(filename) and os.path.isfile(filename):
                 f_in: BinaryIO | gzip.GzipFile
                 with (gzip.GzipFile(filename, 'rb')
-                      if filename.casefold().endswith('.json.gz')
-                      else open(filename, 'rb')) as f_in:
+                if filename.casefold().endswith('.json.gz')
+                else open(filename, 'rb')) as f_in:
                     content: bytes = f_in.read()
                     try:
                         json_data: dict[str, list[Real] | list[dict[str, int | str | list[dict[str, float]]]]] \
@@ -62,41 +69,48 @@ class Catalog:
                     except json.decoder.JSONDecodeError:
                         pass
                     else:
-                        if self._data is None:
-                            self._data = {
-                                CATALOG: json_data[CATALOG],
-                                FREQUENCY: (json_data[FREQUENCY],)
-                            }
-                        else:
-                            self._data = {
-                                CATALOG: merge_catalogs(self.catalog, json_data[CATALOG]),
-                                FREQUENCY: merge_frequency_tuples(*self._data[FREQUENCY], json_data[FREQUENCY])
-                            }
-                        self._sources.append(filename)
+                        self._data.append(catalog=json_data[CATALOG],
+                                          frequency_limits=tuple(json_data[FREQUENCY]))
+                        build_datetime: datetime | None = None
+                        if BUILD_TIME in json_data:
+                            build_datetime = datetime.fromisoformat(cast(str, json_data[BUILD_TIME]))
+                        self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
+
+    def __bool__(self) -> bool:
+        return bool(self._data.catalog)
 
     @property
     def is_empty(self) -> bool:
-        return self._data is None
+        return not bool(self)
 
     @property
     def sources(self) -> list[str]:
-        return self._sources[:]
+        source: CatalogSourceInfo
+        return [source.filename for source in self._sources]
+
+    @property
+    def sources_info(self) -> list[CatalogSourceInfo]:
+        return self._sources.copy()
 
     @property
     def catalog(self) -> list[dict[str, int | str | list[dict[str, float]]]]:
-        return self._data[CATALOG] if self._data else []
+        return self._data.catalog
+
+    @property
+    def entries_count(self) -> int:
+        return len(self._data.catalog)
 
     @property
     def frequency_limits(self) -> tuple[tuple[float, float], ...]:
-        return self._data[FREQUENCY] if self._data else (-math.inf, math.inf)
+        return self._data.frequency_limits if self._data.catalog else (-math.inf, math.inf)
 
     @property
     def min_frequency(self) -> float:
-        return min(min(f) for f in self._data[FREQUENCY]) if self._data else -math.inf
+        return min(min(f) for f in self._data.frequency_limits) if self._data.frequency_limits else -math.inf
 
     @property
     def max_frequency(self) -> float:
-        return max(max(f) for f in self._data[FREQUENCY]) if self._data else math.inf
+        return max(max(f) for f in self._data.frequency_limits) if self._data.frequency_limits else math.inf
 
     def filter(self, *,
                min_frequency: float = -math.inf,
@@ -183,8 +197,8 @@ class Catalog:
             return new_catalog_entry
 
         if (min_frequency > max_frequency
-                or min_frequency > self._max_frequency
-                or max_frequency < self._min_frequency):
+                or min_frequency > self.max_frequency
+                or max_frequency < self.min_frequency):
             return []
         start_time: float = time.monotonic()
         if (species_tag or inchi or trivial_name or structural_formula or name or stoichiometric_formula
@@ -218,7 +232,8 @@ class Catalog:
                              or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == any_formula)
                              or (ISOTOPOLOG in entry and entry[ISOTOPOLOG] == any_formula))
                         and (not any_name_or_formula
-                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME].casefold() == any_name_or_formula.casefold())
+                             or (TRIVIAL_NAME in entry
+                                 and entry[TRIVIAL_NAME].casefold() == any_name_or_formula.casefold())
                              or (NAME in entry and entry[NAME].casefold() == any_name_or_formula.casefold())
                              or (STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == any_name_or_formula)
                              or (MOLECULE_SYMBOL in entry and entry[MOLECULE_SYMBOL] == any_name_or_formula)
@@ -230,7 +245,7 @@ class Catalog:
                         selected_entries.append(filtered_entry)
         else:
             filtered_entries = [filter_by_frequency_and_intensity(entry)
-                                for entry in self._data[CATALOG]
+                                for entry in self._data.catalog
                                 if timeout is None or (timeout > 0.0 and timeout >= time.monotonic() - start_time)]
             selected_entries = [entry for entry in filtered_entries if entry[LINES]]
         unique_entries = selected_entries

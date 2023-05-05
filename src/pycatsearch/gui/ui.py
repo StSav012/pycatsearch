@@ -12,6 +12,7 @@ from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, Q
                             QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView,
                             QTableWidgetSelectionRange, QWidget)
 
+from .catalog_info import CatalogInfo
 from .download_dialog import DownloadDialog
 from .float_spinbox import FloatSpinBox
 from .frequency_box import FrequencyBox
@@ -336,6 +337,7 @@ class UI(QMainWindow):
         self.button_search.clicked.connect(self.on_button_search_clicked)
         self.menu_bar.action_load.triggered.connect(self.on_action_load_triggered)
         self.menu_bar.action_quit.triggered.connect(self.on_action_quit_triggered)
+        self.menu_bar.action_about_catalogs.triggered.connect(self.on_action_about_catalogs_triggered)
         self.menu_bar.action_about.triggered.connect(self.on_action_about_triggered)
         self.menu_bar.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
         self.menu_bar.action_download_catalog.triggered.connect(self.on_action_download_catalog_triggered)
@@ -381,7 +383,7 @@ class UI(QMainWindow):
         new_catalog_file_names: list[str]
         new_catalog_file_names, _ = QFileDialog.getOpenFileNames(
             self, self.tr('Load Catalog'),
-            self.catalog.sources[0] if self.catalog.sources else '',
+            [*self.catalog.sources, ''][0],
             '{0}(*.json.gz);;{1}(*.json);;{2}(*.*)'.format(
                 self.tr('Compressed JSON'),
                 self.tr('JSON'),
@@ -519,6 +521,13 @@ class UI(QMainWindow):
 
     def on_action_show_lower_state_energy_toggled(self, is_checked: bool) -> None:
         self.toggle_results_table_column_visibility(3, is_checked)
+
+    def on_action_about_catalogs_triggered(self) -> None:
+        if self.catalog:
+            ci: CatalogInfo = CatalogInfo(self.catalog, self)
+            ci.exec()
+        else:
+            QMessageBox.information(self, self.tr('Catalog Info'), self.tr('No catalogs loaded'))
 
     def on_action_about_triggered(self) -> None:
         QMessageBox.about(self,

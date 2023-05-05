@@ -211,32 +211,31 @@ def save_catalog(filename: str,
     :param bool qt_json_zipped: the flag to indicate whether the data stored into ``qt_json_filename`` is compressed.
         Default is `True`.
     """
+
+    from datetime import datetime, timezone
+
     if not filename.endswith('.json.gz'):
         filename += '.json.gz'
     catalog: list[dict[str, int | str | list[dict[str, float]]]] = get_catalog(frequency_limits)
     if not catalog:
         return False
 
+    data_to_save: dict[str, list[dict[str, int | str | list[dict[str, float]]]] | tuple[float, float] | str] = {
+        CATALOG: catalog,
+        FREQUENCY: frequency_limits,
+        BUILD_TIME: datetime.now(tz=timezone.utc).isoformat()
+    }
     f: BinaryIO | gzip.GzipFile
     with gzip.open(filename, 'wb') as f:
-        f.write(json.dumps({
-            CATALOG: catalog,
-            FREQUENCY: frequency_limits
-        }, indent=4).encode())
+        f.write(json.dumps(data_to_save, indent=4).encode())
     if qt_json_filename:
         qt_core: ModuleType | None = find_qt_core()
         if qt_core is not None:
             with open(qt_json_filename, 'wb') as f:
                 if qt_json_zipped:
-                    f.write(qt_core.qCompress(qt_core.QJsonDocument({
-                        CATALOG: catalog,
-                        FREQUENCY: frequency_limits
-                    }).toBinaryData()).data())
+                    f.write(qt_core.qCompress(qt_core.QJsonDocument(data_to_save).toBinaryData()).data())
                 else:
-                    f.write(qt_core.QJsonDocument({
-                        CATALOG: catalog,
-                        FREQUENCY: frequency_limits
-                    }).toBinaryData().data())
+                    f.write(qt_core.QJsonDocument(data_to_save).toBinaryData().data())
         else:
             logger.error('No Qt realization found')
     return True
