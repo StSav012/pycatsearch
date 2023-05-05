@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Collection
 
 from qtpy.QtCore import QModelIndex, Qt, Slot
 from qtpy.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLabel, QListWidget, QListWidgetItem, QVBoxLayout,
@@ -14,7 +14,7 @@ __all__ = ['SubstanceInfoSelector', 'SubstanceInfo']
 
 
 class SubstanceInfoSelector(QDialog):
-    def __init__(self, catalog: Catalog, entry_ids: Iterable[int],
+    def __init__(self, catalog: Catalog, entry_ids: Collection[int],
                  allow_html: bool = True, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._catalog: Catalog = catalog
@@ -27,8 +27,12 @@ class SubstanceInfoSelector(QDialog):
         self._list_box.itemSelectionChanged.connect(self._on_list_selection_changed)
         self._list_box.doubleClicked.connect(self._on_list_double_clicked)
         layout.addWidget(self._list_box)
+        entry_ids = set(entry_ids)
         for entry in catalog.catalog:
+            if not entry_ids:
+                break  # nothing to search for
             if entry[ID] in entry_ids:
+                entry_ids.discard(entry[ID])  # don't search for the ID again
                 # don't specify the parent here: https://t.me/qtforpython/20950
                 item: QListWidgetItem = QListWidgetItem()
                 item.setData(Qt.ItemDataRole.ToolTipRole, str(entry[SPECIES_TAG]))
