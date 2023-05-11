@@ -8,11 +8,15 @@ import os.path
 import time
 from datetime import datetime
 from numbers import Real
-from typing import Any, BinaryIO, NamedTuple, Optional, cast
+from typing import Any, BinaryIO, Dict, List, NamedTuple, Optional, Union, cast
 
 from utils import *
 
-__all__ = ['Catalog', 'CatalogSourceInfo']
+__all__ = ['Catalog', 'CatalogSourceInfo', 'LineType', 'LinesType', 'CatalogEntryType']
+
+LineType = Dict[str, float]
+LinesType = List[LineType]
+CatalogEntryType = Dict[str, Union[int, str, LinesType]]
 
 
 class CatalogSourceInfo(NamedTuple):
@@ -22,12 +26,27 @@ class CatalogSourceInfo(NamedTuple):
 
 class CatalogData:
     def __init__(self) -> None:
-        self.catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
+        self.catalog: list[CatalogEntryType] = []
         self.frequency_limits: tuple[tuple[float, float], ...] = ()
 
     def append(self,
-               catalog: list[dict[str, int | str | list[dict[str, float]]]],
+               catalog: list[CatalogEntryType],
                frequency_limits: tuple[float, float]) -> None:
+        def squash_same_species_tag_entries() -> None:
+            i: int = 0
+            while i < len(self.catalog) - 1:
+                while i < len(self.catalog) - 1 and self.catalog[i][SPECIES_TAG] == self.catalog[i + 1][SPECIES_TAG]:
+                    self.catalog[i][LINES] = cast(LinesType,
+                                                  merge_sorted(self.catalog[i][LINES],
+                                                               self.catalog[i + 1][LINES],
+                                                               key=lambda line: (line[FREQUENCY],
+                                                                                 line[INTENSITY],
+                                                                                 line[LOWER_STATE_ENERGY])
+                                                               )
+                                                  )
+                    del self.catalog[i + 1]
+                i += 1
+
         def merge_frequency_tuples(*args: tuple[float, float] | list[Real]) -> tuple[tuple[float, float], ...]:
             if not args:
                 return tuple()
@@ -47,7 +66,8 @@ class CatalogData:
                 ranges += ((current_min, current_max),)
             return ranges
 
-        self.catalog.extend(catalog)
+        self.catalog.extend(sorted(catalog, key=lambda entry: entry[SPECIES_TAG]))
+        squash_same_species_tag_entries()
         self.frequency_limits = merge_frequency_tuples(*self.frequency_limits, frequency_limits)
 
 
@@ -64,8 +84,7 @@ class Catalog:
                 else open(filename, 'rb')) as f_in:
                     content: bytes = f_in.read()
                     try:
-                        json_data: dict[str, list[Real] | list[dict[str, int | str | list[dict[str, float]]]]] \
-                            = json.loads(content)
+                        json_data: dict[str, list[Real] | list[CatalogEntryType]] = json.loads(content)
                     except json.decoder.JSONDecodeError:
                         pass
                     else:
@@ -93,7 +112,7 @@ class Catalog:
         return self._sources.copy()
 
     @property
-    def catalog(self) -> list[dict[str, int | str | list[dict[str, float]]]]:
+    def catalog(self) -> list[CatalogEntryType]:
         return self._data.catalog
 
     @property
@@ -131,7 +150,7 @@ class Catalog:
                state: str = '',
                degrees_of_freedom: Optional[int] = None,
                timeout: Optional[float] = None
-               ) -> list[dict[str, int | str | list[dict[str, float]]]]:
+               ) -> list[CatalogEntryType]:
         """
         Extract only the entries that match all the specified conditions
 
@@ -162,36 +181,24 @@ class Catalog:
         if self.is_empty:
             return []
 
-        def same_entry(entry_1: dict[str, int | str | list[dict[str, float]]],
-                       entry_2: dict[str, int | str | list[dict[str, float]]]) -> bool:
-            if len(entry_1) != len(entry_2):
-                return False
-            for key, value in entry_1.items():
-                if key not in entry_2:
-                    return False
-                if key != LINES and value != entry_2[key]:
-                    return False
-                if key == LINES and len(value) != len(entry_2[key]):
-                    return False
-            return True
-
-        def filter_by_frequency_and_intensity(catalog_entry: dict[str, int | str | list[dict[str, float]]]) \
-                -> dict[str, int | str | list[dict[str, float]]]:
-            def intensity(_entry: dict[str, float]) -> float:
+        def filter_by_frequency_and_intensity(catalog_entry: CatalogEntryType) -> CatalogEntryType:
+            def intensity(_line: LineType) -> float:
                 if catalog_entry[DEGREES_OF_FREEDOM] >= 0 and temperature > 0. and temperature != T0:
-                    return (_entry[INTENSITY]
-                            + ((0.5 * catalog_entry[DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
-                               - ((1 / temperature - 1 / T0) * _entry[
-                                        LOWER_STATE_ENERGY] * 100. * h * c / k)) / M_LOG10E)
+                    return (_line[INTENSITY] +
+                            ((0.5 * catalog_entry[DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
+                             - ((1 / temperature - 1 / T0) * _line[LOWER_STATE_ENERGY] * 100. * h * c / k)) / M_LOG10E)
                 else:
-                    return _entry[INTENSITY]
+                    return _line[INTENSITY]
 
-            new_catalog_entry: dict[str, int | str | list[dict[str, float]]] = catalog_entry.copy()
-            if LINES in new_catalog_entry:
+            new_catalog_entry: CatalogEntryType = catalog_entry.copy()
+            if LINES in new_catalog_entry and new_catalog_entry[LINES]:
+                min_frequency_index: int = search_sorted(min_frequency, new_catalog_entry[LINES],
+                                                         key=lambda line: line[FREQUENCY]) + 1
+                max_frequency_index: int = search_sorted(max_frequency, new_catalog_entry[LINES],
+                                                         key=lambda line: line[FREQUENCY], maybe_equal=True)
                 new_catalog_entry[LINES] = \
-                    [_e for _e in catalog_entry[LINES]
-                     if (min_frequency <= _e[FREQUENCY] <= max_frequency
-                         and min_intensity <= intensity(_e) <= max_intensity)]
+                    [line for line in new_catalog_entry[LINES][min_frequency_index:(max_frequency_index + 1)]
+                     if min_intensity <= intensity(line) <= max_intensity]
             else:
                 new_catalog_entry[LINES] = []
             return new_catalog_entry
@@ -248,19 +255,7 @@ class Catalog:
                                 for entry in self._data.catalog
                                 if timeout is None or (timeout > 0.0 and timeout >= time.monotonic() - start_time)]
             selected_entries = [entry for entry in filtered_entries if entry[LINES]]
-        unique_entries = selected_entries
-        all_unique: bool = True  # unless the opposite is proven
-        for i in range(len(selected_entries)):
-            unique: bool = True
-            for j in range(i + 1, len(selected_entries)):
-                if same_entry(selected_entries[i], selected_entries[j]):
-                    unique = False
-                    if all_unique:
-                        unique_entries = []
-                        all_unique = False
-            if unique and not all_unique:
-                unique_entries.append(selected_entries[i])
-        return unique_entries
+        return selected_entries
 
     def print(self, **kwargs: None | int | float | str) -> None:
         """
@@ -269,7 +264,7 @@ class Catalog:
         :param kwargs: all arguments that are valid for :func:`filter <catalog.Catalog.filter>`
         :return: nothing
         """
-        entries: list[dict[str, int | str | list[dict[str, float]]]] = self.filter(**kwargs)
+        entries: list[CatalogEntryType] = self.filter(**kwargs)
         if not entries:
             print('nothing found')
             return
@@ -278,7 +273,7 @@ class Catalog:
         frequencies: list[float] = []
         intensities: list[float] = []
         for entry in entries:
-            for line in cast(list[dict[str, float]], entry[LINES]):
+            for line in cast(LinesType, entry[LINES]):
                 names.append(entry[NAME])
                 frequencies.append(line[FREQUENCY])
                 intensities.append(line[INTENSITY])

@@ -10,7 +10,7 @@ import os
 from numbers import Real
 from pathlib import Path
 from types import ModuleType
-from typing import BinaryIO, Final, cast
+from typing import BinaryIO, Callable, Final, Protocol, Sequence, TypeVar, cast, overload
 
 __all__ = ['UPDATED',
            'M_LOG10E',
@@ -30,6 +30,7 @@ __all__ = ['UPDATED',
            'sq_nm_mhz_to_log10_sq_nm_mhz',
            'log10_cm_per_molecule_to_log10_sq_nm_mhz',
            'cm_per_molecule_to_log10_sq_nm_mhz',
+           'sort_unique', 'merge_sorted', 'search_sorted',
            'within', 'chem_html', 'best_name', 'remove_html', 'wrap_in_html',
            'find_qt_core',
            'save_catalog_to_file']
@@ -107,6 +108,146 @@ def within(x: float, limits: tuple[float, float] | tuple[tuple[float, float], ..
         return any(min(limit) <= x <= max(limit) for limit in limits)
     else:
         raise TypeError('Invalid limits type')
+
+
+_AnyType = TypeVar('_AnyType')
+
+
+class SupportsLessAndEqual(Protocol[_AnyType]):
+    def __eq__(self, other: _AnyType) -> bool:
+        pass
+
+    def __lt__(self, other: _AnyType) -> bool:
+        pass
+
+    def __le__(self, other: _AnyType) -> bool:
+        pass
+
+
+@overload
+def sort_unique(items: Sequence[_AnyType], *,
+                key: Callable[[_AnyType], SupportsLessAndEqual],
+                reverse: bool = False) -> list[_AnyType]:
+    pass
+
+
+@overload
+def sort_unique(items: Sequence[SupportsLessAndEqual], *,
+                key: Callable[[SupportsLessAndEqual], SupportsLessAndEqual] | None = None,
+                reverse: bool = False) -> list[SupportsLessAndEqual]:
+    pass
+
+
+def sort_unique(items: Sequence[SupportsLessAndEqual] | Sequence[_AnyType], *,
+                key: Callable[[_AnyType], SupportsLessAndEqual] | None = None,
+                reverse: bool = False) -> list[SupportsLessAndEqual]:
+    sorted_items: list[SupportsLessAndEqual] = sorted(items, key=key, reverse=reverse)
+    i: int = 0
+    while i < len(sorted_items) - 1:
+        while i < len(sorted_items) - 1 and sorted_items[i] == sorted_items[i + 1]:
+            del sorted_items[i + 1]
+        i += 1
+    return sorted_items
+
+
+@overload
+def merge_sorted(items_1: Sequence[_AnyType],
+                 items_2: Sequence[_AnyType], *,
+                 key: Callable[[_AnyType], SupportsLessAndEqual]) -> list[_AnyType]:
+    pass
+
+
+@overload
+def merge_sorted(items_1: Sequence[SupportsLessAndEqual],
+                 items_2: Sequence[SupportsLessAndEqual], *,
+                 key: Callable[[_AnyType], SupportsLessAndEqual] | None = None) -> list[SupportsLessAndEqual]:
+    pass
+
+
+def merge_sorted(items_1: Sequence[SupportsLessAndEqual] | Sequence[_AnyType],
+                 items_2: Sequence[SupportsLessAndEqual] | Sequence[_AnyType], *,
+                 key: Callable[[_AnyType], SupportsLessAndEqual] | None = None) -> list[SupportsLessAndEqual]:
+    sorted_items_1: list[SupportsLessAndEqual] = sort_unique(items_1, key=key, reverse=False)
+    sorted_items_2: list[SupportsLessAndEqual] = sort_unique(items_2, key=key, reverse=False)
+    merged_items: list[SupportsLessAndEqual] = []
+
+    last_i_1: int
+    last_i_2: int
+    i_1: int = 0
+    i_2: int = 0
+
+    if key is None:
+        key = lambda _: _
+
+    while i_1 < len(sorted_items_1) and i_2 < len(sorted_items_2):
+        last_i_1 = i_1
+        while (i_1 < len(sorted_items_1) and i_2 < len(sorted_items_2)
+               and key(sorted_items_1[i_1]) <= key(sorted_items_2[i_2])):
+            i_1 += 1
+        if last_i_1 < i_1:
+            merged_items.extend(sorted_items_1[last_i_1:i_1])
+
+        last_i_2 = i_2
+        while (i_1 < len(sorted_items_1) and i_2 < len(sorted_items_2)
+               and key(sorted_items_2[i_2]) <= key(sorted_items_1[i_1])):
+            i_2 += 1
+        if last_i_2 < i_2:
+            merged_items.extend(sorted_items_2[last_i_2:i_2])
+
+    while i_1 < len(sorted_items_1) and key(merged_items[-1]) == key(sorted_items_1[i_1]):
+        i_1 += 1
+    if i_1 < len(sorted_items_1) and i_2 >= len(sorted_items_2):
+        merged_items.extend(sorted_items_1[i_1:])
+    while i_2 < len(sorted_items_2) and key(merged_items[-1]) == key(sorted_items_2[i_2]):
+        i_2 += 1
+    if i_2 < len(sorted_items_2) and i_1 >= len(sorted_items_1):
+        merged_items.extend(sorted_items_2[i_2:])
+    return merged_items
+
+
+@overload
+def search_sorted(threshold: SupportsLessAndEqual,
+                  items: Sequence[_AnyType], *,
+                  key: Callable[[_AnyType], SupportsLessAndEqual],
+                  maybe_equal: bool = False) -> int:
+    pass
+
+
+@overload
+def search_sorted(threshold: SupportsLessAndEqual,
+                  items: Sequence[SupportsLessAndEqual], *,
+                  key: Callable[[_AnyType], SupportsLessAndEqual] | None = None,
+                  maybe_equal: bool = False) -> int:
+    pass
+
+
+def search_sorted(threshold: SupportsLessAndEqual,
+                  items: Sequence[_AnyType] | Sequence[SupportsLessAndEqual], *,
+                  key: Callable[[_AnyType], SupportsLessAndEqual] | None = None,
+                  maybe_equal: bool = False) -> int:
+    from operator import lt, le
+
+    if not items:
+        raise ValueError('Empty sequence provided')
+    if key is None:
+        key = lambda _: _
+    less: Callable[[SupportsLessAndEqual, SupportsLessAndEqual], bool] = le if maybe_equal else lt
+    if not less(key(items[0]), threshold):
+        return -1
+    if less(key(items[-1]), threshold):
+        return len(items)
+    i: int = 0
+    j: int = len(items) - 1
+    n: int
+    while j - i > 1:
+        n = (i + j) // 2
+        if less(key(items[n]), threshold):
+            i = n
+        else:
+            j = n
+    if i != j and not less(key(items[j]), threshold):
+        return i
+    return j
 
 
 def mhz_to_ghz(frequency_mhz: float) -> float:
