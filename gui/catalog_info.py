@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Iterable, Sequence
 
-from qtpy.QtCore import QAbstractTableModel, QDateTime, QModelIndex, QObject, QTimeZone, Qt
+from qtpy.QtCore import QAbstractTableModel, QDateTime, QModelIndex, QObject, QPersistentModelIndex, QTimeZone, Qt
 from qtpy.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox, QFormLayout, QHeaderView, QTableView,
                             QVBoxLayout, QWidget)
 
@@ -12,7 +12,6 @@ from gui.selectable_label import SelectableLabel
 from gui.titled_list_widget import TitledListWidget
 
 __all__ = ['CatalogInfo']
-
 
 
 class DataModel(QAbstractTableModel):
@@ -29,10 +28,10 @@ class DataModel(QAbstractTableModel):
     def header(self, new_header: Iterable[str]) -> None:
         self._header = list(new_header)
 
-    def rowCount(self, parent: QModelIndex | None = None) -> int:
+    def rowCount(self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()) -> int:
         return len(self._data)
 
-    def columnCount(self, parent: QModelIndex | None = None) -> int:
+    def columnCount(self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()) -> int:
         return 1 if all(info.build_datetime is None for info in self._data) else 2
 
     def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> str | None:
