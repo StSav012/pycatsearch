@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Final
+from typing import Any, Final, NamedTuple
 
 from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
 from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QIcon, QPainter, QPixmap, QScreen,
@@ -12,7 +12,7 @@ from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, Q
                             QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView,
                             QTableWidgetSelectionRange, QWidget)
 
-from catalog import Catalog
+from catalog import Catalog, CatalogEntryType, LineType
 from gui.catalog_info import CatalogInfo
 from gui.download_dialog import DownloadDialog
 from gui.float_spinbox import FloatSpinBox
@@ -87,12 +87,22 @@ class HTMLDelegate(QStyledItemDelegate):
 class LinesListModel(QAbstractTableModel):
     ROW_BATCH_COUNT: Final[int] = 5
 
+    class DataType(NamedTuple):
+        id: int
+        best_name: str
+        frequency_str: str
+        frequency: float
+        intensity_str: str
+        intensity: float
+        lower_state_energy_str: str
+        lower_state_energy: float
+
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._settings: Settings = settings
-        self._entries: list[dict[str, int | str | list[dict[str, float]]]] = []
-        self._data: list[tuple[int, str, float, float, float]] = []
-        self._rows_loaded: int = self.ROW_BATCH_COUNT
+        self._entries: list[CatalogEntryType] = []
+        self._data: list[LinesListModel.DataType] = []
+        self._rows_loaded: int = LinesListModel.ROW_BATCH_COUNT
 
         unit_format: Final[str] = self.tr('{0} [{1}]', 'unit format')
         self._header: Final[list[str]] = [
@@ -121,7 +131,7 @@ class LinesListModel(QAbstractTableModel):
                 return self._data[index.row()][data_column]
         return None
 
-    def row(self, row_index: int) -> tuple[int, str, float, float, float]:
+    def row(self, row_index: int) -> LinesListModel.DataType:
         return self._data[row_index]
 
     def item(self, row_index: int, column_index: int) -> int | str | float:
@@ -147,14 +157,14 @@ class LinesListModel(QAbstractTableModel):
     def clear(self) -> None:
         self.set_entries([])
 
-    def set_entries(self, new_data: list[dict[str, int | str | list[dict[str, float]]]]) -> None:
-        def frequency_str(line: dict[str, float]) -> tuple[str, float]:
+    def set_entries(self, new_data: list[CatalogEntryType]) -> None:
+        def frequency_str(line: LineType) -> tuple[str, float]:
             frequency: float = self._settings.from_mhz(line[FREQUENCY])
             frequency_suffix: int = self._settings.frequency_unit
             precision: int = [4, 7, 8, 8][frequency_suffix]
             return f'{frequency:.{precision}f}', frequency
 
-        def intensity_str(line: dict[str, float]) -> tuple[str, float]:
+        def intensity_str(line: LineType) -> tuple[str, float]:
             intensity: float = self._settings.from_log10_sq_nm_mhz(line[INTENSITY])
             if intensity == 0.0:
                 return '0', intensity
@@ -163,7 +173,7 @@ class LinesListModel(QAbstractTableModel):
             else:
                 return f'{intensity:.4f}', intensity
 
-        def lower_state_energy_str(line: dict[str, float]) -> tuple[str, float]:
+        def lower_state_energy_str(line: LineType) -> tuple[str, float]:
             lower_state_energy: float = self._settings.from_rec_cm(line[LOWER_STATE_ENERGY])
             if lower_state_energy == 0.0:
                 return '0', lower_state_energy
@@ -172,11 +182,35 @@ class LinesListModel(QAbstractTableModel):
             else:
                 return f'{lower_state_energy:.4f}', lower_state_energy
 
+        def same_entry(entry_1: CatalogEntryType, entry_2: CatalogEntryType) -> bool:
+            if len(entry_1) != len(entry_2):
+                return False
+            for key, value in entry_1.items():
+                if key not in entry_2:
+                    return False
+                if key != LINES and value != entry_2[key]:
+                    return False
+                if key == LINES and len(value) != len(entry_2[key]):
+                    return False
+            return True
+
         self.beginResetModel()
-        self._entries = new_data.copy()
-        entry: dict[str, int | str | list[dict[str, float]]]
+        unique_entries = new_data.copy()
+        all_unique: bool = True  # unless the opposite is proven
+        for i in range(len(new_data)):
+            unique: bool = True
+            for j in range(i + 1, len(new_data)):
+                if same_entry(new_data[i], new_data[j]):
+                    unique = False
+                    if all_unique:
+                        unique_entries = []
+                        all_unique = False
+            if unique and not all_unique:
+                unique_entries.append(new_data[i])
+        self._entries = unique_entries
+        entry: CatalogEntryType
         self._data = [
-            (
+            LinesListModel.DataType(
                 entry[ID],
                 best_name(entry, self._settings.rich_text_in_formulas),
                 *frequency_str(line),
@@ -186,7 +220,7 @@ class LinesListModel(QAbstractTableModel):
             for entry in self._entries
             for line in entry[LINES]
         ]
-        self._rows_loaded = self.ROW_BATCH_COUNT
+        self._rows_loaded = LinesListModel.ROW_BATCH_COUNT
         self.endResetModel()
 
     def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
@@ -201,7 +235,7 @@ class LinesListModel(QAbstractTableModel):
     def fetchMore(self, index: QModelIndex = QModelIndex()) -> None:
         # https://sateeshkumarb.wordpress.com/2012/04/01/paginated-display-of-table-data-in-pyqt/
         remainder: int = len(self._data) - self._rows_loaded
-        items_to_fetch: int = min(remainder, self.ROW_BATCH_COUNT)
+        items_to_fetch: int = min(remainder, LinesListModel.ROW_BATCH_COUNT)
         self.beginInsertRows(QModelIndex(), self._rows_loaded, self._rows_loaded + items_to_fetch - 1)
         self._rows_loaded += items_to_fetch
         self.endInsertRows()
@@ -428,11 +462,11 @@ class UI(QMainWindow):
             3: self.settings.energy_unit_str,
         }
         for r in self.results_table.selectionModel().selectedRows():
-            row: tuple[int, str, float, float, float] = self.results_model.row(r.row())
+            row: LinesListModel.DataType = self.results_model.row(r.row())
             text.append(
                 '<tr><td>' +
                 f'</td>{self.settings.csv_separator}<td>'.join(
-                    [row[1]] +
+                    [row.best_name] +
                     [(str(row[_c * 2]) + ((' ' + units[_c]) if self.settings.with_units and _c in units else ''))
                      for _c, _a in zip(range(1, self.results_model.columnCount()),
                                        self.menu_bar.menu_columns.actions())
@@ -502,7 +536,7 @@ class UI(QMainWindow):
         if self.results_table.selectionModel().selectedRows():
             syn: SubstanceInfo = SubstanceInfo(
                 self.catalog,
-                self.results_model.row(self.results_table.selectionModel().selectedRows()[0].row())[0],
+                self.results_model.row(self.results_table.selectionModel().selectedRows()[0].row()).id,
                 self)
             syn.exec()
 
