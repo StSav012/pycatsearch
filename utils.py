@@ -10,7 +10,7 @@ import os
 from numbers import Real
 from pathlib import Path
 from types import ModuleType
-from typing import BinaryIO, Final, TextIO, cast
+from typing import BinaryIO, Final, cast
 
 __all__ = ['UPDATED',
            'M_LOG10E',
@@ -421,9 +421,9 @@ def save_catalog_to_file(saving_path: str | Path,
         CATALOG: catalog,
         FREQUENCY: list(frequency_limits)
     }
-    f: TextIO | BinaryIO | gzip.GzipFile
+    f: BinaryIO | gzip.GzipFile
     if saving_path.suffix.casefold() == '.json':
-        with saving_path.open('wt') as f:
+        with saving_path.open('wb') as f:
             f.write(json.dumps(data, indent=4).encode())
     elif saving_path.name.casefold().endswith('.json.gz'):
         with gzip.open(saving_path, 'wb') as f:
