@@ -4,7 +4,8 @@ from __future__ import annotations
 from typing import Iterable, Sequence
 
 from qtpy.QtCore import QAbstractTableModel, QDateTime, QModelIndex, QObject, QTimeZone, Qt
-from qtpy.QtWidgets import QAbstractItemView, QDialog, QDialogButtonBox, QHeaderView, QTableView, QVBoxLayout, QWidget
+from qtpy.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox, QFormLayout, QHeaderView, QLabel, QTableView,
+                            QVBoxLayout, QWidget)
 
 from .titled_list_widget import TitledListWidget
 from ..catalog import Catalog, CatalogSourceInfo
@@ -134,6 +135,10 @@ class CatalogInfo(QDialog):
         frequency_limits_list.addItems([
             self.tr('{frequency_limit[0]} to {frequency_limit[1]} MHz').format(frequency_limit=frequency_limit)
             for frequency_limit in catalog.frequency_limits])
+
+        stat_layout: QFormLayout = QFormLayout()
+        stat_layout.addRow(self.tr('Total number of substances:'), QLabel(str(catalog.entries_count)))
+        layout.addLayout(stat_layout, 0)
 
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         buttons.rejected.connect(self.reject)
