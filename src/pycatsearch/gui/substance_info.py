@@ -7,6 +7,7 @@ from qtpy.QtCore import QModelIndex, Qt, Slot
 from qtpy.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLabel, QListWidget, QListWidgetItem, QVBoxLayout,
                             QWidget)
 
+from .selectable_label import SelectableLabel
 from ..catalog import Catalog
 from ..utils import *
 
@@ -80,22 +81,21 @@ class SubstanceInfo(QDialog):
         if parent is not None:
             self.setWindowIcon(parent.windowIcon())
         layout: QFormLayout = QFormLayout(self)
-        label: QLabel
+        label: SelectableLabel
         for entry in catalog.catalog:
             if entry[ID] == entry_id:
                 for key in entry:
                     if key == LINES:
                         continue
                     elif key == STATE_HTML:
-                        label = QLabel(chem_html(str(entry[key])), self)
+                        label = SelectableLabel(chem_html(str(entry[key])), self)
                     elif key == INCHI_KEY:
-                        label = \
-                            QLabel(f'<a href="https://pubchem.ncbi.nlm.nih.gov/#query={entry[key]}">{entry[key]}</a>',
-                                   self)
+                        label = SelectableLabel(
+                            f'<a href="https://pubchem.ncbi.nlm.nih.gov/#query={entry[key]}">{entry[key]}</a>',
+                            self)
                         label.setOpenExternalLinks(True)
                     else:
-                        label = QLabel(str(entry[key]), self)
-                    label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+                        label = SelectableLabel(str(entry[key]), self)
                     layout.addRow(self.tr(HUMAN_READABLE[key]), label)
                 break
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
