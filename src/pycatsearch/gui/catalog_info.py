@@ -101,17 +101,23 @@ class SourcesList(QTableView):
         self.setAlternatingRowColors(True)
         self.horizontalHeader().setDefaultSectionSize(180)
         self.horizontalHeader().setHighlightSections(False)
-        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setHighlightSections(False)
 
     def append(self, info: CatalogSourceInfo) -> None:
         self._model.append(info)
+        if self.horizontalHeader().count() > 0:
+            self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        for i in range(1, self.horizontalHeader().count()):
+            self.horizontalHeader().setSectionResizeMode(i, QHeaderView.ResizeMode.ResizeToContents)
         self.resizeColumnsToContents()
 
     def extend(self, info: Sequence[CatalogSourceInfo]) -> None:
         self._model.extend(info)
+        if self.horizontalHeader().count() > 0:
+            self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        for i in range(1, self.horizontalHeader().count()):
+            self.horizontalHeader().setSectionResizeMode(i, QHeaderView.ResizeMode.ResizeToContents)
         self.resizeColumnsToContents()
 
 
