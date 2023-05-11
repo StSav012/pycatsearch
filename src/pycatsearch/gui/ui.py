@@ -201,8 +201,8 @@ class LinesListModel(QAbstractTableModel):
 
     def fetchMore(self, index: QModelIndex = QModelIndex()) -> None:
         # https://sateeshkumarb.wordpress.com/2012/04/01/paginated-display-of-table-data-in-pyqt/
-        reminder: int = len(self._data) - self._rows_loaded
-        items_to_fetch: int = min(reminder, self.ROW_BATCH_COUNT)
+        remainder: int = len(self._data) - self._rows_loaded
+        items_to_fetch: int = min(remainder, self.ROW_BATCH_COUNT)
         self.beginInsertRows(QModelIndex(), self._rows_loaded, self._rows_loaded + items_to_fetch - 1)
         self._rows_loaded += items_to_fetch
         self.endInsertRows()
