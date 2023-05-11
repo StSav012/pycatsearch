@@ -4,12 +4,13 @@ from __future__ import annotations
 from typing import Iterable, Sequence
 
 from qtpy.QtCore import QAbstractTableModel, QDateTime, QModelIndex, QObject, QTimeZone, Qt
-from qtpy.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox, QGroupBox, QHeaderView, QListWidget,
-                            QTableView, QVBoxLayout, QWidget)
+from qtpy.QtWidgets import QAbstractItemView, QDialog, QDialogButtonBox, QHeaderView, QTableView, QVBoxLayout, QWidget
 
 from catalog import Catalog, CatalogSourceInfo
+from gui.titled_list_widget import TitledListWidget
 
 __all__ = ['CatalogInfo']
+
 
 
 class DataModel(QAbstractTableModel):
@@ -128,12 +129,9 @@ class CatalogInfo(QDialog):
         layout.addWidget(sources_list)
         sources_list.extend(catalog.sources_info)
 
-        frequency_limits_box: QGroupBox = QGroupBox(self)
-        frequency_limits_box.setTitle(self.tr('Frequency limits'))
-        layout.addWidget(frequency_limits_box)
-        frequency_limits_box.setLayout(QVBoxLayout())
-        frequency_limits_list: QListWidget = QListWidget(self)
-        frequency_limits_box.layout().addWidget(frequency_limits_list)
+        frequency_limits_list: TitledListWidget = TitledListWidget(self)
+        frequency_limits_list.setTitle(self.tr('Frequency limits:'))
+        layout.addWidget(frequency_limits_list)
         frequency_limits_list.addItems([
             self.tr('{frequency_limit[0]} to {frequency_limit[1]} MHz').format(frequency_limit=frequency_limit)
             for frequency_limit in catalog.frequency_limits])
