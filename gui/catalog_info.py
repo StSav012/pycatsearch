@@ -4,10 +4,11 @@ from __future__ import annotations
 from typing import Iterable, Sequence
 
 from qtpy.QtCore import QAbstractTableModel, QDateTime, QModelIndex, QObject, QTimeZone, Qt
-from qtpy.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox, QFormLayout, QHeaderView, QLabel, QTableView,
+from qtpy.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox, QFormLayout, QHeaderView, QTableView,
                             QVBoxLayout, QWidget)
 
 from catalog import Catalog, CatalogSourceInfo
+from gui.selectable_label import SelectableLabel
 from gui.titled_list_widget import TitledListWidget
 
 __all__ = ['CatalogInfo']
@@ -138,7 +139,7 @@ class CatalogInfo(QDialog):
             for frequency_limit in catalog.frequency_limits])
 
         stat_layout: QFormLayout = QFormLayout()
-        stat_layout.addRow(self.tr('Total number of substances:'), QLabel(str(catalog.entries_count)))
+        stat_layout.addRow(self.tr('Total number of substances:'), SelectableLabel(str(catalog.entries_count)))
         layout.addLayout(stat_layout, 0)
 
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
