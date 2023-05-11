@@ -4,7 +4,8 @@ from __future__ import annotations
 from typing import Iterable, Sequence
 
 from qtpy.QtCore import QAbstractTableModel, QDateTime, QModelIndex, QObject, QTimeZone, Qt
-from qtpy.QtWidgets import QDialog, QDialogButtonBox, QListWidget, QTableView, QVBoxLayout, QWidget, QHeaderView, QAbstractItemView, QGroupBox
+from qtpy.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox, QGroupBox, QHeaderView, QListWidget,
+                            QTableView, QVBoxLayout, QWidget)
 
 from catalog import Catalog, CatalogSourceInfo
 
