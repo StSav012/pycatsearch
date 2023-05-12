@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import bz2
 import gzip
 import json
+import lzma
 import math
 import os.path
 import time
-from datetime import datetime
-from numbers import Real
-from typing import Any, BinaryIO, Dict, List, NamedTuple, Optional, Union, cast
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from os import PathLike
+from pathlib import Path
+from typing import Any, BinaryIO, Callable, Dict, List, NamedTuple, Optional, TextIO, Union, cast
 
 from utils import *
 
@@ -47,7 +51,7 @@ class CatalogData:
                     del self.catalog[i + 1]
                 i += 1
 
-        def merge_frequency_tuples(*args: tuple[float, float] | list[Real]) -> tuple[tuple[float, float], ...]:
+        def merge_frequency_tuples(*args: tuple[float, float] | list[float]) -> tuple[tuple[float, float], ...]:
             if not args:
                 return tuple()
             ranges: tuple[tuple[float, float], ...] = tuple()
@@ -72,6 +76,66 @@ class CatalogData:
 
 
 class Catalog:
+    DEFAULT_SUFFIX: str = '.json.gz'
+
+    class Opener:
+        OPENERS_BY_SUFFIX: dict[str, Callable] = {
+            '.json': open,
+            '.json.gz': gzip.open,
+            '.json.bz2': bz2.open,
+            '.json.xz': lzma.open,
+            '.json.lzma': lzma.open,
+        }
+
+        OPENERS_BY_SIGNATURE: dict[str, Callable] = {
+            b'{': open,
+            b'\x1F\x8B': gzip.open,
+            b'BZh': bz2.open,
+            b'\xFD\x37\x7A\x58\x5A\x00': lzma.open,
+        }
+
+        def __init__(self, path: str | PathLike[str]) -> None:
+            self._path: Path = Path(path)
+            suffix: str = self._path.suffix.casefold()
+            self._opener: Callable
+            if suffix in Catalog.Opener.OPENERS_BY_SUFFIX:
+                self._opener = Catalog.Opener.OPENERS_BY_SUFFIX[suffix]
+            else:
+                if self._path.exists():
+                    max_signature_length: int = max(map(len, Catalog.Opener.OPENERS_BY_SIGNATURE.keys()))
+                    f: BinaryIO
+                    with self._path.open('rb') as f:
+                        init_bytes: bytes = f.read(max_signature_length)
+                    key: bytes
+                    value: Callable
+                    for key, value in Catalog.Opener.OPENERS_BY_SIGNATURE.items():
+                        if init_bytes.startswith(key):
+                            self._opener = value
+                            return
+
+                raise ValueError(f'Unknown file: {path}')
+
+        @contextmanager
+        def open(self, mode: str, encoding: str = 'utf-8',
+                 errors: str | None = None, newline: str | None = None) -> TextIO | BinaryIO:
+            """
+            Open a file in a safe way. Create a temporary file when writing.
+
+            See https://stackoverflow.com/a/29491523/8554611, https://stackoverflow.com/a/2333979/8554611
+            """
+            writing: bool = 'w' in mode.casefold()
+            tmp_path: Path = self._path.with_name(self._path.name + '.part')
+            file: TextIO | BinaryIO
+            with self._opener(tmp_path if writing else self._path, mode=mode,
+                              encoding=encoding, errors=errors, newline=newline) as file:
+                try:
+                    yield file
+                finally:
+                    if writing:
+                        file.flush()
+                        os.fsync(file.fileno())
+                        tmp_path.replace(self._path)
+
     def __init__(self, *catalog_file_names: str) -> None:
         self._data: CatalogData = CatalogData()
         self._sources: list[CatalogSourceInfo] = []
@@ -79,17 +143,17 @@ class Catalog:
         for filename in catalog_file_names:
             if os.path.exists(filename) and os.path.isfile(filename):
                 f_in: BinaryIO | gzip.GzipFile
-                with (gzip.GzipFile(filename, 'rb')
-                if filename.casefold().endswith('.json.gz')
-                else open(filename, 'rb')) as f_in:
+                with Catalog.Opener(filename).open('rb') as f_in:
                     content: bytes = f_in.read()
                     try:
-                        json_data: dict[str, list[Real] | list[CatalogEntryType]] = json.loads(content)
+                        json_data: dict[str, list[float | None] | list[CatalogEntryType]] = json.loads(content)
                     except (json.decoder.JSONDecodeError, UnicodeDecodeError):
                         pass
                     else:
                         self._data.append(catalog=json_data[CATALOG],
-                                          frequency_limits=tuple(json_data[FREQUENCY]))
+                                          frequency_limits=(json_data[FREQUENCY][0],
+                                                            (math.inf if json_data[FREQUENCY][1] is None
+                                                             else json_data[FREQUENCY][1])))
                         build_datetime: datetime | None = None
                         if BUILD_TIME in json_data:
                             build_datetime = datetime.fromisoformat(cast(str, json_data[BUILD_TIME]))
@@ -286,3 +350,25 @@ class Catalog:
         intensities_width: int = max_width(intensities)
         for j, (n, f, i) in enumerate(zip(names, frequencies, intensities)):
             print(f'{n:<{names_width}} {f:>{frequencies_width}} {i:>{intensities_width}}')
+
+    @staticmethod
+    def save(filename: str,
+             catalog: list[CatalogEntryType],
+             frequency_limits: tuple[float, float] = (0.0, math.inf),
+             build_time: datetime | None = None) -> None:
+        if build_time is None:
+            build_time = datetime.now(tz=timezone.utc)
+        data_to_save: dict[str, list[CatalogEntryType] | tuple[float, float] | str] = {
+            CATALOG: catalog,
+            FREQUENCY: list(frequency_limits),
+            BUILD_TIME: build_time.isoformat(),
+        }
+        opener: Catalog.Opener
+        try:
+            opener = Catalog.Opener(filename)
+        except ValueError:
+            opener = Catalog.Opener(filename + Catalog.DEFAULT_SUFFIX)
+
+        f: BinaryIO
+        with opener.open('wb') as f:
+            f.write(json.dumps(data_to_save, indent=4).encode())
