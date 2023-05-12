@@ -7,10 +7,10 @@ from typing import Any, Final, NamedTuple
 from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
 from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QIcon, QPainter, QPixmap, QScreen,
                         QTextDocument)
-from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox,
-                            QFileDialog, QFormLayout, QGridLayout, QHeaderView, QMainWindow, QMessageBox, QPushButton,
-                            QStatusBar, QStyle, QStyleOptionViewItem, QStyledItemDelegate, QTableView,
-                            QTableWidgetSelectionRange, QWidget)
+from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QGridLayout,
+                            QHeaderView, QMainWindow, QMessageBox, QPushButton, QStatusBar, QStyle,
+                            QStyleOptionViewItem, QStyledItemDelegate, QTableView, QTableWidgetSelectionRange, QWidget)
+from qtpy.compat import getopenfilenames
 
 from catalog import Catalog, CatalogEntryType, LineType
 from gui.catalog_info import CatalogInfo
@@ -411,21 +411,58 @@ class UI(QMainWindow):
         self.menu_bar.action_copy.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
         self.menu_bar.action_substance_info.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
 
+    def get_open_file_names(self, formats: dict[tuple[str, ...], str],
+                            caption: str = '', directory: str = '') -> tuple[list[str], str]:
+        def ensure_prefix(text: str, prefix: str) -> str:
+            if text.startswith(prefix):
+                return text
+            else:
+                return prefix + text
+
+        def join_file_dialog_formats(_formats: dict[tuple[str, ...], str]) -> str:
+            f: tuple[str, ...]
+            all_supported_extensions: list[str] = []
+            for f in _formats.keys():
+                all_supported_extensions.extend(ensure_prefix(_f, '*') for _f in f)
+            format_lines: list[str] = [''.join((
+                    self.tr('All supported', 'file type'),
+                    '(',
+                    ' '.join(ensure_prefix(_f, '*') for _f in all_supported_extensions),
+                    ')'))]
+            n: str
+            for f, n in _formats.items():
+                format_lines.append(''.join((n, '(', ' '.join(ensure_prefix(_f, '*') for _f in f), ')')))
+            format_lines.append(self.tr('All files', 'file type') + '(* *.*)')
+            return ';;'.join(format_lines)
+
+        filename: list[str]
+        _filter: str
+        filename, _filter = getopenfilenames(self,
+                                             caption=caption,
+                                             filters=join_file_dialog_formats(formats),
+                                             basedir=directory)
+        return filename, _filter
+
     def on_action_load_triggered(self) -> None:
         self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
         new_catalog_file_names: list[str]
-        new_catalog_file_names, _ = QFileDialog.getOpenFileNames(
-            self, self.tr('Load Catalog'),
-            [*self.catalog.sources, ''][0],
-            '{0}(*.json.gz);;{1}(*.json);;{2}(*.*)'.format(
-                self.tr('Compressed JSON'),
-                self.tr('JSON'),
-                self.tr('All Files')))
+        _formats: dict[tuple[str, ...], str] = {
+            tuple(all_cases('.json.gz')): self.tr('Compressed JSON', 'file type'),
+            tuple(all_cases('.json')): self.tr('JSON', 'file type'),
+        }
+        new_catalog_file_names, _ = self.get_open_file_names(formats=_formats,
+                                                             caption=self.tr('Load Catalog'),
+                                                             directory=(*self.catalog.sources, '')[0])
+
         if new_catalog_file_names:
             self.status_bar.showMessage(self.tr('Loading...'))
+            self.status_bar.repaint()
+            self.central_widget.setDisabled(True)
+            self.central_widget.repaint()
             self.catalog = Catalog(*new_catalog_file_names)
             self.box_substance.catalog = self.catalog
             self.button_search.setDisabled(self.catalog.is_empty)
+            self.central_widget.setEnabled(True)
             if not self.catalog.is_empty:
                 self.status_bar.showMessage(self.tr('Catalogs loaded.'))
                 self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)

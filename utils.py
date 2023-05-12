@@ -4,13 +4,14 @@ from __future__ import annotations
 import gzip
 import html
 import html.entities
+import itertools
 import json
 import math
 import os
 from numbers import Real
 from pathlib import Path
 from types import ModuleType
-from typing import BinaryIO, Callable, Final, Protocol, Sequence, TypeVar, cast, overload
+from typing import BinaryIO, Callable, Final, Iterator, Protocol, Sequence, TypeVar, cast, overload
 
 __all__ = ['UPDATED',
            'M_LOG10E',
@@ -32,6 +33,7 @@ __all__ = ['UPDATED',
            'cm_per_molecule_to_log10_sq_nm_mhz',
            'sort_unique', 'merge_sorted', 'search_sorted',
            'within', 'chem_html', 'best_name', 'remove_html', 'wrap_in_html',
+           'all_cases',
            'find_qt_core',
            'save_catalog_to_file']
 
@@ -552,6 +554,33 @@ def find_qt_core() -> ModuleType | None:
         else:
             break
     return qt_core
+
+
+def all_cases(text: str) -> Iterator[str]:
+    """ return all cases of the text given """
+
+    cases: list[str] = list({text.lower(), text.upper(), text.capitalize(), text.swapcase(), text.casefold()})
+
+    if len(cases) < 2:
+        # don't bother
+        yield from cases
+        return
+
+    length: int = len(cases[0])
+    case: str
+    if not all(len(case) == length for case in cases):
+        # don't know what to do with cases of different lengths
+        yield from cases
+        return
+    # now, all the cases are of the same length
+
+    # get all possible variants of characters at each position
+    i: int
+    variants: Iterator[list[str]] = (sorted(set(case[i] for case in cases), reverse=True) for i in range(length))
+
+    combination: tuple[str, ...]
+    for combination in itertools.product(*variants):
+        yield ''.join(combination)
 
 
 def save_catalog_to_file(saving_path: str | Path,
