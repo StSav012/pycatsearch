@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import gzip
 import html
 import html.entities
 import itertools
-import json
 import math
 import os
 from numbers import Real
 from pathlib import Path
-from types import ModuleType
-from typing import BinaryIO, Callable, Final, Iterator, Protocol, Sequence, TypeVar, cast, overload
+from typing import Callable, Final, Iterator, Protocol, Sequence, TypeVar, cast, overload
 
 __all__ = ['M_LOG10E',
            'T0', 'c', 'h', 'k', 'e',
@@ -32,8 +29,7 @@ __all__ = ['M_LOG10E',
            'cm_per_molecule_to_log10_sq_nm_mhz',
            'sort_unique', 'merge_sorted', 'search_sorted',
            'within', 'chem_html', 'best_name', 'remove_html', 'wrap_in_html',
-           'all_cases',
-           'find_qt_core',
+           'ensure_prefix', 'all_cases',
            'save_catalog_to_file']
 
 M_LOG10E: Final[float] = math.log10(math.e)
@@ -533,18 +529,11 @@ def wrap_in_html(text: str, line_end: str = os.linesep) -> str:
     return line_end.join(new_text)
 
 
-def find_qt_core() -> ModuleType | None:
-    import importlib
-
-    qt_core = None
-    for qt in ('PySide6', 'PyQt6', 'PyQt5', 'PySide2'):
-        try:
-            qt_core = importlib.import_module(f'{qt}.QtCore')
-        except (ImportError, ModuleNotFoundError):
-            pass
-        else:
-            break
-    return qt_core
+def ensure_prefix(text: str, prefix: str) -> str:
+    if text.startswith(prefix):
+        return text
+    else:
+        return prefix + text
 
 
 def all_cases(text: str) -> Iterator[str]:
@@ -574,33 +563,12 @@ def all_cases(text: str) -> Iterator[str]:
         yield ''.join(combination)
 
 
-def save_catalog_to_file(saving_path: str | Path,
+def save_catalog_to_file(filename: str | Path,
                          catalog: list[dict[str, int | str | list[dict[str, float]]]],
                          frequency_limits: tuple[float, float]) -> bool:
-    saving_path: Path = Path(saving_path)
-    data: dict[str, list[dict[str, int | str | list[dict[str, float]]]] | list[float]] = {
-        CATALOG: catalog,
-        FREQUENCY: list(frequency_limits)
-    }
-    f: BinaryIO | gzip.GzipFile
-    if saving_path.suffix.casefold() == '.json':
-        with saving_path.open('wb') as f:
-            f.write(json.dumps(data, indent=4).encode())
-    elif saving_path.name.casefold().endswith('.json.gz'):
-        with gzip.open(saving_path, 'wb') as f:
-            f.write(json.dumps(data, indent=4).encode())
-    elif saving_path.suffix.casefold() in ('.qb''json', '.qb''js'):
-        qt_core: ModuleType | None = find_qt_core()
-        if qt_core is None:
-            return False
-        with saving_path.open('wb') as f:
-            f.write(qt_core.QJsonDocument(data).toBinaryData().data())
-    elif saving_path.suffix == '.qb''jsz':
-        qt_core: ModuleType | None = find_qt_core()
-        if qt_core is None:
-            return False
-        with saving_path.open('wb') as f:
-            f.write(qt_core.qCompress(qt_core.QJsonDocument(data).toBinaryData()).data())
-    else:
-        raise ValueError(f'Do not know what to save into {saving_path}')
+    from catalog import Catalog
+
+    if not catalog:
+        return False
+    Catalog.save(filename=filename, catalog=catalog, frequency_limits=frequency_limits)
     return True

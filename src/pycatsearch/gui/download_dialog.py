@@ -15,7 +15,7 @@ try:
 except (SyntaxError, ImportError, ModuleNotFoundError):
     from ..downloader import Downloader
 from .waiting_screen import WaitingScreen
-from ..utils import save_catalog_to_file
+from ..utils import all_cases, ensure_prefix, save_catalog_to_file
 
 
 __all__ = ['DownloadDialog']
@@ -199,32 +199,59 @@ class DownloadDialog(QWizard):
             self.progress_page.downloader.join(0.1)
         super(DownloadDialog, self).restart()
 
+    def _get_save_file_name(self, formats: dict[tuple[str, ...], str],
+                            caption: str = '', directory: str = '') -> tuple[str, str]:
+
+        def join_file_dialog_formats(_formats: dict[tuple[str, ...], str]) -> str:
+            f: tuple[str, ...]
+            all_supported_extensions: list[str] = []
+            for f in _formats.keys():
+                all_supported_extensions.extend(ensure_prefix(_f, '*') for _f in f)
+            format_lines: list[str] = [''.join((
+                self.tr('All supported', 'file type'),
+                '(',
+                ' '.join(ensure_prefix(_f, '*') for _f in all_supported_extensions),
+                ')'))]
+            n: str
+            for f, n in _formats.items():
+                format_lines.append(''.join((n, '(', ' '.join(ensure_prefix(_f, '*') for _f in f), ')')))
+            format_lines.append(self.tr('All files', 'file type') + '(* *.*)')
+            return ';;'.join(format_lines)
+
+        filename: str
+        _filter: str
+        filename, _filter = getsavefilename(self,
+                                            caption=caption,
+                                            filters=join_file_dialog_formats(formats),
+                                            basedir=directory)
+        return filename, _filter
+
     def done(self, exit_code: QDialog.DialogCode) -> None:
         if self.progress_page.downloader is not None and self.progress_page.downloader.is_alive():
             self.progress_page.downloader.join(0.1)
 
         if exit_code == QDialog.DialogCode.Accepted and self.catalog:
-            filters: tuple[str, ...] = (
-                f"{self.tr('JSON')} (*.json)",
-                f"{self.tr('GZipped JSON')} (*.json.gz)",
-                f"{self.tr('Binary Qt JSON')} (*.qb""json *.qb""js)",
-                f"{self.tr('Compressed Binary Qt JSON')} (*.qb""jsz)",
-            )
+            _formats: dict[tuple[str, ...], str] = {
+                tuple(all_cases('.json.gz')): self.tr('JSON with GZip compression', 'file type'),
+                tuple(all_cases('.json.bz2')): self.tr('JSON with Bzip2 compression', 'file type'),
+                tuple(*all_cases('.json.xz'), *all_cases('.json.lzma')):
+                    self.tr('JSON with LZMA2 compression', 'file type'),
+                tuple(all_cases('.json')): self.tr('JSON', 'file type'),
+            }
             save_file_name: str
-            save_file_name, _ = getsavefilename(
-                parent=self, caption=self.tr('Save As...'),
-                filters=';;'.join(filters), selectedfilter=filters[1])
+            save_file_name, _ = self._get_save_file_name(formats=_formats, caption=self.tr('Save As...'))
             if not save_file_name:
                 return
 
-            ws = WaitingScreen(self,
-                               label=self.tr('Please wait...'),
-                               target=save_catalog_to_file,
-                               kwargs={
-                                   'saving_path': save_file_name,
-                                   'catalog': self.catalog,
-                                   'frequency_limits': (self.field('min_frequency'), self.field('max_frequency'))
-                               })
+            ws: WaitingScreen = WaitingScreen(
+                self,
+                label=self.tr('Please wait...'),
+                target=save_catalog_to_file,
+                kwargs={
+                    'filename': save_file_name,
+                    'catalog': self.catalog,
+                    'frequency_limits': (self.field('min_frequency'), self.field('max_frequency'))
+                })
             ws.exec()
 
         super(DownloadDialog, self).done(exit_code)
