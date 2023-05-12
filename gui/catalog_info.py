@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import Iterable, Sequence
+from typing import Iterable
 
 from qtpy.QtCore import QAbstractTableModel, QDateTime, QModelIndex, QObject, QPersistentModelIndex, QTimeZone, Qt
 from qtpy.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox, QFormLayout, QHeaderView, QTableView,
@@ -79,7 +79,7 @@ class DataModel(QAbstractTableModel):
         self._data.append(info)
         self.endResetModel()
 
-    def extend(self, info: Sequence[CatalogSourceInfo]) -> None:
+    def extend(self, info: Iterable[CatalogSourceInfo]) -> None:
         self.beginResetModel()
         self._data.extend(info)
         self.endResetModel()
@@ -112,7 +112,7 @@ class SourcesList(QTableView):
             self.horizontalHeader().setSectionResizeMode(i, QHeaderView.ResizeMode.ResizeToContents)
         self.resizeColumnsToContents()
 
-    def extend(self, info: Sequence[CatalogSourceInfo]) -> None:
+    def extend(self, info: Iterable[CatalogSourceInfo]) -> None:
         self._model.extend(info)
         if self.horizontalHeader().count() > 0:
             self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
