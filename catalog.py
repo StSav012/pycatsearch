@@ -85,7 +85,7 @@ class Catalog:
                     content: bytes = f_in.read()
                     try:
                         json_data: dict[str, list[Real] | list[CatalogEntryType]] = json.loads(content)
-                    except json.decoder.JSONDecodeError:
+                    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
                         pass
                     else:
                         self._data.append(catalog=json_data[CATALOG],
