@@ -10,7 +10,6 @@ from contextlib import suppress
 from math import inf
 from queue import Empty, Queue
 from threading import Thread
-from types import ModuleType
 from typing import Any, BinaryIO, Final, Mapping, cast
 from urllib.error import HTTPError
 from urllib.parse import urlencode
@@ -197,48 +196,19 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
 
 
 def save_catalog(filename: str,
-                 frequency_limits: tuple[float, float] = (-inf, inf), *,
-                 qt_json_filename: str = '', qt_json_zipped: bool = True) -> bool:
+                 frequency_limits: tuple[float, float] = (0, inf)) -> bool:
     """
     Download and save the spectral lines catalog data
 
     :param str filename: the name of the file to save the downloaded catalog to.
-        It should end with `'.json.gz'`, otherwise `'.json.gz'` is appended to it.
+        If it ends with an unknown suffix, `'.json.gz'` is appended to it.
     :param tuple frequency_limits: the tuple of the maximal and the minimal frequencies of the lines being stored.
         All the lines outside the specified frequency range are omitted.
-    :param str qt_json_filename: the name of the catalog saved as a binary representation of `QJsonDocument`.
-        If the value is omitted, nothing gets stored.
-    :param bool qt_json_zipped: the flag to indicate whether the data stored into ``qt_json_filename`` is compressed.
-        Default is `True`.
     """
 
-    from datetime import datetime, timezone
-
-    if not filename.endswith('.json.gz'):
-        filename += '.json.gz'
-    catalog: list[dict[str, int | str | list[dict[str, float]]]] = get_catalog(frequency_limits)
-    if not catalog:
-        return False
-
-    data_to_save: dict[str, list[dict[str, int | str | list[dict[str, float]]]] | tuple[float, float] | str] = {
-        CATALOG: catalog,
-        FREQUENCY: frequency_limits,
-        BUILD_TIME: datetime.now(tz=timezone.utc).isoformat()
-    }
-    f: BinaryIO | gzip.GzipFile
-    with gzip.open(filename, 'wb') as f:
-        f.write(json.dumps(data_to_save, indent=4).encode())
-    if qt_json_filename:
-        qt_core: ModuleType | None = find_qt_core()
-        if qt_core is not None:
-            with open(qt_json_filename, 'wb') as f:
-                if qt_json_zipped:
-                    f.write(qt_core.qCompress(qt_core.QJsonDocument(data_to_save).toBinaryData()).data())
-                else:
-                    f.write(qt_core.QJsonDocument(data_to_save).toBinaryData().data())
-        else:
-            logger.error('No Qt realization found')
-    return True
+    return save_catalog_to_file(filename=filename,
+                                catalog=get_catalog(frequency_limits),
+                                frequency_limits=frequency_limits)
 
 
 if __name__ == '__main__':
@@ -252,18 +222,9 @@ if __name__ == '__main__':
     ap.add_argument('catalog', type=str, help='the catalog location to save into (required)')
     ap.add_argument('-f''min', '--min-frequency', type=float, help='the lower frequency [MHz] to take', default=-inf)
     ap.add_argument('-f''max', '--max-frequency', type=float, help='the upper frequency [MHz] to take', default=+inf)
-    ap_group = ap.add_mutually_exclusive_group()
-    ap_group.add_argument('--qt-json', type=str, default='',
-                          help='the catalog location to save into '
-                               'as the binary representation of `QJsonDocument`')
-    ap_group.add_argument('--qt-json-zipped', type=str, default='',
-                          help='the catalog location to save into '
-                               'as the compressed binary representation of `QJsonDocument`')
     args: argparse.Namespace = ap.parse_intermixed_args()
 
     logging.basicConfig(level=logging.DEBUG)
     logger.info(f'started at {datetime.now()}')
-    save_catalog(args.catalog, (args.min_frequency, args.max_frequency),
-                 qt_json_filename=(args.qt_json or args.qt_json_zipped),
-                 qt_json_zipped=bool(args.qt_json_zipped))
+    save_catalog(args.catalog, (args.min_frequency, args.max_frequency))
     logger.info(f'finished at {datetime.now()}')

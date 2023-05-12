@@ -31,7 +31,10 @@ c.print(min_frequency=140141, max_frequency=140142)
 - `frequency_limits` is a tuple of the minimal and the maximal frequencies of the lines
   the loaded catalogs contain.
 - `is_empty` indicates whether nothing has been loaded by `__init__`.
+- `entries_count` is the number of the substances loaded by `__init__`.
 - `sources` contains a list of files that have been loaded successfully by `__init__`.
+- `sources_info` returns a list of the files and the timestamps recorded there (if any).
+- `min_frequency` and `max_frequency` are the extreme values of `frequency_limits`.
 
 ###### Functions:
 
@@ -97,7 +100,7 @@ In a code:
 # coding=utf-8
 import downloader
 
-downloader.save_catalog('catalog.json.gz', (115000, 178000), qt_json_filename='catalog.qbjsz', qt_json_zipped=True)
+downloader.save_catalog('catalog.json.gz', (115000, 178000))
 ```
 
 ###### Functions:
@@ -107,21 +110,17 @@ downloader.save_catalog('catalog.json.gz', (115000, 178000), qt_json_filename='c
   It returns a list of the spectral lines catalog entries.
   The parameter `frequency_limits` is the frequency range of the catalog entries to keep.
   By default, there are no limits.
-- `save_catalog(filename: str, frequency_limits: Tuple[float, float] = (-math.inf, math.inf), *,
-  qt_json_filename: str = '', qt_json_zipped: bool = True) -> bool` downloads and saves the spectral lines catalog data.
+- `save_catalog(filename: str, frequency_limits: Tuple[float, float] = (0.0, math.inf)) -> bool`
+  downloads and saves the spectral lines catalog data.
   Inside, `get_catalog` function is called.
   The function returns `True` if something got downloaded, `False` otherwise.
   The function fails with an error if `get_catalog` raises an error,
   or if the result can not be stored in the specified file.
   The parameters of `save_catalog` are the following:
     - `str filename`: the name of the file to save the downloaded catalog to.
-      It should end with `'.json.gz'`, otherwise `'.json.gz'` is appended to it.
+      If it ends with an unknown suffix, `'.json.gz'` is appended to it.
     - `tuple frequency_limits`: the tuple of the maximal and the minimal frequencies of the lines being stored.
       All the lines outside the specified frequency range are omitted. By default, there are no limits.
-    - `str qt_json_filename`: the name of the catalog saved as a binary representation of `QJsonDocument`.
-      If the value is omitted, nothing gets stored.
-    - `bool qt_json_zipped`: the flag to indicate whether the data stored into ``qt_json_filename`` is compressed.
-      Default is `True`.
 
 ### `async_downloader`
 
@@ -135,8 +134,7 @@ Requires `aiohttp`.
 
 - `get_catalog(frequency_limits: Tuple[float, float] = (0.0, math.inf)) ->
   List[Dict[str, Union[int, str, List[Dict[str, float]]]]]`
-- `save_catalog(filename: str, frequency_limits: Tuple[float, float] = (-math.inf, math.inf), *,
-  qt_json_filename: str = '', qt_json_zipped: bool = True) -> bool`
+- `save_catalog(filename: str, frequency_limits: Tuple[float, float] = (0.0, math.inf)) -> bool`
 
 The functions behave _almost_ exactly like their namesakes from `downloader`.
 `get_catalog` prints out the progress described in two numbers:
@@ -171,8 +169,6 @@ Just run `main.py` and see for yourself.
 The code is developed under `python 3.11`. It should work under `python 3.8` but merely tested.
 
 The non-GUI parts require absolute minimum of non-standard modules.
-If you want to save the catalog as a [Qt JSON Document](https://doc.qt.io/qt-5/qjsondocument.html),
-then a Qt binding to Python is needed.
 If you want to download the catalog data faster, consider `async_downloader` module;
 it requires `aiohttp`.
 Otherwise, only the built-ins are used.
@@ -218,7 +214,8 @@ and the _lower state energy_ relative to the ground state \[1/cm\] of a line:
 }
 ```
 
-Besides `catalog`, the JSON file contains `frequency` array that holds the frequency limits of the catalog.
+Besides `catalog`, the JSON file contains `frequency` array that holds the frequency limits of the catalog
+and the catalog build time in ISO format.
 Just in case.
 
 For physical meaning of the values, check out [catdoc.pdf](https://spec.jpl.nasa.gov//ftp//pub/catalog/doc/catdoc.pdf).
