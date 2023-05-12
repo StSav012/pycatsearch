@@ -121,18 +121,18 @@ class Catalog:
 
     @property
     def frequency_limits(self) -> tuple[tuple[float, float], ...]:
-        return self._data.frequency_limits if self._data.catalog else (-math.inf, math.inf)
+        return self._data.frequency_limits if self._data.catalog else (0.0, math.inf)
 
     @property
     def min_frequency(self) -> float:
-        return min(min(f) for f in self._data.frequency_limits) if self._data.frequency_limits else -math.inf
+        return min(min(f) for f in self._data.frequency_limits) if self._data.frequency_limits else 0.0
 
     @property
     def max_frequency(self) -> float:
         return max(max(f) for f in self._data.frequency_limits) if self._data.frequency_limits else math.inf
 
     def filter(self, *,
-               min_frequency: float = -math.inf,
+               min_frequency: float = 0.0,
                max_frequency: float = math.inf,
                min_intensity: float = -math.inf,
                max_intensity: float = math.inf,

@@ -38,7 +38,7 @@ c.print(min_frequency=140141, max_frequency=140142)
 - `__init__(self, *catalog_file_names: str)` accepts names of JSON or GZipped JSON files.
   It loads them into memory joined.
 - `filter(self, *,
-  min_frequency: float = -math.inf,
+  min_frequency: float = 0.0,
   max_frequency: float = math.inf,
   min_intensity: float = -math.inf,
   max_intensity: float = math.inf,
@@ -102,7 +102,7 @@ downloader.save_catalog('catalog.json.gz', (115000, 178000), qt_json_filename='c
 
 ###### Functions:
 
-- `get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) ->
+- `get_catalog(frequency_limits: Tuple[float, float] = (0.0, math.inf)) ->
   List[Dict[str, Union[int, str, List[Dict[str, float]]]]]` downloads the spectral lines catalog data.
   It returns a list of the spectral lines catalog entries.
   The parameter `frequency_limits` is the frequency range of the catalog entries to keep.
@@ -133,7 +133,7 @@ Requires `aiohttp`.
 
 ###### Functions:
 
-- `get_catalog(frequency_limits: Tuple[float, float] = (-math.inf, math.inf)) ->
+- `get_catalog(frequency_limits: Tuple[float, float] = (0.0, math.inf)) ->
   List[Dict[str, Union[int, str, List[Dict[str, float]]]]]`
 - `save_catalog(filename: str, frequency_limits: Tuple[float, float] = (-math.inf, math.inf), *,
   qt_json_filename: str = '', qt_json_zipped: bool = True) -> bool`
