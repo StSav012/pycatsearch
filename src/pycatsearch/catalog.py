@@ -116,7 +116,7 @@ class Catalog:
                 raise ValueError(f'Unknown file: {path}')
 
         @contextmanager
-        def open(self, mode: str, encoding: str = 'utf-8',
+        def open(self, mode: str, encoding: str | None = None,
                  errors: str | None = None, newline: str | None = None) -> TextIO | BinaryIO:
             """
             Open a file in a safe way. Create a temporary file when writing.
@@ -124,6 +124,8 @@ class Catalog:
             See https://stackoverflow.com/a/29491523/8554611, https://stackoverflow.com/a/2333979/8554611
             """
             writing: bool = 'w' in mode.casefold()
+            if encoding is None and 'b' not in mode.casefold():
+                encoding = 'utf-8'
             tmp_path: Path = self._path.with_name(self._path.name + '.part')
             file: TextIO | BinaryIO
             with self._opener(tmp_path if writing else self._path, mode=mode,
