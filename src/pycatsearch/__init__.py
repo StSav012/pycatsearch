@@ -43,6 +43,17 @@ def _make_old_qt_compatible_again() -> None:
     from qtpy.QtCore import QLibraryInfo, Qt
     from qtpy.QtWidgets import QApplication, QDialog
 
+    def from_iso_format(s: str) -> datetime:
+        if sys.version_info < (3, 11):
+            # NB: 'W' specifier is not fixed
+            if s.endswith('Z'):  # '2011-11-04T00:05:23Z'
+                s = s[:-1] + '+00:00'
+            if s.isdigit() and len(s) == 8:  # '20111104'
+                s = '-'.join((s[:4], s[4:6], s[6:]))
+            elif s[:8].isdigit() and s[9:].isdigit() and len(s) >= 13:  # '20111104T000523'
+                s = '-'.join((s[:4], s[4:6], s[6:8])) + s[8] + ':'.join((s[9:11], s[11:13], s[13:]))
+        return datetime.fromisoformat(s)
+
     if PYSIDE2:
         QApplication.exec = QApplication.exec_
         QDialog.exec = QDialog.exec_
@@ -55,7 +66,7 @@ def _make_old_qt_compatible_again() -> None:
 
     if _version_tuple(__version__) < _version_tuple('2.3.1'):
         _warn_about_outdated_package(package_name='QtPy', package_version='2.3.1',
-                                     release_time=datetime.fromisoformat('2023-03-28T23:06:05Z'))
+                                     release_time=from_iso_format('2023-03-28T23:06:05Z'))
         if QT6:
             QLibraryInfo.LibraryLocation = QLibraryInfo.LibraryPath
     if _version_tuple(__version__) < _version_tuple('2.4.0'):
