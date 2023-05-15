@@ -23,10 +23,16 @@ if sys.version_info < (3, 8):
 
     exit(1)
 
-
 if __name__ == '__main__':
     try:
         from pycatsearch import main
     except ImportError:
+        from contextlib import suppress
+
+        from updater import update
+
+        with suppress(Exception):
+            update('StSav012', 'py''cat''search')
+
         from src.pycatsearch import main
     main()
