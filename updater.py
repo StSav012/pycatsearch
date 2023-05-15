@@ -110,6 +110,14 @@ def update(user: str, repo_name: str, branch: str = 'master') -> None:
         logger.info(f'{github_date} written into {version_path}')
 
 
-    # and if everything went fine...
-    (code_directory / Path('version.py')).write_text(f'UPDATED: str = "{github_date}"\n')
-    logger.info(f'{github_date} written into {(code_directory / Path("version.py"))}')
+if __name__ == '__main__':
+    import argparse
+
+    ap: argparse.ArgumentParser = argparse.ArgumentParser(
+        description='Fetch the code of a package from a GitHub repository')
+    ap.add_argument('user', type=str, help='the owner of the GitHub repository')
+    ap.add_argument('repo', type=str, help='the GitHub repository name')
+    ap.add_argument('branch', type=str, help='the GitHub repository branch', default='master')
+
+    args: argparse.Namespace = ap.parse_args()
+    update(user=args.user, repo_name=args.repo, branch=args.branch)
