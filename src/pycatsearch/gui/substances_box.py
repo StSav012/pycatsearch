@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from qtpy.QtCore import Qt, QModelIndex
+from qtpy.QtCore import QModelIndex, Qt
 from qtpy.QtWidgets import (QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget,
                             QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
 
-from catalog import Catalog
-from gui.settings import Settings
-from gui.substance_info import SubstanceInfo, SubstanceInfoSelector
-from utils import *
+from .settings import Settings
+from .substance_info import SubstanceInfo, SubstanceInfoSelector
+from ..catalog import Catalog
+from ..utils import *
 
 __all__ = ['SubstancesBox']
 

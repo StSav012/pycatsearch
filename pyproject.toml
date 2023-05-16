@@ -1,0 +1,54 @@
+[build-system]
+requires = ['setuptools>=45', 'setuptools_scm[toml]>=6.2']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'pycatsearch'
+authors = [
+    {name = 'StSav012', email = 'stsav012@gmail.com'},
+]
+description = 'Yet another implementation of JPL and CDMS spectroscopy catalogs offline search'
+readme = 'README.md'
+license = {text = 'LGPL-3.0-only'}
+requires-python = '>=3.8'
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Environment :: Win32 (MS Windows)',
+    'Environment :: X11 Applications :: Qt',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+    'Operating System :: Microsoft :: Windows :: Windows 7',
+    'Operating System :: Microsoft :: Windows :: Windows 8',
+    'Operating System :: Microsoft :: Windows :: Windows 10',
+    'Operating System :: Microsoft :: Windows :: Windows 11',
+    'Operating System :: POSIX',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Scientific/Engineering :: Astronomy',
+    'Topic :: Scientific/Engineering :: Atmospheric Science',
+    'Topic :: Scientific/Engineering :: Chemistry',
+    'Topic :: Scientific/Engineering :: Medical Science Apps.',
+    'Topic :: Scientific/Engineering :: Physics',
+    'Typing :: Typed',
+]
+dynamic = [
+    'version',
+    'dependencies',
+]
+
+[project.gui-scripts]
+pycatsearch = 'pycatsearch:main'
+
+[project.urls]
+'Source Code' = 'https://github.com/StSav012/pycatsearch'
+'Bug Tracker' = 'https://github.com/StSav012/pycatsearch/issues'
+
+[tool.setuptools_scm]
+local_scheme = 'no-local-version'
+write_to = 'src/pycatsearch/_version.py'
+
+[tool.setuptools.dynamic]
+version = {attr = 'pycatsearch._version.__version__'}

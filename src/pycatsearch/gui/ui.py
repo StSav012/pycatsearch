@@ -5,24 +5,25 @@ import math
 from typing import Any, Final, NamedTuple
 
 from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
-from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QIcon, QPainter, QPixmap, QScreen,
-                        QTextDocument)
+from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QCursor, QIcon, QPainter, QPixmap,
+                        QScreen, QTextDocument)
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QGridLayout,
                             QHeaderView, QMainWindow, QMessageBox, QPushButton, QStatusBar, QStyle,
                             QStyleOptionViewItem, QStyledItemDelegate, QTableView, QTableWidgetSelectionRange, QWidget)
 from qtpy.compat import getopenfilenames
 
-from catalog import Catalog, CatalogEntryType, LineType
-from gui.catalog_info import CatalogInfo
-from gui.download_dialog import DownloadDialog
-from gui.float_spinbox import FloatSpinBox
-from gui.frequency_box import FrequencyBox
-from gui.menu_bar import MenuBar
-from gui.preferences import Preferences
-from gui.settings import Settings
-from gui.substance_info import SubstanceInfo
-from gui.substances_box import SubstancesBox
-from utils import *
+from .catalog_info import CatalogInfo
+from .download_dialog import DownloadDialog
+from .float_spinbox import FloatSpinBox
+from .frequency_box import FrequencyBox
+from .menu_bar import MenuBar
+from .preferences import Preferences
+from .settings import Settings
+from .substance_info import SubstanceInfo
+from .substances_box import SubstancesBox
+from .. import __version__
+from ..catalog import Catalog, CatalogEntryType, LineType
+from ..utils import *
 
 __all__ = ['UI']
 
@@ -280,8 +281,8 @@ class UI(QMainWindow):
             </svg>''')
             self.setWindowIcon(QIcon(window_icon))
 
-            if UPDATED:
-                self.setWindowTitle(self.tr('PyCatSearch (as of {0})').format(UPDATED))
+            if __version__:
+                self.setWindowTitle(self.tr('PyCatSearch (version {0})').format(__version__))
             else:
                 self.setWindowTitle(self.tr('PyCatSearch'))
             self.setCentralWidget(self.central_widget)
@@ -395,6 +396,20 @@ class UI(QMainWindow):
         self.save_settings()
         event.accept()
 
+    def load_catalog(self, *catalog_file_names: str) -> bool:
+        self.setDisabled(True)
+        last_cursor: QCursor = self.cursor()
+        self.setCursor(Qt.CursorShape.WaitCursor)
+        self.repaint()
+        self.catalog = Catalog(*catalog_file_names)
+        self.box_substance.catalog = self.catalog
+        self.setCursor(last_cursor)
+        self.setEnabled(True)
+        self.button_search.setDisabled(self.catalog.is_empty)
+        if not self.catalog.is_empty:
+            self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
+        return not self.catalog.is_empty
+
     def on_spin_temperature_changed(self, arg1: float) -> None:
         self.temperature = self.settings.to_k(arg1)
         self.fill_table()
@@ -452,16 +467,8 @@ class UI(QMainWindow):
 
         if new_catalog_file_names:
             self.status_bar.showMessage(self.tr('Loading...'))
-            self.status_bar.repaint()
-            self.central_widget.setDisabled(True)
-            self.central_widget.repaint()
-            self.catalog = Catalog(*new_catalog_file_names)
-            self.box_substance.catalog = self.catalog
-            self.button_search.setDisabled(self.catalog.is_empty)
-            self.central_widget.setEnabled(True)
-            if not self.catalog.is_empty:
+            if self.load_catalog(*new_catalog_file_names):
                 self.status_bar.showMessage(self.tr('Catalogs loaded.'))
-                self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
             else:
                 self.status_bar.showMessage(self.tr('Failed to load a catalog.'))
 
@@ -471,12 +478,8 @@ class UI(QMainWindow):
     def on_action_reload_triggered(self) -> None:
         if self.catalog.sources:
             self.status_bar.showMessage(self.tr('Loading...'))
-            self.catalog = Catalog(*self.catalog.sources)
-            self.box_substance.catalog = self.catalog
-            self.button_search.setDisabled(self.catalog.is_empty)
-            if not self.catalog.is_empty:
+            if self.load_catalog(*self.catalog.sources):
                 self.status_bar.showMessage(self.tr('Catalogs loaded.'))
-                self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
             else:
                 self.status_bar.showMessage(self.tr('Failed to load a catalog.'))
         else:
@@ -663,11 +666,7 @@ class UI(QMainWindow):
         self.fill_parameters()
 
         if self.settings.load_last_catalogs:
-            self.catalog = Catalog(*catalog_file_names)
-            self.button_search.setEnabled(not self.catalog.is_empty)
-            if not self.catalog.is_empty:
-                self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
-                self.box_substance.catalog = self.catalog
+            self.load_catalog(*catalog_file_names)
 
     def save_settings(self) -> None:
         self.settings.beginGroup('search')
@@ -757,6 +756,12 @@ class UI(QMainWindow):
 
     def on_button_search_clicked(self) -> None:
         self.status_bar.showMessage(self.tr('Searching...'))
+        self.setDisabled(True)
+        last_cursor: QCursor = self.cursor()
+        self.setCursor(Qt.CursorShape.WaitCursor)
+        self.repaint()
         self.box_substance.update_selected_substances()
         self.fill_table()
+        self.setCursor(last_cursor)
+        self.setEnabled(True)
         self.status_bar.showMessage(self.tr('Ready.'))

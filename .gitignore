@@ -1,6 +1,15 @@
 .*
+!.gitignore
+!/.github/
+
 *.json
 *.json.gz
-*.qbjs
-*.qbjsz
+*.json.bz2
+*.json.xz
+*.json.lzma
+
 typograph.py
+
+/dist/
+/src/pycatsearch/_version.py
+/src/pycatsearch.egg-info/

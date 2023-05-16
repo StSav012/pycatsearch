@@ -2,85 +2,68 @@
 from __future__ import annotations
 
 import logging
+import sys
 import urllib.request
+from datetime import datetime
 from http.client import HTTPResponse
 from pathlib import Path
-from typing import Final
 
 __all__ = ['update']
 
 logger: logging.Logger = logging.getLogger('updater')
 
 
-def get_github_date(user: str, repo_name: str, branch: str = 'master') -> str:
+def from_iso_format(s: str) -> datetime:
+    if sys.version_info < (3, 11):
+        # NB: 'W' specifier is not fixed
+        if s.endswith('Z'):  # '2011-11-04T00:05:23Z'
+            s = s[:-1] + '+00:00'
+        if s.isdigit() and len(s) == 8:  # '20111104'
+            s = '-'.join((s[:4], s[4:6], s[6:]))
+        elif s[:8].isdigit() and s[9:].isdigit() and len(s) >= 13:  # '20111104T000523'
+            s = '-'.join((s[:4], s[4:6], s[6:8])) + s[8] + ':'.join((s[9:11], s[11:13], s[13:]))
+    return datetime.fromisoformat(s)
+
+
+def get_github_date(user: str, repo_name: str, branch: str = 'master') -> datetime | None:
     import json
 
-    url: str = f'https://api.github.com/repos/{user}/{repo_name}/commits?sha={branch}&page=1&per_page=1'
+    url: str = f'https://api.github.com/repos/{user}/{repo_name}/commits/{branch}'
     logger.debug(f'Requesting {url}')
     r: HTTPResponse = urllib.request.urlopen(url, timeout=1)
     logger.debug(f'Response code: {r.getcode()}')
     if r.getcode() != 200:
         logger.warning(f'Response code is not OK: {r.getcode()}')
-        return ''
+        return None
     content: bytes = r.read()
     if not content:
         logger.warning(f'No data received from {url}')
-        return ''
-    d: list[dict[str,
-                 str
-                 |
-                 dict[str,
-                      str | int | bool | dict[str,
-                                              None | str | bool]]
-                 |
-                 list[dict[str, str]]]] \
+        return None
+    d: dict[str, str
+                 | dict[str, bool | int | str]
+                 | dict[str, int | str | dict[str, bool | str] | dict[str, str]]
+                 | dict[str, int]
+                 | list[dict[str, int | str]]
+                 | list[dict[str, str]]] \
         = json.loads(content)
-    if not isinstance(d, list) or not d:
+    if not isinstance(d, dict) or not d:
         logger.warning(f'Malformed JSON received: {d}')
-        return ''
-    d_0: dict[str,
-              str
-              |
-              dict[str,
-                   str | int | bool | dict[str,
-                                           None | str | bool]]
-              |
-              list[dict[str, str]]] = d[0]
-    commit: dict[str,
-                 str | int | dict[str,
-                                  None | str | bool]] \
-        = d_0.get('commit', dict())
+        return None
+    commit: dict[str, int | str | dict[str, bool | str] | dict[str, str]] = d.get('commit', dict())
     if not isinstance(commit, dict):
         logger.warning(f'Malformed commit info received: {commit}')
-        return ''
-    author: dict[str, str] = commit.get('author', dict())
-    if not isinstance(author, dict):
-        logger.warning(f'Malformed commit author info received: {author}')
-        return ''
-    return author.get('date', '')
+        return None
+    committer: dict[str, str] = commit.get('committer', dict())
+    if not isinstance(committer, dict) or 'date' not in committer:
+        logger.warning(f'Malformed commit committer info received: {committer}')
+        return None
+    try:
+        return from_iso_format(committer['date'])
+    except ValueError:
+        return None
 
 
-def get_current_version_date(root_path: Path) -> str:
-    """ Safely get the UPDATED value from version.py """
-
-    import ast
-
-    if not (root_path / Path('version.py')).exists():
-        logger.info('No `version.py` file exists (yet).')
-        return ''
-
-    date: str = ''
-    text: str = (root_path / Path('version.py')).read_text()
-    o: ast.AST
-    for o in ast.parse(text, mode='single').body:
-        if isinstance(o, ast.AnnAssign) and isinstance(o.target, ast.Name) and isinstance(o.value, ast.Constant):
-            if o.target.id == 'UPDATED' and isinstance(o.value.value, str):
-                date = o.value.value
-                logger.debug(f'Found {o.target.id} = {date}')
-    return date
-
-
-def upgrade_files(code_directory: Path, user: str, repo_name: str, branch: str = 'master') -> None:
+def upgrade_files(code_directory: Path, user: str, repo_name: str, branch: str = 'master') -> bool:
     """ Replace the files in `code_directory` with the newer versions acquired from GitHub """
 
     import io
@@ -92,7 +75,7 @@ def upgrade_files(code_directory: Path, user: str, repo_name: str, branch: str =
     logger.debug(f'Response code: {r.getcode()}')
     if r.getcode() != 200:
         logger.warning(f'Response code is not OK: {r.getcode()}')
-        return
+        return False
     with zipfile.ZipFile(io.BytesIO(r.read())) as inner_zip:
         root: Path = Path(f'{repo_name}-{branch}/')
         member: zipfile.ZipInfo
@@ -101,25 +84,40 @@ def upgrade_files(code_directory: Path, user: str, repo_name: str, branch: str =
             if member.is_dir():
                 logger.debug('it is a directory')
                 continue
-            content = inner_zip.read(member)
             (code_directory / Path(member.filename).relative_to(root)).parent.mkdir(parents=True, exist_ok=True)
-            (code_directory / Path(member.filename).relative_to(root)).write_bytes(content)
+            (code_directory / Path(member.filename).relative_to(root)).write_bytes(inner_zip.read(member))
             logger.info(f'{(code_directory / Path(member.filename).relative_to(root))} written')
+
+    return True
 
 
 def update(user: str, repo_name: str, branch: str = 'master') -> None:
     code_directory: Path = Path(__file__).parent
+    version_path: Path = code_directory / 'src' / repo_name / '_version.py'
 
-    github_date: Final[str] = get_github_date(user=user, repo_name=repo_name)
-    if not github_date:
+    github_date: datetime | None = get_github_date(user=user, repo_name=repo_name)
+    if github_date is None:
         logger.warning('Failed to fetch the last commit date from GitHub')
         return
-    if get_current_version_date(code_directory) == github_date:
+    if version_path.exists() and datetime.fromtimestamp(version_path.stat().st_mtime) >= github_date:
         logger.info('Current files are up to date')
         return
 
-    upgrade_files(code_directory=code_directory, user=user, repo_name=repo_name, branch=branch)
+    if upgrade_files(code_directory=code_directory, user=user, repo_name=repo_name, branch=branch):
+        # if everything went fine...
+        version_path.parent.mkdir(exist_ok=True, parents=True)
+        version_path.write_text(f'__version__ = version = "{github_date.isoformat()}"\n')
+        logger.info(f'{github_date} written into {version_path}')
 
-    # and if everything went fine...
-    (code_directory / Path('version.py')).write_text(f'UPDATED: str = "{github_date}"\n')
-    logger.info(f'{github_date} written into {(code_directory / Path("version.py"))}')
+
+if __name__ == '__main__':
+    import argparse
+
+    ap: argparse.ArgumentParser = argparse.ArgumentParser(
+        description='Fetch the code of a package from a GitHub repository')
+    ap.add_argument('user', type=str, help='the owner of the GitHub repository')
+    ap.add_argument('repo', type=str, help='the GitHub repository name')
+    ap.add_argument('branch', type=str, help='the GitHub repository branch', default='master')
+
+    args: argparse.Namespace = ap.parse_args()
+    update(user=args.user, repo_name=args.repo, branch=args.branch)

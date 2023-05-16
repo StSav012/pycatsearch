@@ -10,8 +10,7 @@ from numbers import Real
 from pathlib import Path
 from typing import Callable, Final, Iterator, Protocol, Sequence, TypeVar, cast, overload
 
-__all__ = ['UPDATED',
-           'M_LOG10E',
+__all__ = ['M_LOG10E',
            'T0', 'c', 'h', 'k', 'e',
            'CATALOG', 'BUILD_TIME', 'LINES', 'FREQUENCY', 'INTENSITY', 'ID', 'STRUCTURAL_FORMULA',
            'STOICHIOMETRIC_FORMULA', 'MOLECULE', 'MOLECULE_SYMBOL', 'SPECIES_TAG', 'NAME', 'TRIVIAL_NAME', 'ISOTOPOLOG',
@@ -32,14 +31,6 @@ __all__ = ['UPDATED',
            'within', 'chem_html', 'best_name', 'remove_html', 'wrap_in_html',
            'ensure_prefix', 'all_cases',
            'save_catalog_to_file']
-
-try:
-    import version
-except ImportError:
-    version = None
-    UPDATED: Final[str] = ''
-else:
-    UPDATED: Final[str] = version.UPDATED
 
 M_LOG10E: Final[float] = math.log10(math.e)
 

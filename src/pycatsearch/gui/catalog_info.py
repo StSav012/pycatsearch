@@ -7,9 +7,9 @@ from qtpy.QtCore import QAbstractTableModel, QDateTime, QModelIndex, QObject, QP
 from qtpy.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox, QFormLayout, QHeaderView, QTableView,
                             QVBoxLayout, QWidget)
 
-from catalog import Catalog, CatalogSourceInfo
-from gui.selectable_label import SelectableLabel
-from gui.titled_list_widget import TitledListWidget
+from .selectable_label import SelectableLabel
+from .titled_list_widget import TitledListWidget
+from ..catalog import Catalog, CatalogSourceInfo
 
 __all__ = ['CatalogInfo']
 

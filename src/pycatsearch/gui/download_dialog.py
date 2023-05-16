@@ -11,11 +11,12 @@ from qtpy.QtWidgets import (QDialog, QDoubleSpinBox, QFormLayout, QLabel, QProgr
 from qtpy.compat import getsavefilename
 
 try:
-    from async_downloader import Downloader
+    from ..async_downloader import Downloader
 except (SyntaxError, ImportError, ModuleNotFoundError):
-    from downloader import Downloader
-from gui.waiting_screen import WaitingScreen
-from utils import all_cases, ensure_prefix, save_catalog_to_file
+    from ..downloader import Downloader
+from .waiting_screen import WaitingScreen
+from ..utils import all_cases, ensure_prefix, save_catalog_to_file
+
 
 __all__ = ['DownloadDialog']
 

@@ -14,7 +14,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, BinaryIO, Callable, Dict, List, NamedTuple, Optional, TextIO, Union, cast
 
-from utils import *
+from .utils import *
 
 __all__ = ['Catalog', 'CatalogSourceInfo', 'LineType', 'LinesType', 'CatalogEntryType']
 
