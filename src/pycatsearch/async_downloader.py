@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import gzip
 import json
 import logging
 import random
@@ -10,7 +9,7 @@ from contextlib import suppress
 from math import inf
 from queue import Empty, Queue
 from threading import Thread
-from typing import Any, BinaryIO, Final, Mapping, cast
+from typing import Any, Final, Mapping, cast
 from urllib.error import HTTPError
 from urllib.parse import urlencode
 
