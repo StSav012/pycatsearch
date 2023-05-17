@@ -12,7 +12,7 @@ It consists of three parts:
 In a command line:
 
 ```commandline
-python3 catalog.py --min-frequency 118749 --max-frequency 118751 catalog_115-178.json.gz -n oxygen
+pycatsearch --min-frequency 118749 --max-frequency 118751 catalog.json.gz -n oxygen
 ```
 
 In a code:
@@ -91,7 +91,7 @@ c.print(min_frequency=140141, max_frequency=140142)
 In a command line:
 
 ```commandline
-python3 downloader.py --min-frequency 115000 --max-frequency 178000 catalog_115-178.json.gz
+pycatsearch-downloader --min-frequency 115000 --max-frequency 178000 catalog.json.gz
 ```
 
 In a code:
@@ -130,6 +130,23 @@ Most of the time, it takes no more than 90 seconds to load all the data.
 
 Requires `aiohttp`.
 
+###### Sample usage:
+
+In a command line:
+
+```commandline
+pycatsearch-async-downloader --min-frequency 115000 --max-frequency 178000 catalog.json.gz
+```
+
+In a code:
+
+```python
+# coding=utf-8
+from pycatsearch import async_downloader
+
+async_downloader.save_catalog('catalog.json.gz', (115000, 178000))
+```
+
 ###### Functions:
 
 - `get_catalog(frequency_limits: Tuple[float, float] = (0.0, math.inf)) ->
@@ -162,7 +179,7 @@ The numbers are the same as what `get_catalog` function types.
 ### `gui`
 
 This is the graphical interface built with Python bindings for Qt (`PyQt5`, `PySide6`, `PyQt6`, or `PySide2`).
-Just run `main.py` and see for yourself.
+Just run `pycatsearch` and see for yourself.
 
 ### Requirements
 
