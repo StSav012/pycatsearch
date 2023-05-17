@@ -4,11 +4,13 @@ from __future__ import annotations
 import logging
 import sys
 import urllib.request
+from contextlib import suppress
 from datetime import datetime
 from http.client import HTTPResponse
 from pathlib import Path
+from subprocess import PIPE, Popen, check_call
 
-__all__ = ['update']
+__all__ = ['update_from_github', 'update_with_git', 'update_with_pip']
 
 logger: logging.Logger = logging.getLogger('updater')
 
@@ -91,23 +93,100 @@ def upgrade_files(code_directory: Path, user: str, repo_name: str, branch: str =
     return True
 
 
-def update(user: str, repo_name: str, branch: str = 'master') -> None:
-    code_directory: Path = Path(__file__).parent
-    version_path: Path = code_directory / 'src' / repo_name / '_version.py'
+def update_with_git() -> bool:
+    with suppress(Exception):
+        code_directory: Path = Path(__file__).parent
+        if (code_directory / '.git').exists():
+            p: Popen
+            with Popen(args=['git', 'pull']) as p:
+                return p.returncode == 0
+    return False
 
-    github_date: datetime | None = get_github_date(user=user, repo_name=repo_name)
-    if github_date is None:
-        logger.warning('Failed to fetch the last commit date from GitHub')
-        return
-    if version_path.exists() and datetime.fromtimestamp(version_path.stat().st_mtime) >= github_date:
-        logger.info('Current files are up to date')
-        return
 
-    if upgrade_files(code_directory=code_directory, user=user, repo_name=repo_name, branch=branch):
-        # if everything went fine...
-        version_path.parent.mkdir(exist_ok=True, parents=True)
-        version_path.write_text(f'__version__ = version = "{github_date.isoformat()}"\n')
-        logger.info(f'{github_date} written into {version_path}')
+def update_from_github(user: str, repo_name: str, branch: str = 'master') -> bool:
+    with suppress(Exception):
+        code_directory: Path = Path(__file__).parent
+        version_path: Path = code_directory / 'src' / repo_name / '_version.py'
+
+        github_date: datetime | None = get_github_date(user=user, repo_name=repo_name)
+        if github_date is None:
+            logger.warning('Failed to fetch the last commit date from GitHub')
+            return False
+        if version_path.exists() and datetime.fromtimestamp(version_path.stat().st_mtime) >= github_date:
+            logger.info('Current files are up to date')
+            return False
+
+        if upgrade_files(code_directory=code_directory, user=user, repo_name=repo_name, branch=branch):
+            # if everything went fine...
+            version_path.parent.mkdir(exist_ok=True, parents=True)
+            version_path.write_text(f'__version__ = version = "{github_date.isoformat()}"\n')
+            logger.info(f'{github_date} written into {version_path}')
+            return True
+    return False
+
+
+def parse_table(table_text: str) -> list[dict[str, str]]:
+    text_lines: list[str] = table_text.splitlines()
+    rules: list[str] = [line for line in text_lines if set(line) == set('- ')]
+    if len(rules) != 1:
+        raise RuntimeError('Failed to parse the table')
+    if text_lines.index(rules[0]) != 1:
+        raise RuntimeError('Failed to parse the table')
+    cols: list[int] = [len(rule) for rule in rules[0].split()]
+    titles: list[str] = []
+    offset: int = 0
+    for col in cols:
+        titles.append(text_lines[0][offset:(offset + col)].strip())
+        offset += col + 1
+    data: list[dict[str, str]] = []
+    for line_no in range(2, len(text_lines)):
+        data.append(dict())
+        offset = 0
+        for col, title in zip(cols, titles):
+            data[-1][title] = text_lines[line_no][offset:(offset + col)].strip()
+            offset += col + 1
+    return data
+
+
+def update_package(package_name: str) -> tuple[str, str]:
+    p: Popen
+    with Popen(args=[sys.executable, '-m', 'pip', 'install', '--user', '-U', package_name],
+               stdout=PIPE, stderr=PIPE, text=True) as p:
+        err: str = p.stderr.read()
+        return p.stdout.read(), err
+
+
+def update_packages() -> list[str]:
+    priority_packages: list[str] = ['pip', 'setuptools', 'wheel']
+    err: str
+    p: Popen
+    with Popen(args=[sys.executable, '-m', 'pip', 'list', '--outdated'], stdout=PIPE, stderr=PIPE, text=True) as p:
+        err = p.stderr.read()
+        if err:
+            return []
+        outdated_packages: list[str] = [item['Package'] for item in parse_table(p.stdout.read())]
+    updated_packages: list[str] = []
+    try:
+        for pp in priority_packages:
+            if pp in outdated_packages:
+                out, err = update_package(pp)
+                if err:
+                    return []
+                outdated_packages.remove(pp)
+                updated_packages.append(pp)
+        for op in outdated_packages:
+            update_package(op)
+            updated_packages.append(op)
+    finally:
+        return updated_packages
+
+
+def update_with_pip(package_name: str) -> bool:
+    with suppress(Exception):
+        if package_name not in update_packages():
+            out, err = update_package(package_name)
+            return not err
+    return False
 
 
 if __name__ == '__main__':
@@ -120,4 +199,4 @@ if __name__ == '__main__':
     ap.add_argument('branch', type=str, help='the GitHub repository branch', default='master')
 
     args: argparse.Namespace = ap.parse_args()
-    update(user=args.user, repo_name=args.repo, branch=args.branch)
+    update_from_github(user=args.user, repo_name=args.repo, branch=args.branch)
