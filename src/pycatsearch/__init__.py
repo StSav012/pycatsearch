@@ -129,6 +129,16 @@ def main() -> None:
         c.print(**search_args)
         return
 
+    main_gui()
+
+
+def main_gui() -> None:
+    ap: argparse.ArgumentParser = argparse.ArgumentParser(
+        description='Yet another implementation of JPL and CDMS spectroscopy catalogs offline search.\n'
+                    f'Find more at https://github.com/{__author__}/{__original_name__}.')
+    ap.add_argument('catalog', type=str, help='the catalog location to load',
+                    nargs=argparse.ZERO_OR_MORE)
+
     try:
         _make_old_qt_compatible_again()
 

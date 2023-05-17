@@ -12,7 +12,11 @@ It consists of three parts:
 In a command line:
 
 ```commandline
-pycatsearch --min-frequency 118749 --max-frequency 118751 catalog.json.gz -n oxygen
+pycatsearch-cli --min-frequency 118749 --max-frequency 118751 catalog.json.gz -n oxygen
+```
+or
+```commandline
+python3 -m pycatsearch --min-frequency 118749 --max-frequency 118751 catalog.json.gz -n oxygen
 ```
 
 In a code:
