@@ -41,6 +41,8 @@ dynamic = [
 
 [project.gui-scripts]
 pycatsearch = 'pycatsearch:main'
+pycatsearch-downloader = 'pycatsearch:download'
+pycatsearch-async-downloader = 'pycatsearch:async_download'
 
 [project.urls]
 'Source Code' = 'https://github.com/StSav012/pycatsearch'

@@ -16,7 +16,7 @@ from urllib.parse import ParseResult, urlencode, urlparse
 from .catalog_entry import CatalogEntry
 from .utils import *
 
-__all__ = ['Downloader', 'get_catalog', 'save_catalog']
+__all__ = ['Downloader', 'get_catalog', 'save_catalog', 'download']
 
 logger: logging.Logger = logging.getLogger('downloader')
 
@@ -220,7 +220,7 @@ def save_catalog(filename: str,
                                 frequency_limits=frequency_limits)
 
 
-if __name__ == '__main__':
+def download() -> None:
     import argparse
     from datetime import datetime
 
@@ -237,3 +237,7 @@ if __name__ == '__main__':
     logger.info(f'started at {datetime.now()}')
     save_catalog(args.catalog, (args.min_frequency, args.max_frequency))
     logger.info(f'finished at {datetime.now()}')
+
+
+if __name__ == '__main__':
+    download()

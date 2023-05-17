@@ -169,3 +169,15 @@ def main() -> None:
             root.destroy()
     else:
         gui.run()
+
+
+def download() -> None:
+    from . import downloader
+
+    downloader.download()
+
+
+def async_download() -> None:
+    from . import async_downloader
+
+    async_downloader.download()
