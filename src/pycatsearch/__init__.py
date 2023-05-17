@@ -127,7 +127,7 @@ def main() -> None:
     if search_args:
         c: Catalog = Catalog(*args.catalog)
         c.print(**search_args)
-        exit(0)
+        return
 
     try:
         _make_old_qt_compatible_again()
