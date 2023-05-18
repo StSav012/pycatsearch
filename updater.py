@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import logging
+import subprocess
 import sys
 import urllib.request
 from contextlib import suppress
 from datetime import datetime
 from http.client import HTTPResponse
 from pathlib import Path
-from subprocess import PIPE, Popen
 
 __all__ = ['update_from_github', 'update_with_git', 'update_with_pip']
 
@@ -97,9 +97,7 @@ def update_with_git() -> bool:
     with suppress(Exception):
         code_directory: Path = Path(__file__).parent
         if (code_directory / '.git').exists():
-            p: Popen
-            with Popen(args=['git', 'pull']) as p:
-                return p.returncode == 0
+            return subprocess.run(args=['git', 'pull'], capture_output=True).returncode == 0
     return False
 
 
@@ -149,10 +147,10 @@ def parse_table(table_text: str) -> list[dict[str, str]]:
 
 
 def update_package(package_name: str) -> tuple[str, str, int | None]:
-    p: Popen
-    with Popen(args=[sys.executable, '-m', 'pip', 'install', '-U', package_name],
-               stdout=PIPE, stderr=PIPE, text=True) as p:
-        return p.stdout.read(), p.stderr.read(), p.returncode
+    p: subprocess.CompletedProcess = subprocess.run(
+        args=[sys.executable, '-m', 'pip', 'install', '-U', package_name],
+        capture_output=True, text=True)
+    return p.stdout, p.stderr, p.returncode
 
 
 def update_packages() -> list[str]:
@@ -160,11 +158,12 @@ def update_packages() -> list[str]:
     out: str
     err: str
     ret: int | None
-    p: Popen
-    with Popen(args=[sys.executable, '-m', 'pip', 'list', '--outdated'], stdout=PIPE, stderr=PIPE, text=True) as p:
-        if p.returncode:
-            return []
-        outdated_packages: list[str] = [item['Package'] for item in parse_table(p.stdout.read())]
+    p: subprocess.CompletedProcess = subprocess.run(
+        args=[sys.executable, '-m', 'pip', 'list', '--outdated'],
+        capture_output=True, text=True)
+    if p.returncode:
+        return []
+    outdated_packages: list[str] = [item['Package'] for item in parse_table(p.stdout)]
     updated_packages: list[str] = []
     try:
         for pp in priority_packages:
