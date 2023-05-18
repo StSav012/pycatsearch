@@ -150,7 +150,7 @@ def parse_table(table_text: str) -> list[dict[str, str]]:
 
 def update_package(package_name: str) -> tuple[str, str, int | None]:
     p: Popen
-    with Popen(args=[sys.executable, '-m', 'pip', 'install', '--user', '-U', package_name],
+    with Popen(args=[sys.executable, '-m', 'pip', 'install', '-U', package_name],
                stdout=PIPE, stderr=PIPE, text=True) as p:
         return p.stdout.read(), p.stderr.read(), p.returncode
 
