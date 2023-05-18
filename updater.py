@@ -8,7 +8,7 @@ from contextlib import suppress
 from datetime import datetime
 from http.client import HTTPResponse
 from pathlib import Path
-from subprocess import PIPE, Popen, check_call
+from subprocess import PIPE, Popen
 
 __all__ = ['update_from_github', 'update_with_git', 'update_with_pip']
 
@@ -148,30 +148,30 @@ def parse_table(table_text: str) -> list[dict[str, str]]:
     return data
 
 
-def update_package(package_name: str) -> tuple[str, str]:
+def update_package(package_name: str) -> tuple[str, str, int | None]:
     p: Popen
     with Popen(args=[sys.executable, '-m', 'pip', 'install', '--user', '-U', package_name],
                stdout=PIPE, stderr=PIPE, text=True) as p:
-        err: str = p.stderr.read()
-        return p.stdout.read(), err
+        return p.stdout.read(), p.stderr.read(), p.returncode
 
 
 def update_packages() -> list[str]:
     priority_packages: list[str] = ['pip', 'setuptools', 'wheel']
+    out: str
     err: str
+    ret: int | None
     p: Popen
     with Popen(args=[sys.executable, '-m', 'pip', 'list', '--outdated'], stdout=PIPE, stderr=PIPE, text=True) as p:
-        err = p.stderr.read()
-        if err:
+        if p.returncode:
             return []
         outdated_packages: list[str] = [item['Package'] for item in parse_table(p.stdout.read())]
     updated_packages: list[str] = []
     try:
         for pp in priority_packages:
             if pp in outdated_packages:
-                out, err = update_package(pp)
-                if err:
-                    return []
+                out, err, ret = update_package(pp)
+                if ret:
+                    return updated_packages
                 outdated_packages.remove(pp)
                 updated_packages.append(pp)
         for op in outdated_packages:
@@ -184,8 +184,8 @@ def update_packages() -> list[str]:
 def update_with_pip(package_name: str) -> bool:
     with suppress(Exception):
         if package_name not in update_packages():
-            out, err = update_package(package_name)
-            return not err
+            out, err, ret = update_package(package_name)
+            return not ret
     return False
 
 
