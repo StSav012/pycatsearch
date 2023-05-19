@@ -465,36 +465,52 @@ def is_good_html(text: str) -> bool:
 
 def best_name(entry: dict[str, int | str | list[dict[str, float]]],
               allow_html: bool = True) -> str:
-    if allow_html and ISOTOPOLOG in entry and entry[ISOTOPOLOG]:
-        if allow_html:
-            if (is_good_html(str(entry[MOLECULE_SYMBOL]))
-                    and ((STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == entry[ISOTOPOLOG])
-                         or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == entry[ISOTOPOLOG]))):
-                if STATE_HTML in entry and entry[STATE_HTML]:
-                    # span tags are needed when the molecule symbol is malformed
-                    return f'<span>{entry[MOLECULE_SYMBOL]}</span>, ' \
-                           f'{chem_html(tex_to_html_entity(str(entry[STATE_HTML])))}'
-                return str(entry[MOLECULE_SYMBOL])
+    last: str = best_name.__dict__.get('last', dict()).get(entry[SPECIES_TAG], dict()).get(allow_html, '')
+    if last:
+        return last
+
+    def _best_name() -> str:
+        if allow_html and ISOTOPOLOG in entry and entry[ISOTOPOLOG]:
+            if allow_html:
+                if (is_good_html(str(entry[MOLECULE_SYMBOL]))
+                        and ((STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == entry[ISOTOPOLOG])
+                             or (STOICHIOMETRIC_FORMULA in entry
+                                 and entry[STOICHIOMETRIC_FORMULA] == entry[ISOTOPOLOG]))):
+                    if STATE_HTML in entry and entry[STATE_HTML]:
+                        # span tags are needed when the molecule symbol is malformed
+                        return f'<span>{entry[MOLECULE_SYMBOL]}</span>, ' \
+                               f'{chem_html(tex_to_html_entity(str(entry[STATE_HTML])))}'
+                    return str(entry[MOLECULE_SYMBOL])
+                else:
+                    if STATE_HTML in entry and entry[STATE_HTML]:
+                        return f'{chem_html(str(entry[ISOTOPOLOG]))}, ' \
+                               f'{chem_html(tex_to_html_entity(str(entry[STATE_HTML])))}'
+                    return chem_html(str(entry[ISOTOPOLOG]))
             else:
                 if STATE_HTML in entry and entry[STATE_HTML]:
-                    return f'{chem_html(str(entry[ISOTOPOLOG]))}, ' \
-                           f'{chem_html(tex_to_html_entity(str(entry[STATE_HTML])))}'
-                return chem_html(str(entry[ISOTOPOLOG]))
-        else:
-            if STATE_HTML in entry and entry[STATE_HTML]:
-                return f'{entry[ISOTOPOLOG]}, {remove_html(tex_to_html_entity(entry[STATE_HTML]))}'
-            if STATE in entry and entry[STATE]:
-                return f'{entry[ISOTOPOLOG]}, {remove_html(tex_to_html_entity(entry[STATE].strip("$")))}'
-            return entry[ISOTOPOLOG]
+                    return f'{entry[ISOTOPOLOG]}, {remove_html(tex_to_html_entity(entry[STATE_HTML]))}'
+                if STATE in entry and entry[STATE]:
+                    return f'{entry[ISOTOPOLOG]}, {remove_html(tex_to_html_entity(entry[STATE].strip("$")))}'
+                return entry[ISOTOPOLOG]
 
-    for key in (NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA):
-        if key in entry and entry[key]:
-            return chem_html(str(entry[key])) if allow_html else str(entry[key])
-    if TRIVIAL_NAME in entry and entry[TRIVIAL_NAME]:
-        return str(entry[TRIVIAL_NAME])
-    if SPECIES_TAG in entry and entry[SPECIES_TAG]:
-        return str(entry[SPECIES_TAG])
-    return 'no name'
+        for key in (NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA):
+            if key in entry and entry[key]:
+                return chem_html(str(entry[key])) if allow_html else str(entry[key])
+        if TRIVIAL_NAME in entry and entry[TRIVIAL_NAME]:
+            return str(entry[TRIVIAL_NAME])
+        if SPECIES_TAG in entry and entry[SPECIES_TAG]:
+            return str(entry[SPECIES_TAG])
+        return 'no name'
+
+    res: str = _best_name()
+    if SPECIES_TAG not in entry:
+        return res
+    if 'last' not in best_name.__dict__:
+        best_name.__dict__['last'] = dict()
+    if entry[SPECIES_TAG] not in best_name.__dict__['last']:
+        best_name.__dict__['last'][entry[SPECIES_TAG]] = dict()
+    best_name.__dict__['last'][entry[SPECIES_TAG]][allow_html] = res
+    return res
 
 
 def remove_html(line: str) -> str:
