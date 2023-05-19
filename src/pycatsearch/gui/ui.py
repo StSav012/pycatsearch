@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import dataclasses
 import math
 from typing import Any, Final
 
@@ -89,16 +88,31 @@ class HTMLDelegate(QStyledItemDelegate):
 class LinesListModel(QAbstractTableModel):
     ROW_BATCH_COUNT: Final[int] = 5
 
-    @dataclasses.dataclass(slots=True)
     class DataType:
-        id: int
-        best_name: str
-        frequency_str: str
-        frequency: float
-        intensity_str: str
-        intensity: float
-        lower_state_energy_str: str
-        lower_state_energy: float
+        __slots__ = ['id', 'name',
+                     'frequency_str', 'frequency',
+                     'intensity_str', 'intensity',
+                     'lower_state_energy_str', 'lower_state_energy']
+
+        def __init__(self,
+                     species_id: int, name: str,
+                     frequency_str: str, frequency: float,
+                     intensity_str: str, intensity: float,
+                     lower_state_energy_str: str, lower_state_energy: float) -> None:
+            self.id: int = species_id
+            self.name: str = name
+            self.frequency_str: str = frequency_str
+            self.frequency: float = frequency
+            self.intensity_str: str = intensity_str
+            self.intensity: float = intensity
+            self.lower_state_energy_str: str = lower_state_energy_str
+            self.lower_state_energy: float = lower_state_energy
+
+        def __eq__(self, other: LinesListModel.DataType) -> int:
+            return (self.id == other.id
+                    and self.frequency == other.frequency
+                    and self.intensity == other.intensity
+                    and self.lower_state_energy == other.lower_state_energy)
 
         def __hash__(self) -> int:
             return hash(self.id) ^ hash(self.frequency) ^ hash(self.lower_state_energy)
@@ -136,7 +150,7 @@ class LinesListModel(QAbstractTableModel):
                 item: LinesListModel.DataType = self._data[index.row()]
                 column_index: int = index.column()
                 if column_index == 0:
-                    return item.best_name
+                    return item.name
                 if column_index == 1:
                     return item.frequency_str
                 if column_index == 2:
@@ -242,10 +256,10 @@ class LinesListModel(QAbstractTableModel):
     def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
         self.beginResetModel()
         key = {
-            0: (lambda l: (l.best_name, l.frequency, l.intensity, l.lower_state_energy)),
-            1: (lambda l: (l.frequency, l.intensity, l.best_name, l.lower_state_energy)),
-            2: (lambda l: (l.intensity, l.frequency, l.best_name, l.lower_state_energy)),
-            3: (lambda l: (l.lower_state_energy, l.intensity, l.frequency, l.best_name))
+            0: (lambda l: (l.name, l.frequency, l.intensity, l.lower_state_energy)),
+            1: (lambda l: (l.frequency, l.intensity, l.name, l.lower_state_energy)),
+            2: (lambda l: (l.intensity, l.frequency, l.name, l.lower_state_energy)),
+            3: (lambda l: (l.lower_state_energy, l.intensity, l.frequency, l.name))
         }[column]
         self._data.sort(key=key, reverse=bool(order != Qt.SortOrder.AscendingOrder))
         self.endResetModel()
@@ -522,7 +536,7 @@ class UI(QMainWindow):
             text.append(
                 '<tr><td>' +
                 f'</td>{self.settings.csv_separator}<td>'.join(
-                    [row.best_name] +
+                    [row.name] +
                     [(str(_c) + ((' ' + units[_i]) if self.settings.with_units and _i in units else ''))
                      for _i, (_c, _a) in enumerate(zip((row.frequency, row.intensity, row.lower_state_energy),
                                                        self.menu_bar.menu_columns.actions()))
