@@ -130,7 +130,7 @@ class LinesListModel(QAbstractTableModel):
     def columnCount(self, parent: QModelIndex = ...) -> int:
         return len(self._header)
 
-    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> int | str | float | None:
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> str | None:
         if index.isValid():
             if role == Qt.ItemDataRole.DisplayRole:
                 item: LinesListModel.DataType = self._data[index.row()]
@@ -147,13 +147,6 @@ class LinesListModel(QAbstractTableModel):
 
     def row(self, row_index: int) -> LinesListModel.DataType:
         return self._data[row_index]
-
-    def item(self, row_index: int, column_index: int) -> int | str | float:
-        data_column: Final[int] = {0: 1, 1: 2, 2: 4, 3: 6}[column_index]
-        return self._data[row_index][data_column]
-
-    def raw_item(self, row_index: int, column_index: int) -> int | str | float:
-        return self._data[row_index][column_index]
 
     def headerData(self, col: int, orientation: Qt.Orientation, role: int = ...) -> str | None:
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
