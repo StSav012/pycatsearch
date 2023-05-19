@@ -231,7 +231,3 @@ def download() -> None:
     logger.info(f'started at {datetime.now()}')
     save_catalog(args.catalog, (args.min_frequency, args.max_frequency))
     logger.info(f'finished at {datetime.now()}')
-
-
-if __name__ == '__main__':
-    download()
