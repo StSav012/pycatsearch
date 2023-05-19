@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import dataclasses
 import math
-from typing import Any, Final, NamedTuple
+from typing import Any, Final
 
 from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
 from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QCursor, QIcon, QPainter, QPixmap,
@@ -88,7 +89,8 @@ class HTMLDelegate(QStyledItemDelegate):
 class LinesListModel(QAbstractTableModel):
     ROW_BATCH_COUNT: Final[int] = 5
 
-    class DataType(NamedTuple):
+    @dataclasses.dataclass(slots=True)
+    class DataType:
         id: int
         best_name: str
         frequency_str: str
@@ -97,6 +99,9 @@ class LinesListModel(QAbstractTableModel):
         intensity: float
         lower_state_energy_str: str
         lower_state_energy: float
+
+        def __hash__(self) -> int:
+            return hash(self.id) ^ hash(self.frequency) ^ hash(self.lower_state_energy)
 
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -128,8 +133,16 @@ class LinesListModel(QAbstractTableModel):
     def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> int | str | float | None:
         if index.isValid():
             if role == Qt.ItemDataRole.DisplayRole:
-                data_column: Final[int] = {0: 1, 1: 2, 2: 4, 3: 6}[index.column()]
-                return self._data[index.row()][data_column]
+                item: LinesListModel.DataType = self._data[index.row()]
+                column_index: int = index.column()
+                if column_index == 0:
+                    return item.best_name
+                if column_index == 1:
+                    return item.frequency_str
+                if column_index == 2:
+                    return item.intensity_str
+                if column_index == 3:
+                    return item.lower_state_energy_str
         return None
 
     def row(self, row_index: int) -> LinesListModel.DataType:
@@ -235,8 +248,13 @@ class LinesListModel(QAbstractTableModel):
 
     def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
         self.beginResetModel()
-        data_column: Final[int] = {0: 1, 1: 3, 2: 5, 3: 7}[column]
-        self._data.sort(key=lambda l: l[data_column], reverse=bool(order != Qt.SortOrder.AscendingOrder))
+        key = {
+            0: (lambda l: (l.best_name, l.frequency, l.intensity, l.lower_state_energy)),
+            1: (lambda l: (l.frequency, l.intensity, l.best_name, l.lower_state_energy)),
+            2: (lambda l: (l.intensity, l.frequency, l.best_name, l.lower_state_energy)),
+            3: (lambda l: (l.lower_state_energy, l.intensity, l.frequency, l.best_name))
+        }[column]
+        self._data.sort(key=key, reverse=bool(order != Qt.SortOrder.AscendingOrder))
         self.endResetModel()
 
     def canFetchMore(self, index: QModelIndex = QModelIndex()) -> bool:
@@ -512,9 +530,9 @@ class UI(QMainWindow):
                 '<tr><td>' +
                 f'</td>{self.settings.csv_separator}<td>'.join(
                     [row.best_name] +
-                    [(str(row[_c * 2]) + ((' ' + units[_c]) if self.settings.with_units and _c in units else ''))
-                     for _c, _a in zip(range(1, self.results_model.columnCount()),
-                                       self.menu_bar.menu_columns.actions())
+                    [(str(_c) + ((' ' + units[_i]) if self.settings.with_units and _i in units else ''))
+                     for _i, (_c, _a) in enumerate(zip((row.frequency, row.intensity, row.lower_state_energy),
+                                                       self.menu_bar.menu_columns.actions()))
                      if _a.isChecked()]
                 ) +
                 '</td></tr>' + self.settings.line_end
