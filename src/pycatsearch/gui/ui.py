@@ -23,7 +23,7 @@ from .settings import Settings
 from .substance_info import SubstanceInfo
 from .substances_box import SubstancesBox
 from .. import __version__
-from ..catalog import Catalog, CatalogEntryType, LineType
+from ..catalog import Catalog, CatalogEntryType
 from ..utils import *
 
 __all__ = ['UI']
@@ -172,14 +172,14 @@ class LinesListModel(QAbstractTableModel):
         self.set_entries([])
 
     def set_entries(self, new_data: list[CatalogEntryType]) -> None:
-        def frequency_str(line: LineType) -> tuple[str, float]:
-            frequency: float = self._settings.from_mhz(line[FREQUENCY])
+        def frequency_str(frequency: float) -> tuple[str, float]:
+            frequency = self._settings.from_mhz(frequency)
             frequency_suffix: int = self._settings.frequency_unit
             precision: int = [4, 7, 8, 8][frequency_suffix]
             return f'{frequency:.{precision}f}', frequency
 
-        def intensity_str(line: LineType) -> tuple[str, float]:
-            intensity: float = self._settings.from_log10_sq_nm_mhz(line[INTENSITY])
+        def intensity_str(intensity: float) -> tuple[str, float]:
+            intensity = self._settings.from_log10_sq_nm_mhz(intensity)
             if intensity == 0.0:
                 return '0', intensity
             elif abs(intensity) < 0.1:
@@ -187,8 +187,8 @@ class LinesListModel(QAbstractTableModel):
             else:
                 return f'{intensity:.4f}', intensity
 
-        def lower_state_energy_str(line: LineType) -> tuple[str, float]:
-            lower_state_energy: float = self._settings.from_rec_cm(line[LOWER_STATE_ENERGY])
+        def lower_state_energy_str(lower_state_energy: float) -> tuple[str, float]:
+            lower_state_energy = self._settings.from_rec_cm(lower_state_energy)
             if lower_state_energy == 0.0:
                 return '0', lower_state_energy
             elif abs(lower_state_energy) < 0.1:
@@ -236,9 +236,9 @@ class LinesListModel(QAbstractTableModel):
             LinesListModel.DataType(
                 entry[ID],
                 best_name(entry, self._settings.rich_text_in_formulas),
-                *frequency_str(line),
-                *intensity_str(line),
-                *lower_state_energy_str(line),
+                *frequency_str(line[FREQUENCY]),
+                *intensity_str(line[INTENSITY]),
+                *lower_state_energy_str(line[LOWER_STATE_ENERGY]),
             )
             for entry in self._entries
             for line in entry[LINES]
