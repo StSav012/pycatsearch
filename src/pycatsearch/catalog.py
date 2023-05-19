@@ -144,7 +144,7 @@ class Catalog:
 
         for filename in catalog_file_names:
             if os.path.exists(filename) and os.path.isfile(filename):
-                f_in: BinaryIO | gzip.GzipFile
+                f_in: BinaryIO
                 with Catalog.Opener(filename).open('rb') as f_in:
                     content: bytes = f_in.read()
                     try:
