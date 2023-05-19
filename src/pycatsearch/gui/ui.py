@@ -186,31 +186,40 @@ class LinesListModel(QAbstractTableModel):
         def same_entry(entry_1: CatalogEntryType, entry_2: CatalogEntryType) -> bool:
             if len(entry_1) != len(entry_2):
                 return False
-            for key, value in entry_1.items():
+            for key in entry_1.keys():
                 if key not in entry_2:
                     return False
-                if key != LINES and value != entry_2[key]:
+                if key != LINES and entry_1[key] != entry_2[key]:
                     return False
-                if key == LINES and len(value) != len(entry_2[key]):
+                if key == LINES and len(entry_1[key]) != len(entry_2[key]):
                     return False
             return True
 
         self.beginResetModel()
-        unique_entries = new_data.copy()
+        unique_entries: list[CatalogEntryType] = []
+        non_unique_indices: set[int] = set()
+        unique: bool
         all_unique: bool = True  # unless the opposite is proven
         for i in range(len(new_data)):
-            unique: bool = True
+            if i in non_unique_indices:
+                continue
+            unique = True
             for j in range(i + 1, len(new_data)):
+                if j in non_unique_indices:
+                    continue
                 if same_entry(new_data[i], new_data[j]):
+                    non_unique_indices.add(j)
                     unique = False
-                    if all_unique:
-                        unique_entries = []
-                        all_unique = False
+                    all_unique = False
+                    break
             if unique and not all_unique:
                 unique_entries.append(new_data[i])
-        self._entries = unique_entries
+        if all_unique:
+            self._entries = new_data.copy()
+        else:
+            self._entries = unique_entries
         entry: CatalogEntryType
-        self._data = [
+        self._data = list(set(
             LinesListModel.DataType(
                 entry[ID],
                 best_name(entry, self._settings.rich_text_in_formulas),
@@ -220,7 +229,7 @@ class LinesListModel(QAbstractTableModel):
             )
             for entry in self._entries
             for line in entry[LINES]
-        ]
+        ))
         self._rows_loaded = LinesListModel.ROW_BATCH_COUNT
         self.endResetModel()
 
