@@ -4,5 +4,8 @@ QtPy>=2.3.1
 # for faster downloading
 aiohttp
 
+# for faster JSON loading
+orjson
+
 # to build a package and install it
 setuptools

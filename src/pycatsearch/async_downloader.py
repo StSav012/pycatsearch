@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import random
 from contextlib import suppress
@@ -15,6 +14,11 @@ from urllib.parse import urlencode
 
 import aiohttp
 import aiohttp.client_exceptions
+
+try:
+    import orjson as json
+except ImportError:
+    import json
 
 from .catalog_entry import CatalogEntry
 from .utils import *

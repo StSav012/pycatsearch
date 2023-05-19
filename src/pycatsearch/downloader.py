@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import json
 import logging
 import random
 import time
@@ -12,6 +11,11 @@ from threading import Thread
 from typing import Any, Final, Mapping, cast
 from urllib.error import HTTPError
 from urllib.parse import ParseResult, urlencode, urlparse
+
+try:
+    import orjson as json
+except ImportError:
+    import json
 
 from .catalog_entry import CatalogEntry
 from .utils import *

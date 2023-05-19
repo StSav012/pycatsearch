@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import bz2
 import gzip
-import json
 import lzma
 import math
 import os.path
@@ -12,7 +11,12 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from os import PathLike
 from pathlib import Path
-from typing import Any, BinaryIO, Callable, Dict, List, NamedTuple, Optional, TextIO, Union, cast
+from typing import Any, AnyStr, BinaryIO, Callable, Dict, List, NamedTuple, Optional, TextIO, Union, cast
+
+try:
+    import orjson as json
+except ImportError:
+    import json
 
 from .utils import *
 
@@ -371,6 +375,13 @@ class Catalog:
         except ValueError:
             opener = Catalog.Opener(filename + Catalog.DEFAULT_SUFFIX)
 
+        def ensure_bytes(data: AnyStr) -> bytes:
+            if isinstance(data, str):
+                return data.encode('utf-8')
+            if isinstance(data, bytes):
+                return data
+            raise TypeError('Unknown conversion to bytes')
+
         f: BinaryIO
         with opener.open('wb') as f:
-            f.write(json.dumps(data_to_save, indent=4).encode())
+            f.write(ensure_bytes(json.dumps(data_to_save, indent=4)))
