@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Final
+from typing import Any, Callable, Final
 
 from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
 from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QCursor, QIcon, QPainter, QPixmap,
@@ -179,14 +179,18 @@ class LinesListModel(QAbstractTableModel):
         self.set_entries([])
 
     def set_entries(self, new_data: list[CatalogEntryType]) -> None:
+        from_mhz: Callable[[float], float] = self._settings.from_mhz
+        from_log10_sq_nm_mhz: Callable[[float], float] = self._settings.from_log10_sq_nm_mhz
+        from_rec_cm: Callable[[float], float] = self._settings.from_rec_cm
+        frequency_suffix: int = self._settings.frequency_unit
+        precision: int = [4, 7, 8, 8][frequency_suffix]
+
         def frequency_str(frequency: float) -> tuple[str, float]:
-            frequency = self._settings.from_mhz(frequency)
-            frequency_suffix: int = self._settings.frequency_unit
-            precision: int = [4, 7, 8, 8][frequency_suffix]
+            frequency = from_mhz(frequency)
             return f'{frequency:.{precision}f}', frequency
 
         def intensity_str(intensity: float) -> tuple[str, float]:
-            intensity = self._settings.from_log10_sq_nm_mhz(intensity)
+            intensity = from_log10_sq_nm_mhz(intensity)
             if intensity == 0.0:
                 return '0', intensity
             elif abs(intensity) < 0.1:
@@ -195,25 +199,13 @@ class LinesListModel(QAbstractTableModel):
                 return f'{intensity:.4f}', intensity
 
         def lower_state_energy_str(lower_state_energy: float) -> tuple[str, float]:
-            lower_state_energy = self._settings.from_rec_cm(lower_state_energy)
+            lower_state_energy = from_rec_cm(lower_state_energy)
             if lower_state_energy == 0.0:
                 return '0', lower_state_energy
             elif abs(lower_state_energy) < 0.1:
                 return f'{lower_state_energy:.4e}', lower_state_energy
             else:
                 return f'{lower_state_energy:.4f}', lower_state_energy
-
-        def same_entry(entry_1: CatalogEntryType, entry_2: CatalogEntryType) -> bool:
-            if len(entry_1) != len(entry_2):
-                return False
-            for key in entry_1.keys():
-                if key not in entry_2:
-                    return False
-                if key != LINES and entry_1[key] != entry_2[key]:
-                    return False
-                if key == LINES and len(entry_1[key]) != len(entry_2[key]):
-                    return False
-            return True
 
         self.beginResetModel()
         unique_entries: list[CatalogEntryType] = []
@@ -227,7 +219,7 @@ class LinesListModel(QAbstractTableModel):
             for j in range(i + 1, len(new_data)):
                 if j in non_unique_indices:
                     continue
-                if same_entry(new_data[i], new_data[j]):
+                if new_data[i] == new_data[j]:
                     non_unique_indices.add(j)
                     unique = False
                     all_unique = False
@@ -239,10 +231,11 @@ class LinesListModel(QAbstractTableModel):
         else:
             self._entries = unique_entries
         entry: CatalogEntryType
+        rich_text_in_formulas: bool = self._settings.rich_text_in_formulas
         self._data = list(set(
             LinesListModel.DataType(
                 entry[ID],
-                best_name(entry, self._settings.rich_text_in_formulas),
+                best_name(entry, rich_text_in_formulas),
                 *frequency_str(line[FREQUENCY]),
                 *intensity_str(line[INTENSITY]),
                 *lower_state_energy_str(line[LOWER_STATE_ENERGY]),
