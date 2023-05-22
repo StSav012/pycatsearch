@@ -12,7 +12,7 @@ __author__ = 'StSav012'
 __original_name__ = 'py''cat''search'
 
 try:
-    from _version import __version__
+    from ._version import __version__
 except ImportError:
     __version__ = ''
 
