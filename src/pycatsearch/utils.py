@@ -30,7 +30,8 @@ __all__ = ['M_LOG10E',
            'sort_unique', 'merge_sorted', 'search_sorted',
            'within', 'chem_html', 'best_name', 'remove_html', 'wrap_in_html',
            'ensure_prefix', 'all_cases',
-           'save_catalog_to_file']
+           'save_catalog_to_file',
+           'ReleaseInfo', 'latest_release', 'update_with_pip']
 
 M_LOG10E: Final[float] = math.log10(math.e)
 
@@ -588,3 +589,74 @@ def save_catalog_to_file(filename: str | Path,
         return False
     Catalog.save(filename=filename, catalog=catalog, frequency_limits=frequency_limits)
     return True
+
+
+class ReleaseInfo:
+    def __init__(self, version: str = '', pub_date: str = '') -> None:
+        self.version: str = version
+        self.pub_date: str = pub_date
+
+    def __bool__(self) -> bool:
+        return bool(self.version) and bool(self.pub_date)
+
+    def __gt__(self, other: str) -> bool:
+        self_as_tuple: tuple[int | str, ...] = tuple(int(i) if i.isdigit() else i for i in self.version.split('.'))
+        other_as_tuple: tuple[int | str, ...] = tuple(int(i) if i.isdigit() else i for i in other.split('.'))
+        return self_as_tuple > other_as_tuple
+
+
+def latest_release() -> ReleaseInfo:
+    import urllib.request
+    import xml.dom.minidom as dom
+    from http.client import HTTPResponse
+    from xml.dom.minicompat import NodeList
+    from urllib.error import URLError
+
+    from . import __original_name__
+
+    try:
+        r: HTTPResponse = urllib.request.urlopen(f'https://pypi.org/rss/project/{__original_name__}/releases.xml',
+                                                 timeout=1)
+    except URLError:
+        return ReleaseInfo()
+    if r.getcode() != 200 or not r.readable():
+        return ReleaseInfo()
+    rss: dom.Node | None = dom.parseString(r.read().decode(encoding='ascii')).documentElement
+    if not isinstance(rss, dom.Element) or rss.tagName != 'rss':
+        return ReleaseInfo()
+    channels: NodeList = rss.getElementsByTagName('channel')
+    if not channels or channels[0].nodeType != dom.Node.ELEMENT_NODE:
+        return ReleaseInfo()
+    channel: dom.Element = channels[0]
+    items: NodeList = channel.getElementsByTagName('item')
+    if not items or items[0].nodeType != dom.Node.ELEMENT_NODE:
+        return ReleaseInfo()
+    item: dom.Element = items[0]
+    titles: NodeList = item.getElementsByTagName('title')
+    if not titles or titles[0].nodeType != dom.Node.ELEMENT_NODE:
+        return ReleaseInfo()
+    title: dom.Element = titles[0]
+    pub_dates: NodeList = item.getElementsByTagName('pubDate')
+    if not pub_dates or pub_dates[0].nodeType != dom.Node.ELEMENT_NODE:
+        return ReleaseInfo()
+    pub_date: dom.Element = pub_dates[0]
+    title_value: dom.Node = title.firstChild
+    pub_date_value: dom.Node = pub_date.firstChild
+    if not isinstance(title_value, dom.Text) or not isinstance(pub_date_value, dom.Text):
+        return ReleaseInfo()
+
+    return ReleaseInfo(title_value.data, pub_date_value.data)
+
+
+def update_with_pip() -> None:
+    import subprocess
+    import sys
+
+    from . import __original_name__
+
+    subprocess.Popen(args=[
+        sys.executable, '-c',
+        f'''import sys, subprocess, time; time.sleep(2);\
+        subprocess.run(args=[sys.executable, '-m', 'pip', 'install', '-U', {__original_name__!r}]);\
+        subprocess.Popen(args=[sys.executable, '-m', {__original_name__!r}])'''])
+    sys.exit(0)

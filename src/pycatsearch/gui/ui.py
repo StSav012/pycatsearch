@@ -398,6 +398,7 @@ class UI(QMainWindow):
         self.button_search.clicked.connect(self.on_button_search_clicked)
         self.menu_bar.action_load.triggered.connect(self.on_action_load_triggered)
         self.menu_bar.action_quit.triggered.connect(self.on_action_quit_triggered)
+        self.menu_bar.action_check_updates.triggered.connect(self.on_action_check_updates_triggered)
         self.menu_bar.action_about_catalogs.triggered.connect(self.on_action_about_catalogs_triggered)
         self.menu_bar.action_about.triggered.connect(self.on_action_about_triggered)
         self.menu_bar.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
@@ -617,6 +618,21 @@ class UI(QMainWindow):
 
     def on_action_show_lower_state_energy_toggled(self, is_checked: bool) -> None:
         self.toggle_results_table_column_visibility(3, is_checked)
+
+    def on_action_check_updates_triggered(self) -> None:
+        _latest_release: ReleaseInfo = latest_release()
+        if not _latest_release:
+            QMessageBox.warning(self, self.tr('Release Info'), self.tr('Update check failed.'))
+        elif _latest_release.version > __version__:
+            res: QMessageBox.StandardButton = QMessageBox.question(
+                self, self.tr('Release Info'),
+                self.tr('Version {release.version} published {release.pub_date} is available. '
+                        'Would you like to get the update? '
+                        'The app will try to restart.').format(release=_latest_release))
+            if res == QMessageBox.StandardButton.Yes:
+                update_with_pip()
+        else:
+            QMessageBox.information(self, self.tr('Release Info'), self.tr('You are using the latest version.'))
 
     def on_action_about_catalogs_triggered(self) -> None:
         if self.catalog:

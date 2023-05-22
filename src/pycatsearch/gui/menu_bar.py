@@ -27,6 +27,7 @@ class MenuBar(QMenuBar):
         self.action_preferences: QAction = QAction(self.tr('&Preferences...'), self.menu_file)
         self.action_quit: QAction = QAction(QIcon.fromTheme('application-exit'), self.tr('&Quit'),
                                             self.menu_file)
+        self.action_check_updates: QAction = QAction(self.tr('Check for Updates...'), self.menu_help)
         self.action_about_catalogs: QAction = QAction(
             QIcon.fromTheme('help-about', self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogInfoView)),
             self.tr('About Catalogs...'),
@@ -68,6 +69,8 @@ class MenuBar(QMenuBar):
         self.menu_file.addAction(self.action_preferences)
         self.menu_file.addSeparator()
         self.menu_file.addAction(self.action_quit)
+        self.menu_help.addAction(self.action_check_updates)
+        self.menu_help.addSeparator()
         self.menu_help.addAction(self.action_about_catalogs)
         self.menu_help.addAction(self.action_about)
         self.menu_help.addAction(self.action_about_qt)
