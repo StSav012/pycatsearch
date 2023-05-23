@@ -14,7 +14,3 @@ def run() -> None:
     window: UI = UI(Catalog(*sys.argv[1:]))
     window.show()
     sys.exit(app.exec())
-
-
-if __name__ == '__main__':
-    run()
