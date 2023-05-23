@@ -23,8 +23,9 @@ class Settings(QSettings):
     _CSV_SEPARATORS: Final[list[str]] = [',', '\t', ';', ' ']
 
     DIALOG: dict[str, dict[str, tuple[Any, ...]]] = {
-        'Start': {
-            'Load catalogs when the program starts': ('load_last_catalogs',),
+        'When the program starts': {
+            'Load catalogs': ('load_last_catalogs',),
+            'Check for update': ('check_updates',),
         },
         'Display': {
             'Allow rich text in formulas': ('rich_text_in_formulas',),
@@ -233,6 +234,19 @@ class Settings(QSettings):
     def load_last_catalogs(self, new_value: bool) -> None:
         self.beginGroup('start')
         self.setValue('loadLastCatalogs', new_value)
+        self.endGroup()
+
+    @property
+    def check_updates(self) -> bool:
+        self.beginGroup('start')
+        v: bool = self.value('checkUpdates', True, bool)
+        self.endGroup()
+        return v
+
+    @check_updates.setter
+    def check_updates(self, new_value: bool) -> None:
+        self.beginGroup('start')
+        self.setValue('checkUpdates', new_value)
         self.endGroup()
 
     @property

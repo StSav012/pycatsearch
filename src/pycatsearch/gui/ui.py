@@ -420,6 +420,17 @@ class UI(QMainWindow):
         if not self.catalog.is_empty:
             self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
 
+        if self.settings.check_updates:
+            _latest_release: ReleaseInfo = latest_release()
+            if _latest_release and _latest_release.version > __version__:
+                res: QMessageBox.StandardButton = QMessageBox.question(
+                    self, self.tr('Release Info'),
+                    self.tr('Version {release.version} published {release.pub_date} is available. '
+                            'Would you like to get the update? '
+                            'The app will try to restart.').format(release=_latest_release))
+                if res == QMessageBox.StandardButton.Yes:
+                    update_with_pip()
+
     def closeEvent(self, event: QCloseEvent) -> None:
         self.save_settings()
         event.accept()
