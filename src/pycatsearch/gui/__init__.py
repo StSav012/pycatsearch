@@ -9,8 +9,8 @@ from .ui import UI
 __all__ = ['UI', 'run']
 
 
-def run() -> None:
+def run() -> int:
     app: QApplication = QApplication(sys.argv)
     window: UI = UI(Catalog(*sys.argv[1:]))
     window.show()
-    sys.exit(app.exec())
+    return app.exec()

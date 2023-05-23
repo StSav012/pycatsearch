@@ -76,7 +76,7 @@ def _make_old_qt_compatible_again() -> None:
             QLibraryInfo.LibraryPath = QLibraryInfo.LibraryLocation
 
 
-def main() -> None:
+def main() -> int:
     ap: argparse.ArgumentParser = argparse.ArgumentParser(
         allow_abbrev=True,
         description='Yet another implementation of JPL and CDMS spectroscopy catalogs offline search.\n'
@@ -127,12 +127,12 @@ def main() -> None:
     if search_args:
         c: Catalog = Catalog(*args.catalog)
         c.print(**search_args)
-        return
+        return 0
 
-    main_gui()
+    return main_gui()
 
 
-def main_gui() -> None:
+def main_gui() -> int:
     ap: argparse.ArgumentParser = argparse.ArgumentParser(
         description='Yet another implementation of JPL and CDMS spectroscopy catalogs offline search.\n'
                     f'Find more at https://github.com/{__author__}/{__original_name__}.')
@@ -177,8 +177,9 @@ def main_gui() -> None:
             else:
                 tkinter.messagebox.showerror(title='Error', message=error_message)
             root.destroy()
+        return 1
     else:
-        gui.run()
+        return gui.run()
 
 
 def download() -> None:
