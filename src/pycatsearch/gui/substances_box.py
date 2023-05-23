@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from qtpy.QtCore import QModelIndex, Qt
+from qtpy.QtCore import QModelIndex, Qt, Slot
 from qtpy.QtWidgets import (QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget,
                             QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
 
@@ -47,10 +47,10 @@ class SubstancesBox(QGroupBox):
         self._button_select_none.setText(self._button_select_none.tr('Select None'))
         self._layout_substance.addWidget(self._button_select_none)
 
-        self._text_substance.textChanged.connect(self.on_text_changed)
-        self._check_keep_selection.toggled.connect(self.on_check_save_selection_toggled)
-        self._button_select_none.clicked.connect(self.on_button_select_none_clicked)
-        self._list_substance.doubleClicked.connect(self.on_list_substance_double_clicked)
+        self._text_substance.textChanged.connect(self._on_text_changed)
+        self._check_keep_selection.toggled.connect(self._on_check_save_selection_toggled)
+        self._button_select_none.clicked.connect(self._on_button_select_none_clicked)
+        self._list_substance.doubleClicked.connect(self._on_list_substance_double_clicked)
 
         self.load_settings()
 
@@ -128,20 +128,24 @@ class SubstancesBox(QGroupBox):
                                    else Qt.CheckState.Unchecked)
             self._list_substance.addItem(new_item)
 
-    def on_text_changed(self, current_text: str) -> None:
+    @Slot(str)
+    def _on_text_changed(self, current_text: str) -> None:
         self.fill_substances_list(current_text)
 
-    def on_check_save_selection_toggled(self, new_state: bool) -> None:
+    @Slot(bool)
+    def _on_check_save_selection_toggled(self, new_state: bool) -> None:
         if not new_state:
             self._selected_substances.clear()
             self.update_selected_substances()
 
-    def on_button_select_none_clicked(self) -> None:
+    @Slot()
+    def _on_button_select_none_clicked(self) -> None:
         for i in range(self._list_substance.count()):
             self._list_substance.item(i).setCheckState(Qt.CheckState.Unchecked)
         self._selected_substances.clear()
 
-    def on_list_substance_double_clicked(self, index: QModelIndex) -> None:
+    @Slot(QModelIndex)
+    def _on_list_substance_double_clicked(self, index: QModelIndex) -> None:
         item: QListWidgetItem = self._list_substance.item(index.row())
         ids: set[int] = item.data(Qt.ItemDataRole.UserRole)
         if len(ids) > 1:

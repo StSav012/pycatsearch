@@ -5,7 +5,7 @@ from math import inf
 from queue import Queue
 from typing import cast
 
-from qtpy.QtCore import QTimer
+from qtpy.QtCore import QTimer, Slot
 from qtpy.QtWidgets import (QDialog, QDoubleSpinBox, QFormLayout, QLabel, QProgressBar, QVBoxLayout,
                             QWidget, QWizard, QWizardPage)
 from qtpy.compat import getsavefilename
@@ -109,7 +109,7 @@ class ProgressPage(QWizardPage):
         layout.addWidget(self.progress_bar)
 
         self.timer: QTimer = QTimer(self)
-        self.timer.timeout.connect(self.on_timeout)
+        self.timer.timeout.connect(self._on_timeout)
 
     def initializePage(self) -> None:
         super(ProgressPage, self).initializePage()
@@ -123,7 +123,8 @@ class ProgressPage(QWizardPage):
         self.downloader.start()
         self.timer.start(100)
 
-    def on_timeout(self) -> None:
+    @Slot()
+    def _on_timeout(self) -> None:
         while not self.state_queue.empty():
             cataloged_species: int
             not_yet_processed_species: int

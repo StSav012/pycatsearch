@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from typing import Any, Callable, Final
 
-from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt
+from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt, Slot
 from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QCursor, QIcon, QPainter, QPixmap,
                         QScreen, QTextDocument)
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QGridLayout,
@@ -390,32 +390,33 @@ class UI(QMainWindow):
 
         self.load_settings()
 
-        self.results_table.customContextMenuRequested.connect(self.on_table_context_menu_requested)
-        self.results_table.selectionModel().selectionChanged.connect(self.on_table_item_selection_changed)
-        self.results_table.doubleClicked.connect(self.on_action_substance_info_triggered)
-        self.spin_intensity.valueChanged.connect(self.on_spin_intensity_changed)
-        self.spin_temperature.valueChanged.connect(self.on_spin_temperature_changed)
-        self.button_search.clicked.connect(self.on_button_search_clicked)
-        self.menu_bar.action_load.triggered.connect(self.on_action_load_triggered)
-        self.menu_bar.action_quit.triggered.connect(self.on_action_quit_triggered)
-        self.menu_bar.action_check_updates.triggered.connect(self.on_action_check_updates_triggered)
-        self.menu_bar.action_about_catalogs.triggered.connect(self.on_action_about_catalogs_triggered)
-        self.menu_bar.action_about.triggered.connect(self.on_action_about_triggered)
-        self.menu_bar.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
-        self.menu_bar.action_download_catalog.triggered.connect(self.on_action_download_catalog_triggered)
-        self.menu_bar.action_preferences.triggered.connect(self.on_action_preferences_triggered)
-        self.menu_bar.action_copy.triggered.connect(self.on_action_copy_triggered)
-        self.menu_bar.action_select_all.triggered.connect(self.on_action_select_all_triggered)
-        self.menu_bar.action_reload.triggered.connect(self.on_action_reload_triggered)
-        self.menu_bar.action_copy_name.triggered.connect(self.on_action_copy_name_triggered)
-        self.menu_bar.action_copy_frequency.triggered.connect(self.on_action_copy_frequency_triggered)
-        self.menu_bar.action_copy_intensity.triggered.connect(self.on_action_copy_intensity_triggered)
-        self.menu_bar.action_copy_lower_state_energy.triggered.connect(self.on_action_copy_lower_state_energy_triggered)
-        self.menu_bar.action_show_frequency.toggled.connect(self.on_action_show_frequency_toggled)
-        self.menu_bar.action_show_intensity.toggled.connect(self.on_action_show_intensity_toggled)
-        self.menu_bar.action_show_lower_state_energy.toggled.connect(self.on_action_show_lower_state_energy_toggled)
-        self.menu_bar.action_substance_info.triggered.connect(self.on_action_substance_info_triggered)
-        self.menu_bar.action_clear.triggered.connect(self.on_action_clear_triggered)
+        self.results_table.customContextMenuRequested.connect(self._on_table_context_menu_requested)
+        self.results_table.selectionModel().selectionChanged.connect(self._on_table_item_selection_changed)
+        self.results_table.doubleClicked.connect(self._on_action_substance_info_triggered)
+        self.spin_intensity.valueChanged.connect(self._on_spin_intensity_changed)
+        self.spin_temperature.valueChanged.connect(self._on_spin_temperature_changed)
+        self.button_search.clicked.connect(self._on_button_search_clicked)
+        self.menu_bar.action_load.triggered.connect(self._on_action_load_triggered)
+        self.menu_bar.action_quit.triggered.connect(self._on_action_quit_triggered)
+        self.menu_bar.action_check_updates.triggered.connect(self._on_action_check_updates_triggered)
+        self.menu_bar.action_about_catalogs.triggered.connect(self._on_action_about_catalogs_triggered)
+        self.menu_bar.action_about.triggered.connect(self._on_action_about_triggered)
+        self.menu_bar.action_about_qt.triggered.connect(self._on_action_about_qt_triggered)
+        self.menu_bar.action_download_catalog.triggered.connect(self._on_action_download_catalog_triggered)
+        self.menu_bar.action_preferences.triggered.connect(self._on_action_preferences_triggered)
+        self.menu_bar.action_copy.triggered.connect(self._on_action_copy_triggered)
+        self.menu_bar.action_select_all.triggered.connect(self._on_action_select_all_triggered)
+        self.menu_bar.action_reload.triggered.connect(self._on_action_reload_triggered)
+        self.menu_bar.action_copy_name.triggered.connect(self._on_action_copy_name_triggered)
+        self.menu_bar.action_copy_frequency.triggered.connect(self._on_action_copy_frequency_triggered)
+        self.menu_bar.action_copy_intensity.triggered.connect(self._on_action_copy_intensity_triggered)
+        self.menu_bar.action_copy_lower_state_energy.triggered.connect(
+            self._on_action_copy_lower_state_energy_triggered)
+        self.menu_bar.action_show_frequency.toggled.connect(self._on_action_show_frequency_toggled)
+        self.menu_bar.action_show_intensity.toggled.connect(self._on_action_show_intensity_toggled)
+        self.menu_bar.action_show_lower_state_energy.toggled.connect(self._on_action_show_lower_state_energy_toggled)
+        self.menu_bar.action_substance_info.triggered.connect(self._on_action_substance_info_triggered)
+        self.menu_bar.action_clear.triggered.connect(self._on_action_clear_triggered)
 
         if not self.catalog.is_empty:
             self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
@@ -449,19 +450,23 @@ class UI(QMainWindow):
             self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
         return not self.catalog.is_empty
 
-    def on_spin_temperature_changed(self, arg1: float) -> None:
+    @Slot(float)
+    def _on_spin_temperature_changed(self, arg1: float) -> None:
         self.temperature = self.settings.to_k(arg1)
         self.fill_table()
 
-    def on_spin_intensity_changed(self, arg1: float) -> None:
+    @Slot(float)
+    def _on_spin_intensity_changed(self, arg1: float) -> None:
         self.minimal_intensity = self.settings.to_log10_sq_nm_mhz(arg1)
         if self.results_shown:
             self.fill_table()
 
-    def on_table_context_menu_requested(self, pos: QPoint) -> None:
+    @Slot(QPoint)
+    def _on_table_context_menu_requested(self, pos: QPoint) -> None:
         self.menu_bar.menu_edit.popup(self.results_table.viewport().mapToGlobal(pos))
 
-    def on_table_item_selection_changed(self) -> None:
+    @Slot()
+    def _on_table_item_selection_changed(self) -> None:
         self.menu_bar.action_copy.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
         self.menu_bar.action_substance_info.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
 
@@ -492,7 +497,8 @@ class UI(QMainWindow):
                                              basedir=directory)
         return filename, _filter
 
-    def on_action_load_triggered(self) -> None:
+    @Slot()
+    def _on_action_load_triggered(self) -> None:
         self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
         new_catalog_file_names: list[str]
         _formats: dict[tuple[str, ...], str] = {
@@ -514,7 +520,8 @@ class UI(QMainWindow):
         else:
             self.status_bar.clearMessage()
 
-    def on_action_reload_triggered(self) -> None:
+    @Slot()
+    def _on_action_reload_triggered(self) -> None:
         if self.catalog.sources:
             self.status_bar.showMessage(self.tr('Loading...'))
             if self.load_catalog(*self.catalog.sources):
@@ -551,13 +558,15 @@ class UI(QMainWindow):
             )
         return '<table>' + self.settings.line_end + ''.join(text) + '</table>'
 
-    def on_action_download_catalog_triggered(self) -> None:
+    @Slot()
+    def _on_action_download_catalog_triggered(self) -> None:
         downloader: DownloadDialog = DownloadDialog(
             frequency_limits=(self.catalog.min_frequency, self.catalog.max_frequency),
             parent=self)
         downloader.exec()
 
-    def on_action_preferences_triggered(self) -> None:
+    @Slot()
+    def _on_action_preferences_triggered(self) -> None:
         self.preferences_dialog.exec()
         self.fill_parameters()
         if self.results_model.rowCount():
@@ -566,10 +575,12 @@ class UI(QMainWindow):
         else:
             self.preset_table()
 
-    def on_action_quit_triggered(self) -> None:
+    @Slot()
+    def _on_action_quit_triggered(self) -> None:
         self.close()
 
-    def on_action_clear_triggered(self) -> None:
+    @Slot()
+    def _on_action_clear_triggered(self) -> None:
         self.results_model.clear()
         self.preset_table()
 
@@ -589,25 +600,32 @@ class UI(QMainWindow):
         else:
             copy_to_clipboard(self.settings.line_end.join(text_to_copy), Qt.TextFormat.PlainText)
 
-    def on_action_copy_name_triggered(self) -> None:
+    @Slot()
+    def _on_action_copy_name_triggered(self) -> None:
         self.copy_selected_items(0)
 
-    def on_action_copy_frequency_triggered(self) -> None:
+    @Slot()
+    def _on_action_copy_frequency_triggered(self) -> None:
         self.copy_selected_items(1)
 
-    def on_action_copy_intensity_triggered(self) -> None:
+    @Slot()
+    def _on_action_copy_intensity_triggered(self) -> None:
         self.copy_selected_items(2)
 
-    def on_action_copy_lower_state_energy_triggered(self) -> None:
+    @Slot()
+    def _on_action_copy_lower_state_energy_triggered(self) -> None:
         self.copy_selected_items(3)
 
-    def on_action_copy_triggered(self) -> None:
+    @Slot()
+    def _on_action_copy_triggered(self) -> None:
         copy_to_clipboard(self.stringify_selection_html(), Qt.TextFormat.RichText)
 
-    def on_action_select_all_triggered(self) -> None:
+    @Slot()
+    def _on_action_select_all_triggered(self) -> None:
         self.results_table.selectAll()
 
-    def on_action_substance_info_triggered(self) -> None:
+    @Slot()
+    def _on_action_substance_info_triggered(self) -> None:
         if self.results_table.selectionModel().selectedRows():
             syn: SubstanceInfo = SubstanceInfo(
                 self.catalog,
@@ -621,16 +639,20 @@ class UI(QMainWindow):
         else:
             self.results_table.hideColumn(column)
 
-    def on_action_show_frequency_toggled(self, is_checked: bool) -> None:
+    @Slot(bool)
+    def _on_action_show_frequency_toggled(self, is_checked: bool) -> None:
         self.toggle_results_table_column_visibility(1, is_checked)
 
-    def on_action_show_intensity_toggled(self, is_checked: bool) -> None:
+    @Slot(bool)
+    def _on_action_show_intensity_toggled(self, is_checked: bool) -> None:
         self.toggle_results_table_column_visibility(2, is_checked)
 
-    def on_action_show_lower_state_energy_toggled(self, is_checked: bool) -> None:
+    @Slot(bool)
+    def _on_action_show_lower_state_energy_toggled(self, is_checked: bool) -> None:
         self.toggle_results_table_column_visibility(3, is_checked)
 
-    def on_action_check_updates_triggered(self) -> None:
+    @Slot()
+    def _on_action_check_updates_triggered(self) -> None:
         _latest_release: ReleaseInfo = latest_release()
         if not _latest_release:
             QMessageBox.warning(self, self.tr('Release Info'), self.tr('Update check failed.'))
@@ -645,14 +667,16 @@ class UI(QMainWindow):
         else:
             QMessageBox.information(self, self.tr('Release Info'), self.tr('You are using the latest version.'))
 
-    def on_action_about_catalogs_triggered(self) -> None:
+    @Slot()
+    def _on_action_about_catalogs_triggered(self) -> None:
         if self.catalog:
             ci: CatalogInfo = CatalogInfo(self.catalog, self)
             ci.exec()
         else:
             QMessageBox.information(self, self.tr('Catalog Info'), self.tr('No catalogs loaded'))
 
-    def on_action_about_triggered(self) -> None:
+    @Slot()
+    def _on_action_about_triggered(self) -> None:
         QMessageBox.about(self,
                           self.tr("About CatSearch"),
                           "<html><p>"
@@ -680,7 +704,8 @@ class UI(QMainWindow):
                               "<a href='https://github.com/StSav012/pycatsearch'>GitHub</a>")
                           + "</p></html>")
 
-    def on_action_about_qt_triggered(self) -> None:
+    @Slot()
+    def _on_action_about_qt_triggered(self) -> None:
         QMessageBox.aboutQt(self)
 
     def load_settings(self) -> None:
@@ -808,7 +833,8 @@ class UI(QMainWindow):
         self.menu_bar.menu_copy_only.setEnabled(bool(entries))
         self.results_shown = True
 
-    def on_button_search_clicked(self) -> None:
+    @Slot()
+    def _on_button_search_clicked(self) -> None:
         self.status_bar.showMessage(self.tr('Searching...'))
         self.setDisabled(True)
         last_cursor: QCursor = self.cursor()

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from math import inf
 
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, QWidget
 
 from .settings import Settings
@@ -64,10 +64,10 @@ class FrequencyBox(QTabWidget):
 
         self.load_settings()
 
-        self._spin_frequency_from.editingFinished.connect(self.on_spin_frequency_from_edited)
-        self._spin_frequency_to.editingFinished.connect(self.on_spin_frequency_to_edited)
-        self._spin_frequency_center.editingFinished.connect(self.on_spin_frequency_center_edited)
-        self._spin_frequency_deviation.editingFinished.connect(self.on_spin_frequency_deviation_edited)
+        self._spin_frequency_from.editingFinished.connect(self._on_spin_frequency_from_edited)
+        self._spin_frequency_to.editingFinished.connect(self._on_spin_frequency_to_edited)
+        self._spin_frequency_center.editingFinished.connect(self._on_spin_frequency_center_edited)
+        self._spin_frequency_deviation.editingFinished.connect(self._on_spin_frequency_deviation_edited)
 
     def load_settings(self) -> None:
         self._settings.beginGroup('search')
@@ -113,16 +113,20 @@ class FrequencyBox(QTabWidget):
             spin.setMinimum(min_value)
             spin.setMaximum(max_value)
 
-    def on_spin_frequency_from_edited(self) -> None:
+    @Slot()
+    def _on_spin_frequency_from_edited(self) -> None:
         self._frequency_from = self._settings.to_mhz(self._spin_frequency_from.value())
 
-    def on_spin_frequency_to_edited(self) -> None:
+    @Slot()
+    def _on_spin_frequency_to_edited(self) -> None:
         self._frequency_to = self._settings.to_mhz(self._spin_frequency_to.value())
 
-    def on_spin_frequency_center_edited(self) -> None:
+    @Slot()
+    def _on_spin_frequency_center_edited(self) -> None:
         self._frequency_center = self._settings.to_mhz(self._spin_frequency_center.value())
 
-    def on_spin_frequency_deviation_edited(self) -> None:
+    @Slot()
+    def _on_spin_frequency_deviation_edited(self) -> None:
         self._frequency_deviation = self._settings.to_mhz(self._spin_frequency_deviation.value())
 
     def fill_parameters(self) -> None:
