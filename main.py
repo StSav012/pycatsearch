@@ -24,19 +24,13 @@ if sys.version_info < (3, 8):
     exit(1)
 
 if __name__ == '__main__':
-    from contextlib import suppress
-
-    __author__ = 'StSav012'
-    __original_name__ = 'py''cat''search'
 
     try:
-        with suppress(ImportError):
-            from updater import update_with_pip
-
-            update_with_pip(__original_name__)
-
         from pycatsearch import main
     except ImportError:
+        __author__ = 'StSav012'
+        __original_name__ = 'py''cat''search'
+
         try:
             from updater import update_with_pip
 
