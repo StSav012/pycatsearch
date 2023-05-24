@@ -313,3 +313,16 @@ class Settings(QSettings):
         self.beginGroup('search')
         self.setValue('timeout', new_value)
         self.endGroup()
+
+    @property
+    def ignored_version(self) -> str:
+        self.beginGroup('update')
+        v: str = self.value('ignoredVersion', '', str)
+        self.endGroup()
+        return v
+
+    @ignored_version.setter
+    def ignored_version(self, new_value: str) -> None:
+        self.beginGroup('update')
+        self.setValue('ignoredVersion', new_value)
+        self.endGroup()

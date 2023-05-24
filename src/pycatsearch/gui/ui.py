@@ -423,14 +423,19 @@ class UI(QMainWindow):
 
         if self.settings.check_updates:
             _latest_release: ReleaseInfo = latest_release()
-            if _latest_release and _latest_release.version > __version__:
+            if (_latest_release
+                    and _latest_release.version != self.settings.ignored_version
+                    and _latest_release.version > __version__):
                 res: QMessageBox.StandardButton = QMessageBox.question(
                     self, self.tr('Release Info'),
                     self.tr('Version {release.version} published {release.pub_date} is available. '
                             'Would you like to get the update? '
-                            'The app will try to restart.').format(release=_latest_release))
+                            'The app will try to restart.').format(release=_latest_release),
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Ignore)
                 if res == QMessageBox.StandardButton.Yes:
                     update_with_pip()
+                elif res == QMessageBox.StandardButton.Ignore:
+                    self.settings.ignored_version = _latest_release.version
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.save_settings()
@@ -661,9 +666,12 @@ class UI(QMainWindow):
                 self, self.tr('Release Info'),
                 self.tr('Version {release.version} published {release.pub_date} is available. '
                         'Would you like to get the update? '
-                        'The app will try to restart.').format(release=_latest_release))
+                        'The app will try to restart.').format(release=_latest_release),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Ignore)
             if res == QMessageBox.StandardButton.Yes:
                 update_with_pip()
+            elif res == QMessageBox.StandardButton.Ignore:
+                self.settings.ignored_version = _latest_release.version
         else:
             QMessageBox.information(self, self.tr('Release Info'), self.tr('You are using the latest version.'))
 
