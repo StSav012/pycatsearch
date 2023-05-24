@@ -141,10 +141,10 @@ class MenuBar(QMenuBar):
             return QIcon.fromTheme(theme_name)
 
         if qta_name:
-            with suppress(ImportError):
+            with suppress(ImportError, Exception):
                 import qtawesome as qta
 
-                return qta.icon(*qta_name, **qta_specs)
+                return qta.icon(*qta_name, **qta_specs)  # might raise an `Exception` if the icon is not in the font
 
         if standard_pixmap is not None:
             return self.style().standardIcon(standard_pixmap)
