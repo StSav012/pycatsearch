@@ -168,6 +168,7 @@ class Downloader(Thread):
         species: list[dict[str, int | str]] = get_species()
         catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
         species_count: Final[int] = len(species)
+        skipped_count: int = 0
         catalog_entry: dict[str, int | str | list[dict[str, float]]]
         entry_index: int
         _e: dict[str, int | str]
@@ -175,8 +176,10 @@ class Downloader(Thread):
             catalog_entry = get_substance_catalog(_e)
             if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]:
                 catalog.append(catalog_entry)
+            else:
+                skipped_count += 1
             if self._state_queue is not None:
-                self._state_queue.put((len(catalog), species_count - entry_index))
+                self._state_queue.put((len(catalog), species_count - entry_index - skipped_count))
 
         self._catalog = catalog
 
