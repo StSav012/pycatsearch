@@ -170,6 +170,9 @@ class Downloader(Thread):
                     if self._state_queue is not None:
                         self._state_queue.put((len(catalog), species_count - future_entry_index - skipped_count))
 
+            if self._state_queue is not None:
+                self._state_queue.put((len(catalog), 0))
+
             return catalog
 
         with suppress(RuntimeError):  # it might be “cannot schedule new futures after shutdown”

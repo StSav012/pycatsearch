@@ -181,6 +181,9 @@ class Downloader(Thread):
             if self._state_queue is not None:
                 self._state_queue.put((len(catalog), species_count - entry_index - skipped_count))
 
+        if self._state_queue is not None:
+            self._state_queue.put((len(catalog), 0))
+
         self._catalog = catalog
 
 
