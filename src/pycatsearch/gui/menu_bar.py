@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+from contextlib import suppress
+from typing import Any
+
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QAction, QMenu, QMenuBar, QStyle, QWidget
 
@@ -16,36 +19,53 @@ class MenuBar(QMenuBar):
         self.menu_columns: QMenu = QMenu(self.tr('&Columns'), self)
         self.menu_copy_only: QMenu = QMenu(self.tr('Copy &Only'), self.menu_edit)
         self.action_load: QAction = QAction(
-            QIcon.fromTheme('document-open', self.style().standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton)),
+            self._icon('document-open', 'mdi6.folder-open', standard_pixmap=QStyle.StandardPixmap.SP_DialogOpenButton),
             self.tr('&Load Catalog...'),
             self.menu_file)
         self.action_reload: QAction = QAction(
-            QIcon.fromTheme('document-revert', self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload)),
+            self._icon('document-revert', 'mdi6.reload', standard_pixmap=QStyle.StandardPixmap.SP_BrowserReload),
             self.tr('&Reload Catalogs'),
             self.menu_file)
-        self.action_download_catalog: QAction = QAction(self.tr('&Download Catalog...'), self.menu_file)
-        self.action_preferences: QAction = QAction(self.tr('&Preferences...'), self.menu_file)
-        self.action_quit: QAction = QAction(QIcon.fromTheme('application-exit'), self.tr('&Quit'),
-                                            self.menu_file)
-        self.action_check_updates: QAction = QAction(self.tr('Check for Updates...'), self.menu_help)
+        self.action_download_catalog: QAction = QAction(
+            self._icon('network-receive', 'mdi6.download'),
+            self.tr('&Download Catalog...'),
+            self.menu_file)
+        self.action_preferences: QAction = QAction(
+            self._icon('preferences-other', 'mdi6.application-settings'),
+            self.tr('&Preferences...'),
+            self.menu_file)
+        self.action_quit: QAction = QAction(
+            self._icon('application-exit', 'mdi6.exit-run'),
+            self.tr('&Quit'),
+            self.menu_file)
+        self.action_check_updates: QAction = QAction(
+            self._icon('application-update', 'mdi6.update'),
+            self.tr('Check for Updates...'),
+            self.menu_help)
         self.action_about_catalogs: QAction = QAction(
-            QIcon.fromTheme('help-about', self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogInfoView)),
+            self._icon('document-properties', 'mdi6.information'),
             self.tr('About Catalogs...'),
             self.menu_help)
         self.action_about: QAction = QAction(
-            QIcon.fromTheme('help-about', self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogInfoView)),
+            self._icon('help-about', 'mdi6.help', standard_pixmap=QStyle.StandardPixmap.SP_FileDialogInfoView),
             self.tr('&About...'),
             self.menu_help)
-        self.action_about_qt: QAction = QAction(self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarMenuButton),
-                                                self.tr('About &Qt...'), self.menu_help)
-        self.action_copy: QAction = QAction(QIcon.fromTheme('edit-copy'), self.tr('Co&py Selection'),
-                                            self.menu_edit)
+        self.action_about_qt: QAction = QAction(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarMenuButton),
+            self.tr('About &Qt...'),
+            self.menu_help)
+        self.action_copy: QAction = QAction(
+            self._icon('edit-copy', 'mdi6.content-copy'),
+            self.tr('Co&py Selection'),
+            self.menu_edit)
         self.action_clear: QAction = QAction(
-            QIcon.fromTheme('edit-clear', self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton)),
+            self._icon('edit-clear', 'mdi6.backspace', standard_pixmap=QStyle.StandardPixmap.SP_DialogResetButton),
             self.tr('&Clear Results'),
             self.menu_edit)
-        self.action_select_all: QAction = QAction(QIcon.fromTheme('edit-select-all'), self.tr('&Select All'),
-                                                  self.menu_edit)
+        self.action_select_all: QAction = QAction(
+            self._icon('edit-select-all', 'mdi6.select-all'),
+            self.tr('&Select All'),
+            self.menu_edit)
         self.action_copy_name: QAction = QAction(self.tr('&Substance Name'), self.menu_copy_only)
         self.action_copy_frequency: QAction = QAction(self.tr('&Frequency'), self.menu_copy_only)
         self.action_copy_intensity: QAction = QAction(self.tr('&Intensity'), self.menu_copy_only)
@@ -55,7 +75,11 @@ class MenuBar(QMenuBar):
         self.action_show_intensity: QAction = QAction(self.tr('&Intensity'), self.menu_columns)
         self.action_show_lower_state_energy: QAction = QAction(self.tr('&Lower State Energy'),
                                                                self.menu_columns)
-        self.action_substance_info: QAction = QAction(self.tr('Substance &Info'), self.menu_edit)
+        self.action_substance_info: QAction = QAction(
+            self._icon('dialog-information', 'mdi6.flask-empty-outline', 'mdi6.information-variant',
+                       options=[{}, {'scale_factor': 0.5}]),
+            self.tr('Substance &Info'),
+            self.menu_edit)
 
         self.action_preferences.setMenuRole(QAction.MenuRole.PreferencesRole)
         self.action_quit.setMenuRole(QAction.MenuRole.QuitRole)
@@ -109,3 +133,20 @@ class MenuBar(QMenuBar):
         self.action_show_frequency.setCheckable(True)
         self.action_show_intensity.setCheckable(True)
         self.action_show_lower_state_energy.setCheckable(True)
+
+    def _icon(self, theme_name: str, *qta_name: str,
+              standard_pixmap: QStyle.StandardPixmap | None = None,
+              **qta_specs: Any) -> QIcon:
+        if theme_name and QIcon.hasThemeIcon(theme_name):
+            return QIcon.fromTheme(theme_name)
+
+        if qta_name:
+            with suppress(ImportError):
+                import qtawesome as qta
+
+                return qta.icon(*qta_name, **qta_specs)
+
+        if standard_pixmap is not None:
+            return self.style().standardIcon(standard_pixmap)
+
+        return QIcon()

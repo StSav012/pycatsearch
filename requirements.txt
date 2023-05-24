@@ -7,5 +7,8 @@ aiohttp
 # for faster JSON loading
 orjson
 
+# for unified isons
+qtawesome
+
 # to build a package and install it
 setuptools
