@@ -59,7 +59,7 @@ class MenuBar(QMenuBar):
             self.tr('Co&py Selection'),
             self.menu_edit)
         self.action_clear: QAction = QAction(
-            self._icon('edit-clear', 'mdi6.backspace', standard_pixmap=QStyle.StandardPixmap.SP_DialogResetButton),
+            self._icon('edit-clear', 'mdi6.broom', standard_pixmap=QStyle.StandardPixmap.SP_DialogResetButton),
             self.tr('&Clear Results'),
             self.menu_edit)
         self.action_select_all: QAction = QAction(
