@@ -167,7 +167,8 @@ def merge_sorted(items_1: Sequence[SupportsLessAndEqual] | Sequence[_AnyType],
     i_2: int = 0
 
     if key is None:
-        key = lambda _: _
+        def key(value: _AnyType) -> SupportsLessAndEqual:
+            return value
 
     while i_1 < len(sorted_items_1) and i_2 < len(sorted_items_2):
         last_i_1 = i_1
@@ -220,7 +221,9 @@ def search_sorted(threshold: SupportsLessAndEqual,
     if not items:
         raise ValueError('Empty sequence provided')
     if key is None:
-        key = lambda _: _
+        def key(value: _AnyType) -> SupportsLessAndEqual:
+            return value
+
     less: Callable[[SupportsLessAndEqual, SupportsLessAndEqual], bool] = le if maybe_equal else lt
     if not less(key(items[0]), threshold):
         return -1
