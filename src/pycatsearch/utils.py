@@ -602,10 +602,32 @@ class ReleaseInfo:
     def __bool__(self) -> bool:
         return bool(self.version) and bool(self.pub_date)
 
-    def __gt__(self, other: str) -> bool:
-        self_as_tuple: tuple[int | str, ...] = tuple(int(i) if i.isdigit() else i for i in self.version.split('.'))
-        other_as_tuple: tuple[int | str, ...] = tuple(int(i) if i.isdigit() else i for i in other.split('.'))
-        return self_as_tuple > other_as_tuple
+    def __lt__(self, other: str | ReleaseInfo) -> bool:
+        if isinstance(other, str):
+            other = ReleaseInfo(version=other)
+        i: str
+        j: str
+        for i, j in itertools.zip_longest(self.version.replace('-', '.').split('.'),
+                                          other.version.replace('-', '.').split('.'), fillvalue=''):
+            if i == j:
+                continue
+            if i.isdigit() and j.isdigit():
+                return int(i) < int(j)
+            else:
+                i_digits: str = ''.join(itertools.takewhile(str.isdigit, i))
+                j_digits: str = ''.join(itertools.takewhile(str.isdigit, j))
+                if i_digits != j_digits:
+                    if i_digits and j_digits:
+                        return int(i_digits) < int(j_digits)
+                    else:
+                        return i_digits < j_digits
+                return i < j
+        return False
+
+    def __eq__(self, other: str | ReleaseInfo) -> bool:
+        if isinstance(other, str):
+            other = ReleaseInfo(version=other)
+        return self.version == other.version
 
 
 def latest_release() -> ReleaseInfo:
