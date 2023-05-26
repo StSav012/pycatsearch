@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Callable, Final
+from typing import Any, Callable, Final, Hashable, Iterable, NamedTuple
 
-from qtpy.QtCore import QSettings
+from qtpy.QtCore import QObject, QSettings
 
 from ..utils import *
 
@@ -13,38 +13,18 @@ __all__ = ['Settings']
 
 class Settings(QSettings):
     """ convenient internal representation of the application settings """
-    FREQUENCY_UNITS: Final[list[str]] = ['MHz', 'GHz', 'cm⁻¹', 'nm']
-    INTENSITY_UNITS: Final[list[str]] = ['lg(nm² × MHz)', 'nm² × MHz', 'lg(cm / molecule)', 'cm / molecule']
-    ENERGY_UNITS: Final[list[str]] = ['cm⁻¹', 'meV', 'J']
-    TEMPERATURE_UNITS: Final[list[str]] = ['K', '°C']
-    LINE_ENDS: Final[list[str]] = [r'Line Feed (\n)', r'Carriage Return (\r)', r'CR+LF (\r\n)', r'LF+CR (\n\r)']
-    _LINE_ENDS: Final[list[str]] = ['\n', '\r', '\r\n', '\n\r']
-    CSV_SEPARATORS: Final[list[str]] = [r'comma (,)', r'tab (\t)', r'semicolon (;)', r'space ( )']
-    _CSV_SEPARATORS: Final[list[str]] = [',', '\t', ';', ' ']
 
-    DIALOG: dict[str, dict[str, tuple[Any, ...]]] = {
-        'When the program starts': {
-            'Load catalogs': ('load_last_catalogs',),
-            'Check for update': ('check_updates',),
-        },
-        'Display': {
-            'Allow rich text in formulas': ('rich_text_in_formulas',),
-        },
-        'Search': {
-            'Timeout:': (slice(1, 99), (' sec',), 'timeout',),
-        },
-        'Units': {
-            'Frequency:': (FREQUENCY_UNITS, 'frequency_unit'),
-            'Intensity:': (INTENSITY_UNITS, 'intensity_unit'),
-            'Energy:': (ENERGY_UNITS, 'energy_unit'),
-            'Temperature:': (TEMPERATURE_UNITS, 'temperature_unit'),
-        },
-        'Export': {
-            'With units': ('with_units',),
-            'Line ending:': (LINE_ENDS, _LINE_ENDS, 'line_end'),
-            'CSV separator:': (CSV_SEPARATORS, _CSV_SEPARATORS, 'csv_separator'),
-        }
-    }
+    class CallbackOnly(NamedTuple):
+        callback: str
+
+    class SpinboxAndCallback(NamedTuple):
+        range: slice
+        prefix_and_suffix: tuple[str, str]
+        callback: str
+
+    class ComboboxAndCallback(NamedTuple):
+        combobox_data: Iterable[str] | dict[Hashable, str]
+        callback: str
 
     TO_MHZ: Final[list[Callable[[float], float]]] = [lambda x: x, ghz_to_mhz, rec_cm_to_mhz, nm_to_mhz]
     FROM_MHZ: Final[list[Callable[[float], float]]] = [lambda x: x, mhz_to_ghz, mhz_to_rec_cm, mhz_to_nm]
@@ -76,8 +56,58 @@ class Settings(QSettings):
     TO_K: Final[list[Callable[[float], float]]] = [lambda x: x, lambda x: x + 273.15]
     FROM_K: Final[list[Callable[[float], float]]] = [lambda x: x, lambda x: x - 273.15]
 
-    def __init__(self, *args: Any) -> None:
-        super().__init__(*args)
+    def __init__(self, organization: str, application: str, parent: QObject | None = None) -> None:
+        super().__init__(organization, application, parent)
+
+        # for some reason, the dicts are not being translated when used as class variables
+        self.LINE_ENDS: Final[dict[str, str]] = {
+            '\n': self.tr(r'Line Feed (\n)'),
+            '\r': self.tr(r'Carriage Return (\r)'),
+            '\r\n': self.tr(r'CR+LF (\r\n)'),
+            '\n\r': self.tr(r'LF+CR (\n\r)')
+        }
+        self.CSV_SEPARATORS: Final[dict[str, str]] = {
+            ',': self.tr(r'comma (,)'),
+            '\t': self.tr(r'tab (\t)'),
+            ';': self.tr(r'semicolon (;)'),
+            ' ': self.tr(r'space ( )')
+        }
+        self.FREQUENCY_UNITS: Final[list[str]] = [self.tr('MHz'), self.tr('GHz'), self.tr('cm⁻¹'), self.tr('nm')]
+        self.INTENSITY_UNITS: Final[list[str]] = [self.tr('lg(nm² × MHz)'), self.tr('nm² × MHz'),
+                                                  self.tr('lg(cm / molecule)'), self.tr('cm / molecule')]
+        self.ENERGY_UNITS: Final[list[str]] = [self.tr('cm⁻¹'), self.tr('meV'), self.tr('J')]
+        self.TEMPERATURE_UNITS: Final[list[str]] = [self.tr('K'), self.tr('°C')]
+
+    @property
+    def dialog(self) -> (dict[(str
+                               | tuple[str, tuple[str, ...]]
+                               | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]]),
+                              dict[str, (Settings.CallbackOnly
+                                         | Settings.SpinboxAndCallback
+                                         | Settings.ComboboxAndCallback)]]):
+        return {
+            (self.tr('When the program starts'), ('mdi6.rocket-launch',)): {
+                self.tr('Load catalogs'): Settings.CallbackOnly('load_last_catalogs'),
+                self.tr('Check for update'): Settings.CallbackOnly('check_updates'),
+            },
+            (self.tr('Display'), ('mdi6.binoculars',)): {
+                self.tr('Allow rich text in formulas'): Settings.CallbackOnly('rich_text_in_formulas'),
+            },
+            (self.tr('Search'), ('mdi6.table-search',)): {
+                self.tr('Timeout:'): Settings.SpinboxAndCallback(slice(1, 99), ('', 'sec'), 'timeout'),
+            },
+            (self.tr('Units'), ('mdi6.pencil-ruler',)): {
+                self.tr('Frequency:'): Settings.ComboboxAndCallback(self.FREQUENCY_UNITS, 'frequency_unit'),
+                self.tr('Intensity:'): Settings.ComboboxAndCallback(self.INTENSITY_UNITS, 'intensity_unit'),
+                self.tr('Energy:'): Settings.ComboboxAndCallback(self.ENERGY_UNITS, 'energy_unit'),
+                self.tr('Temperature:'): Settings.ComboboxAndCallback(self.TEMPERATURE_UNITS, 'temperature_unit'),
+            },
+            (self.tr('Export'), ('mdi6.file-export',)): {
+                self.tr('With units'): Settings.CallbackOnly('with_units'),
+                self.tr('Line ending:'): Settings.ComboboxAndCallback(self.LINE_ENDS, 'line_end'),
+                self.tr('CSV separator:'): Settings.ComboboxAndCallback(self.CSV_SEPARATORS, 'csv_separator'),
+            }
+        }
 
     @property
     def frequency_unit(self) -> int:
@@ -265,27 +295,27 @@ class Settings(QSettings):
     @property
     def line_end(self) -> str:
         self.beginGroup('export')
-        v: int = self.value('lineEnd', self._LINE_ENDS.index(os.linesep), int)
+        v: int = self.value('lineEnd', list(self.LINE_ENDS.keys()).index(os.linesep), int)
         self.endGroup()
-        return self._LINE_ENDS[v]
+        return list(self.LINE_ENDS.keys())[v]
 
     @line_end.setter
     def line_end(self, new_value: str) -> None:
         self.beginGroup('export')
-        self.setValue('lineEnd', self._LINE_ENDS.index(new_value))
+        self.setValue('lineEnd', list(self.LINE_ENDS.keys()).index(new_value))
         self.endGroup()
 
     @property
     def csv_separator(self) -> str:
         self.beginGroup('export')
-        v: int = self.value('csvSeparator', self._CSV_SEPARATORS.index('\t'), int)
+        v: int = self.value('csvSeparator', list(self.CSV_SEPARATORS.keys()).index('\t'), int)
         self.endGroup()
-        return self._CSV_SEPARATORS[v]
+        return list(self.CSV_SEPARATORS.keys())[v]
 
     @csv_separator.setter
     def csv_separator(self, new_value: str) -> None:
         self.beginGroup('export')
-        self.setValue('csvSeparator', self._CSV_SEPARATORS.index(new_value))
+        self.setValue('csvSeparator', list(self.CSV_SEPARATORS.keys()).index(new_value))
         self.endGroup()
 
     @property
