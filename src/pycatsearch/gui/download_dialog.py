@@ -235,7 +235,7 @@ class DownloadDialog(QWizard):
             _formats: dict[tuple[str, ...], str] = {
                 tuple(all_cases('.json.gz')): self.tr('JSON with GZip compression', 'file type'),
                 tuple(all_cases('.json.bz2')): self.tr('JSON with Bzip2 compression', 'file type'),
-                tuple(*all_cases('.json.xz'), *all_cases('.json.lzma')):
+                (*all_cases('.json.xz'), *all_cases('.json.lzma')):
                     self.tr('JSON with LZMA2 compression', 'file type'),
                 tuple(all_cases('.json')): self.tr('JSON', 'file type'),
             }
