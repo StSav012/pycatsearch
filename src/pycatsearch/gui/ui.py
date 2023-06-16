@@ -272,7 +272,7 @@ class LinesListModel(QAbstractTableModel):
 @final
 class UI(QMainWindow):
     def __init__(self, catalog: Catalog,
-                 parent: QWidget = None) -> None:
+                 parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.catalog: Catalog = catalog
         self.settings: Settings = Settings('SavSoft', 'CatSearch', self)
