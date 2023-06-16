@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Callable, Final
+from typing import Any, Callable, Final, final
 
 from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt, Slot
 from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QCursor, QIcon, QPainter, QPixmap,
@@ -269,6 +269,7 @@ class LinesListModel(QAbstractTableModel):
         self.endInsertRows()
 
 
+@final
 class UI(QMainWindow):
     def __init__(self, catalog: Catalog,
                  parent: QWidget = None) -> None:
