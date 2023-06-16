@@ -9,7 +9,7 @@ from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QC
                         QScreen, QTextDocument)
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QGridLayout,
                             QHeaderView, QMainWindow, QMessageBox, QPushButton, QStatusBar, QStyle,
-                            QStyleOptionViewItem, QStyledItemDelegate, QTableView, QTableWidgetSelectionRange, QWidget)
+                            QStyleOptionViewItem, QStyledItemDelegate, QTableView, QWidget)
 from qtpy.compat import getopenfilenames
 
 from .catalog_info import CatalogInfo
@@ -413,6 +413,7 @@ class UI(QMainWindow):
         self.menu_bar.action_copy.triggered.connect(self._on_action_copy_triggered)
         self.menu_bar.action_select_all.triggered.connect(self._on_action_select_all_triggered)
         self.menu_bar.action_reload.triggered.connect(self._on_action_reload_triggered)
+        self.menu_bar.action_copy_current.triggered.connect(self._on_action_copy_current_triggered)
         self.menu_bar.action_copy_name.triggered.connect(self._on_action_copy_name_triggered)
         self.menu_bar.action_copy_frequency.triggered.connect(self._on_action_copy_frequency_triggered)
         self.menu_bar.action_copy_intensity.triggered.connect(self._on_action_copy_intensity_triggered)
@@ -603,13 +604,21 @@ class UI(QMainWindow):
             return '<ul><li>' + f'</li>{self.settings.line_end}<li>'.join(lines) + '</li></ul>'
 
         text_to_copy: list[str] = []
-        selection: QTableWidgetSelectionRange
-        for row in self.results_table.selectionModel().selectedRows(col):
-            text_to_copy.append(self.results_model.data(row))
+        row: QModelIndex
+        for row in (self.results_table.selectionModel().selectedRows(col)
+                    or [self.results_table.selectionModel().currentIndex()]):
+            if row.isValid():
+                text_to_copy.append(self.results_model.data(row))
+        if not text_to_copy:
+            return
         if col == 0:
             copy_to_clipboard(html_list(text_to_copy), Qt.TextFormat.RichText)
         else:
             copy_to_clipboard(self.settings.line_end.join(text_to_copy), Qt.TextFormat.PlainText)
+
+    @Slot()
+    def _on_action_copy_current_triggered(self) -> None:
+        self.copy_selected_items(self.results_table.selectionModel().currentIndex().column())
 
     @Slot()
     def _on_action_copy_name_triggered(self) -> None:
