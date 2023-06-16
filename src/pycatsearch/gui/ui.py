@@ -486,10 +486,10 @@ class UI(QMainWindow):
             for f in _formats.keys():
                 all_supported_extensions.extend(ensure_prefix(_f, '*') for _f in f)
             format_lines: list[str] = [''.join((
-                    self.tr('All supported', 'file type'),
-                    '(',
-                    ' '.join(ensure_prefix(_f, '*') for _f in all_supported_extensions),
-                    ')'))]
+                self.tr('All supported', 'file type'),
+                '(',
+                ' '.join(ensure_prefix(_f, '*') for _f in all_supported_extensions),
+                ')'))]
             n: str
             for f, n in _formats.items():
                 format_lines.append(''.join((n, '(', ' '.join(ensure_prefix(_f, '*') for _f in f), ')')))
