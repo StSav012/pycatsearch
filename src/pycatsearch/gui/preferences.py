@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import logging
-from contextlib import suppress
 from functools import partial
 from typing import Any, Hashable, cast
 
 from qtpy.QtCore import QByteArray, Qt
-from qtpy.QtGui import QCloseEvent, QIcon
+from qtpy.QtGui import QCloseEvent
 from qtpy.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QHBoxLayout,
                             QListWidget, QScrollArea, QSpinBox, QStackedWidget, QVBoxLayout, QWidget, QListWidgetItem)
 
@@ -89,6 +88,8 @@ class PreferencesBody(QScrollArea):
     """ The main area of the GUI preferences dialog """
 
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
+        from . import icon  # import locally to avoid a circular import
+
         super().__init__(parent)
 
         self.settings: Settings = settings
@@ -100,15 +101,6 @@ class PreferencesBody(QScrollArea):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setFrameStyle(0)
-
-        def icon(*qta_name: str, **qta_specs: Any) -> QIcon:
-            if qta_name:
-                with suppress(ImportError, Exception):
-                    from qtawesome import icon
-
-                    return icon(*qta_name, **qta_specs)  # might raise an `Exception` if the icon is not in the font
-
-            return QIcon()
 
         layout: QHBoxLayout = QHBoxLayout(widget)
         content: QListWidget = QListWidget(widget)

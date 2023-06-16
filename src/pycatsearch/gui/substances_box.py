@@ -15,6 +15,8 @@ __all__ = ['SubstancesBox']
 
 class SubstancesBox(QGroupBox):
     def __init__(self, catalog: Catalog, settings: Settings, parent: QWidget | None = None) -> None:
+        from . import icon  # import locally to avoid a circular import
+
         super().__init__(parent)
 
         self._catalog: Catalog = catalog
@@ -46,6 +48,8 @@ class SubstancesBox(QGroupBox):
         self._button_select_none.setStatusTip(self._button_select_none.tr('Clear substances list selection'))
         self._button_select_none.setText(self._button_select_none.tr('Select None'))
         self._layout_substance.addWidget(self._button_select_none)
+
+        self._button_select_none.setIcon(icon('mdi6.checkbox-blank-off-outline'))
 
         self._text_substance.textChanged.connect(self._on_text_changed)
         self._check_keep_selection.toggled.connect(self._on_check_save_selection_toggled)

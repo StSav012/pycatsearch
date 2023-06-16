@@ -296,6 +296,8 @@ class UI(QMainWindow):
         self.status_bar: QStatusBar = QStatusBar(self)
 
         def setup_ui() -> None:
+            from . import icon  # import locally to avoid a circular import
+
             # https://ru.stackoverflow.com/a/1032610
             window_icon: QPixmap = QPixmap()
             window_icon.loadFromData(b'''\
@@ -374,6 +376,8 @@ class UI(QMainWindow):
             self.setStatusBar(self.status_bar)
 
             self.button_search.setShortcut('Ctrl+Return')
+
+            self.button_search.setIcon(icon('mdi6.magnify'))
 
             self.adjustSize()
 
