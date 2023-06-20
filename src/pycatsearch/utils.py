@@ -35,11 +35,11 @@ __all__ = ['M_LOG10E',
 
 M_LOG10E: Final[float] = math.log10(math.e)
 
-T0: Final[float] = 300.00
-k: Final[float] = 1.380649000e-23  # https://physics.nist.gov/cgi-bin/cuu/Value?k
-h: Final[float] = 6.626070150e-34  # https://physics.nist.gov/cgi-bin/cuu/Value?h
-e: Final[float] = 1.602176634e-19  # https://physics.nist.gov/cgi-bin/cuu/Value?e
-c: Final[float] = 299792458.00000  # https://physics.nist.gov/cgi-bin/cuu/Value?c
+T0: Final[float] = 300.00  # [K], see https://spec.jpl.nasa.gov/ftp/pub/catalog/doc/catdoc.pdf
+k: Final[float] = 1.380649000e-23  # [J/K],  see https://physics.nist.gov/cgi-bin/cuu/Value?k
+h: Final[float] = 6.626070150e-34  # [J/Hz], see https://physics.nist.gov/cgi-bin/cuu/Value?h
+e: Final[float] = 1.602176634e-19  # [C],    see https://physics.nist.gov/cgi-bin/cuu/Value?e
+c: Final[float] = 299_792_458.000  # [m/s],  see https://physics.nist.gov/cgi-bin/cuu/Value?c
 
 CATALOG: Final[str] = 'catalog'
 BUILD_TIME: Final[str] = 'build_time'
