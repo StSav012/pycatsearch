@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from qtpy.QtCore import QModelIndex, Qt, Slot
-from qtpy.QtWidgets import (QAbstractItemView, QCheckBox, QGroupBox, QLineEdit, QListWidget,
+from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox, QGroupBox, QLineEdit, QListWidget,
                             QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
 
 from .settings import Settings
@@ -40,6 +40,7 @@ class SubstancesBox(QGroupBox):
         self._list_substance.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self._list_substance.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._list_substance.setSortingEnabled(False)
+        self._list_substance.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self._layout_substance.addWidget(self._list_substance)
         self._check_keep_selection.setStatusTip(
             self._check_keep_selection.tr('Keep substances list selection through filter changes'))
