@@ -4,12 +4,12 @@ from __future__ import annotations
 import math
 from typing import Any, Callable, Final, final
 
-from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt, Slot
+from qtpy.QtCore import QAbstractTableModel, QByteArray, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt, Slot
 from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QCursor, QIcon, QPainter, QPixmap,
                         QScreen, QTextDocument)
-from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QGridLayout,
-                            QHeaderView, QMainWindow, QMessageBox, QPushButton, QStatusBar, QStyle,
-                            QStyleOptionViewItem, QStyledItemDelegate, QTableView, QWidget)
+from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
+                            QMainWindow, QMessageBox, QPushButton, QSplitter, QStatusBar, QStyle, QStyleOptionViewItem,
+                            QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
 from qtpy.compat import getopenfilenames
 
 from .catalog_info import CatalogInfo
@@ -279,19 +279,19 @@ class UI(QMainWindow):
         self.catalog: Catalog = catalog
         self.settings: Settings = Settings('SavSoft', 'CatSearch', self)
 
-        self.central_widget: QWidget = QWidget(self)
-        self.layout_main: QGridLayout = QGridLayout(self.central_widget)
+        self._central_widget: QSplitter = QSplitter(Qt.Orientation.Vertical, self)
+        self._top_matter: QSplitter = QSplitter(Qt.Orientation.Horizontal, self._central_widget)
+        self._right_matter: QWidget = QWidget(self._central_widget)
 
-        self.layout_options: QFormLayout = QFormLayout()
-        self.spin_intensity: FloatSpinBox = FloatSpinBox(self.central_widget)
-        self.spin_temperature: QDoubleSpinBox = QDoubleSpinBox(self.central_widget)
+        self.spin_intensity: FloatSpinBox = FloatSpinBox(self._central_widget)
+        self.spin_temperature: QDoubleSpinBox = QDoubleSpinBox(self._central_widget)
 
-        self.box_substance: SubstancesBox = SubstancesBox(self.catalog, self.settings, self.central_widget)
-        self.box_frequency: FrequencyBox = FrequencyBox(self.settings, self.central_widget)
-        self.button_search: QPushButton = QPushButton(self.central_widget)
+        self.box_substance: SubstancesBox = SubstancesBox(self.catalog, self.settings, self._central_widget)
+        self.box_frequency: FrequencyBox = FrequencyBox(self.settings, self._central_widget)
+        self.button_search: QPushButton = QPushButton(self._central_widget)
 
         self.results_model: LinesListModel = LinesListModel(self.settings, self)
-        self.results_table: QTableView = QTableView(self.central_widget)
+        self.results_table: QTableView = QTableView(self._central_widget)
 
         self.menu_bar: MenuBar = MenuBar(self)
 
@@ -317,9 +317,10 @@ class UI(QMainWindow):
                 self.setWindowTitle(self.tr('PyCatSearch (version {0})').format(__version__))
             else:
                 self.setWindowTitle(self.tr('PyCatSearch'))
-            self.setCentralWidget(self.central_widget)
-            self.layout_main.setColumnStretch(0, 1)
-            self.layout_main.setRowStretch(4, 1)
+            self.setCentralWidget(self._central_widget)
+
+            layout_right: QVBoxLayout = QVBoxLayout()
+            layout_options: QFormLayout = QFormLayout()
 
             self.results_table.setModel(self.results_model)
             self.results_table.setItemDelegateForColumn(0, HTMLDelegate())
@@ -341,13 +342,12 @@ class UI(QMainWindow):
             self.results_table.horizontalHeader().setSectionsMovable(True)
             self.results_table.verticalHeader().setVisible(False)
             self.results_table.verticalHeader().setHighlightSections(False)
-            self.layout_main.addWidget(self.results_table, 4, 0, 1, 3)
 
             # substance selection
-            self.layout_main.addWidget(self.box_substance, 0, 0, 4, 1)
+            self._top_matter.addWidget(self.box_substance)
 
             # frequency limits
-            self.layout_main.addWidget(self.box_frequency, 0, 1, 2, 1)
+            layout_right.addWidget(self.box_frequency, 1)
 
             self.spin_intensity.setAlignment(Qt.AlignmentFlag.AlignRight
                                              | Qt.AlignmentFlag.AlignTrailing
@@ -359,7 +359,7 @@ class UI(QMainWindow):
             self.spin_intensity.setSingleStep(0.1)
             self.spin_intensity.setValue(-6.54)
             self.spin_intensity.setStatusTip(self.spin_intensity.tr('Limit shown spectral lines'))
-            self.layout_options.addRow(self.layout_options.tr('Minimal Intensity:'), self.spin_intensity)
+            layout_options.addRow(layout_options.tr('Minimal Intensity:'), self.spin_intensity)
             self.spin_temperature.setAlignment(Qt.AlignmentFlag.AlignRight
                                                | Qt.AlignmentFlag.AlignTrailing
                                                | Qt.AlignmentFlag.AlignVCenter)
@@ -368,11 +368,21 @@ class UI(QMainWindow):
             self.spin_temperature.setValue(300.0)
             self.spin_temperature.setStatusTip(self.spin_temperature.tr('Temperature to calculate intensity'))
             self.spin_temperature.setSuffix(self.spin_temperature.tr(' K'))
-            self.layout_options.addRow(self.layout_options.tr('Temperature:'), self.spin_temperature)
-            self.layout_main.addLayout(self.layout_options, 2, 1, 1, 1)
+            layout_options.addRow(layout_options.tr('Temperature:'), self.spin_temperature)
+            layout_right.addLayout(layout_options, 0)
 
             self.button_search.setText(self.button_search.tr('Show'))
-            self.layout_main.addWidget(self.button_search, 3, 1, 1, 1)
+            layout_right.addWidget(self.button_search, 0)
+
+            self._right_matter.setLayout(layout_right)
+            self._top_matter.addWidget(self._right_matter)
+            self._top_matter.setStretchFactor(0, 1)
+            self._top_matter.setChildrenCollapsible(False)
+
+            self._central_widget.addWidget(self._top_matter)
+            self._central_widget.addWidget(self.results_table)
+            self._central_widget.setStretchFactor(1, 1)
+            self._central_widget.setChildrenCollapsible(False)
 
             self.setMenuBar(self.menu_bar)
             self.setStatusBar(self.status_bar)
@@ -783,20 +793,20 @@ class UI(QMainWindow):
         self.toggle_results_table_column_visibility(2, self.menu_bar.action_show_intensity.isChecked())
         self.menu_bar.action_show_lower_state_energy.setChecked(self.settings.value('lowerStateEnergy', False, bool))
         self.toggle_results_table_column_visibility(3, self.menu_bar.action_show_lower_state_energy.isChecked())
-        self.results_table.horizontalHeader().restoreState(self.settings.value('state'))
-        self.results_table.horizontalHeader().restoreGeometry(self.settings.value('geometry'))
+        self.results_table.horizontalHeader().restoreState(self.settings.value('state', QByteArray()))
+        self.results_table.horizontalHeader().restoreGeometry(self.settings.value('geometry', QByteArray()))
         self.settings.endGroup()
         self.settings.beginGroup('window')
         screens: list[QScreen] = QApplication.screens()
         if screens:
             self.move(round(0.5 * (screens[0].size().width() - self.size().width())),
                       round(0.5 * (screens[0].size().height() - self.size().height())))  # Fallback: Center the window
-        window_settings = self.settings.value('geometry')
-        if window_settings is not None:
-            self.restoreGeometry(window_settings)
-        window_settings = self.settings.value('state')
-        if window_settings is not None:
-            self.restoreState(window_settings)
+        self.restoreGeometry(self.settings.value('geometry', QByteArray()))
+        self.restoreState(self.settings.value('state', QByteArray()))
+        self._top_matter.restoreGeometry(self.settings.value('verticalSplitterGeometry', QByteArray()))
+        self._top_matter.restoreState(self.settings.value('verticalSplitterState', QByteArray()))
+        self._central_widget.restoreGeometry(self.settings.value('horizontalSplitterGeometry', QByteArray()))
+        self._central_widget.restoreState(self.settings.value('horizontalSplitterState', QByteArray()))
         self.settings.endGroup()
         self.fill_parameters()
 
@@ -824,6 +834,10 @@ class UI(QMainWindow):
         self.settings.beginGroup('window')
         self.settings.setValue('geometry', self.saveGeometry())
         self.settings.setValue('state', self.saveState())
+        self.settings.setValue('verticalSplitterGeometry', self._top_matter.saveGeometry())
+        self.settings.setValue('verticalSplitterState', self._top_matter.saveState())
+        self.settings.setValue('horizontalSplitterGeometry', self._central_widget.saveGeometry())
+        self.settings.setValue('horizontalSplitterState', self._central_widget.saveState())
         self.settings.endGroup()
         self.box_substance.save_settings()
         self.box_frequency.save_settings()
