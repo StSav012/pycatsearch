@@ -30,6 +30,8 @@ __all__ = ['UI']
 
 def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.PlainText) -> None:
     clipboard: QClipboard = QApplication.clipboard()
+    if not text:
+        return
     mime_data: QMimeData = QMimeData()
     if isinstance(text_type, str):
         mime_data.setData(text_type, text.encode())
@@ -419,6 +421,7 @@ class UI(QMainWindow):
         self.menu_bar.action_copy_intensity.triggered.connect(self._on_action_copy_intensity_triggered)
         self.menu_bar.action_copy_lower_state_energy.triggered.connect(
             self._on_action_copy_lower_state_energy_triggered)
+        self.menu_bar.action_show_substance.toggled.connect(self._on_action_show_substance_toggled)
         self.menu_bar.action_show_frequency.toggled.connect(self._on_action_show_frequency_toggled)
         self.menu_bar.action_show_intensity.toggled.connect(self._on_action_show_intensity_toggled)
         self.menu_bar.action_show_lower_state_energy.toggled.connect(self._on_action_show_lower_state_energy_toggled)
@@ -548,27 +551,47 @@ class UI(QMainWindow):
         Convert selected rows to string for copying as rich text
         :return: the rich text representation of the selected table lines
         """
-        text: list[str] = []
-        r: QModelIndex
-        units: dict[int, str] = {
-            1: self.settings.frequency_unit_str,
-            2: self.settings.intensity_unit_str,
-            3: self.settings.energy_unit_str,
-        }
-        for r in self.results_table.selectionModel().selectedRows():
-            row: LinesListModel.DataType = self.results_model.row(r.row())
+        if not self.results_table.selectionModel().selectedRows():
+            return ''
+
+        units: list[str] = [
+            '',
+            self.settings.frequency_unit_str,
+            self.settings.intensity_unit_str,
+            self.settings.energy_unit_str,
+        ]
+        with_units: bool = self.settings.with_units
+
+        def format_value(value: Any, unit: str) -> str:
+            return (self.tr('{value} {unit}', 'format value in html').format(value=value, unit=unit)
+                    if with_units and unit
+                    else self.tr('{value}', 'format value in html').format(value=value))
+
+        columns_order: list[int] = [self.results_table.horizontalHeader().logicalIndex(_c)
+                                    for _c, _a in zip(range(self.results_table.horizontalHeader().count()),
+                                                      self.menu_bar.menu_columns.actions(),
+                                                      strict=True)
+                                    if _a.isChecked()]
+        text: list[str] = ['<table>']
+        values: list[str]
+        index: QModelIndex
+        for index in self.results_table.selectionModel().selectedRows():
+            row: LinesListModel.DataType = self.results_model.row(index.row())
+            values = [
+                format_value(_v, _u)
+                for _u, _v, _a in zip(units,
+                                      (row.name, row.frequency, row.intensity, row.lower_state_energy),
+                                      self.menu_bar.menu_columns.actions(),
+                                      strict=True)
+                if _a.isChecked()
+            ]
             text.append(
                 '<tr><td>' +
-                f'</td>{self.settings.csv_separator}<td>'.join(
-                    [row.name] +
-                    [(str(_c) + ((' ' + units[_i]) if self.settings.with_units and _i in units else ''))
-                     for _i, (_c, _a) in enumerate(zip((row.frequency, row.intensity, row.lower_state_energy),
-                                                       self.menu_bar.menu_columns.actions()))
-                     if _a.isChecked()]
-                ) +
-                '</td></tr>' + self.settings.line_end
+                f'</td>{self.settings.csv_separator}<td>'.join(values[_c] for _c in columns_order) +
+                '</td></tr>'
             )
-        return '<table>' + self.settings.line_end + ''.join(text) + '</table>'
+        text.append('</table>')
+        return self.settings.line_end.join(text)
 
     @Slot()
     def _on_action_download_catalog_triggered(self) -> None:
@@ -604,11 +627,11 @@ class UI(QMainWindow):
             return '<ul><li>' + f'</li>{self.settings.line_end}<li>'.join(lines) + '</li></ul>'
 
         text_to_copy: list[str] = []
-        row: QModelIndex
-        for row in (self.results_table.selectionModel().selectedRows(col)
-                    or [self.results_table.selectionModel().currentIndex()]):
-            if row.isValid():
-                text_to_copy.append(self.results_model.data(row))
+        index: QModelIndex
+        for index in (self.results_table.selectionModel().selectedRows(col)
+                      or [self.results_table.selectionModel().currentIndex()]):
+            if index.isValid():
+                text_to_copy.append(self.results_model.data(index))
         if not text_to_copy:
             return
         if col == 0:
@@ -654,10 +677,16 @@ class UI(QMainWindow):
             syn.exec()
 
     def toggle_results_table_column_visibility(self, column: int, is_visible: bool) -> None:
+        if is_visible != self.results_table.isColumnHidden(column):
+            return
         if is_visible:
             self.results_table.showColumn(column)
         else:
             self.results_table.hideColumn(column)
+
+    @Slot(bool)
+    def _on_action_show_substance_toggled(self, is_checked: bool) -> None:
+        self.toggle_results_table_column_visibility(0, is_checked)
 
     @Slot(bool)
     def _on_action_show_frequency_toggled(self, is_checked: bool) -> None:
@@ -746,6 +775,8 @@ class UI(QMainWindow):
         self.minimal_intensity = self.settings.value('intensity', self.spin_intensity.value(), float)
         self.settings.endGroup()
         self.settings.beginGroup('displayedColumns')
+        self.menu_bar.action_show_substance.setChecked(self.settings.value('substance', True, bool))
+        self.toggle_results_table_column_visibility(0, self.menu_bar.action_show_substance.isChecked())
         self.menu_bar.action_show_frequency.setChecked(self.settings.value('frequency', True, bool))
         self.toggle_results_table_column_visibility(1, self.menu_bar.action_show_frequency.isChecked())
         self.menu_bar.action_show_intensity.setChecked(self.settings.value('intensity', True, bool))
@@ -783,6 +814,7 @@ class UI(QMainWindow):
         self.settings.setValue('intensity', self.minimal_intensity)
         self.settings.endGroup()
         self.settings.beginGroup('displayedColumns')
+        self.settings.setValue('substance', self.menu_bar.action_show_substance.isChecked())
         self.settings.setValue('frequency', self.menu_bar.action_show_frequency.isChecked())
         self.settings.setValue('intensity', self.menu_bar.action_show_intensity.isChecked())
         self.settings.setValue('lowerStateEnergy', self.menu_bar.action_show_lower_state_energy.isChecked())

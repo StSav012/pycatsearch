@@ -60,6 +60,7 @@ class MenuBar(QMenuBar):
             self.tr('Substance &Info'))
 
         self.menu_columns: QMenu = self.addMenu(self.tr('&Columns'))
+        self.action_show_substance: QAction = self.menu_columns.addAction(self.tr('&Substance'))
         self.action_show_frequency: QAction = self.menu_columns.addAction(self.tr('&Frequency'))
         self.action_show_intensity: QAction = self.menu_columns.addAction(self.tr('&Intensity'))
         self.action_show_lower_state_energy: QAction = self.menu_columns.addAction(self.tr('&Lower State Energy'))
@@ -97,6 +98,7 @@ class MenuBar(QMenuBar):
         self.action_copy_intensity.setShortcut('Ctrl+Shift+C, I')
         self.action_copy_lower_state_energy.setShortcut('Ctrl+Shift+C, E')
         self.action_substance_info.setShortcut('Ctrl+I')
+        self.action_show_substance.setCheckable(True)
         self.action_show_frequency.setCheckable(True)
         self.action_show_intensity.setCheckable(True)
         self.action_show_lower_state_energy.setCheckable(True)
