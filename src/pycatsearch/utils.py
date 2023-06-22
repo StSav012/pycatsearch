@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import builtins
 import html
 import html.entities
 import itertools
 import math
 import os
+import sys
 from numbers import Real
 from pathlib import Path
-from typing import Callable, Final, Iterator, Protocol, Sequence, TypeVar, cast, overload
+from typing import Any, Callable, Final, Iterable, Iterator, Protocol, Sequence, TypeVar, cast, overload
 
 __all__ = ['M_LOG10E',
            'T0', 'c', 'h', 'k', 'e',
@@ -31,7 +33,8 @@ __all__ = ['M_LOG10E',
            'within', 'chem_html', 'best_name', 'remove_html', 'wrap_in_html',
            'ensure_prefix', 'all_cases',
            'save_catalog_to_file',
-           'ReleaseInfo', 'latest_release', 'update_with_pip']
+           'ReleaseInfo', 'latest_release', 'update_with_pip',
+           'zip']
 
 M_LOG10E: Final[float] = math.log10(math.e)
 
@@ -685,3 +688,12 @@ def update_with_pip() -> None:
         subprocess.run(args=[sys.executable, '-m', 'pip', 'install', '-U', {__original_name__!r}]);\
         subprocess.Popen(args=[sys.executable, '-m', {__original_name__!r}])'''])
     sys.exit(0)
+
+
+# noinspection PyShadowingBuiltins
+def zip(*iterables: Iterable[Any], strict: bool = False) -> builtins.zip:
+    """ Intentionally override `builtins.zip` to ignore `strict` parameter in Python < 3.10 """
+    if sys.version_info < (3, 10):
+        return builtins.zip(*iterables)
+    else:
+        return builtins.zip(*iterables, strict=strict)
