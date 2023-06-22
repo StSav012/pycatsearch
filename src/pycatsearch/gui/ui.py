@@ -4,7 +4,8 @@ from __future__ import annotations
 import math
 from typing import Any, Callable, Final, final
 
-from qtpy.QtCore import QAbstractTableModel, QByteArray, QMimeData, QModelIndex, QPoint, QPointF, QRect, QSize, Qt, Slot
+from qtpy.QtCore import (QAbstractTableModel, QByteArray, QItemSelection, QMimeData, QModelIndex, QPoint, QPointF,
+                         QRect, QSize, Qt, Slot)
 from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QCursor, QIcon, QPainter, QPixmap,
                         QScreen, QTextDocument)
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
@@ -490,8 +491,8 @@ class UI(QMainWindow):
     def _on_table_context_menu_requested(self, pos: QPoint) -> None:
         self.menu_bar.menu_edit.popup(self.results_table.viewport().mapToGlobal(pos))
 
-    @Slot()
-    def _on_table_item_selection_changed(self) -> None:
+    @Slot(QItemSelection, QItemSelection)
+    def _on_table_item_selection_changed(self, _selected: QItemSelection, _deselected: QItemSelection) -> None:
         self.menu_bar.action_copy.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
         self.menu_bar.action_substance_info.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
 
