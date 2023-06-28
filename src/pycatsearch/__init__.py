@@ -43,16 +43,58 @@ def _make_old_qt_compatible_again() -> None:
     from qtpy.QtCore import QLibraryInfo, Qt
     from qtpy.QtWidgets import QApplication, QDialog
 
-    def from_iso_format(s: str) -> datetime:
+    def to_iso_format(s: str) -> str:
         if sys.version_info < (3, 11):
-            # NB: 'W' specifier is not fixed
-            if s.endswith('Z'):  # '2011-11-04T00:05:23Z'
+            import re
+            from typing import Callable
+
+            if s.endswith('Z'):
+                # '2011-11-04T00:05:23Z'
                 s = s[:-1] + '+00:00'
-            if s.isdigit() and len(s) == 8:  # '20111104'
-                s = '-'.join((s[:4], s[4:6], s[6:]))
-            elif s[:8].isdigit() and s[9:].isdigit() and len(s) >= 13:  # '20111104T000523'
-                s = '-'.join((s[:4], s[4:6], s[6:8])) + s[8] + ':'.join((s[9:11], s[11:13], s[13:]))
-        return datetime.fromisoformat(s)
+
+            def from_iso_datetime(m: re.Match[str]) -> str:
+                groups: dict[str, str] = m.groupdict('')
+                date: str = f"{m['year']}-{m['month']}-{m['day']}"
+                time: str = \
+                    f"{groups['hour']:0>2}:{groups['minute']:0>2}:{groups['second']:0>2}.{groups['fraction']:0<6}"
+                return date + 'T' + time + groups['offset']
+
+            def from_iso_calendar(m: re.Match[str]) -> str:
+                from datetime import date
+
+                groups: dict[str, str] = m.groupdict('')
+                date: str = \
+                    date.fromisocalendar(year=int(m['year']), week=int(m['week']), day=int(m['dof'])).isoformat()
+                time: str = \
+                    f"{groups['hour']:0>2}:{groups['minute']:0>2}:{groups['second']:0>2}.{groups['fraction']:0<6}"
+                return date + 'T' + time + groups['offset']
+
+            patterns: dict[str, Callable[[re.Match[str]], str]] = {
+                # '20111104', '20111104T000523283'
+                r'(?P<year>\d{4})(?P<month>\d{2})(?P<day>\d{2})'
+                r'(.(?P<hour>\d{2})(?P<minute>\d{2})(?P<second>\d{2})(?P<fraction>\d+)?)?'
+                r'(?P<offset>[+\-].+)?': from_iso_datetime,
+                # '2011-11-04', '2011-11-04T00:05:23.283', '2011-11-04T00:05:23.283+00:00'
+                r'(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})'
+                r'(.(?P<hour>\d{1,2}):(?P<minute>\d{1,2}):(?P<second>\d{1,2})(\.(?P<fraction>\d+))?)?'
+                r'(?P<offset>[+\-].+)?': from_iso_datetime,
+                # '2011-W01-2T00:05:23.283'
+                r'(?P<year>\d{4})-W(?P<week>\d{1,2})-(?P<dof>\d{1,2})'
+                r'(.(?P<hour>\d{1,2}):(?P<minute>\d{1,2}):(?P<second>\d{1,2})(\.(?P<fraction>\d+))?)?'
+                r'(?P<offset>[+\-].+)?': from_iso_calendar,
+                # '2011W0102T000523283'
+                r'(?P<year>\d{4})-W(?P<week>\d{2})-(?P<dof>\d{2})'
+                r'(.(?P<hour>\d{1,2})(?P<minute>\d{1,2})(?P<second>\d{1,2})(?P<fraction>\d+)?)?'
+                r'(?P<offset>[+\-].+)?': from_iso_calendar,
+            }
+            match: re.Match[str] | None
+            for p in patterns:
+                match = re.fullmatch(p, s)
+                if match is not None:
+                    s = patterns[p](match)
+                    break
+
+        return s
 
     if PYSIDE2:
         QApplication.exec = QApplication.exec_
@@ -66,7 +108,7 @@ def _make_old_qt_compatible_again() -> None:
 
     if _version_tuple(__version__) < _version_tuple('2.3.1'):
         _warn_about_outdated_package(package_name='QtPy', package_version='2.3.1',
-                                     release_time=from_iso_format('2023-03-28T23:06:05Z'))
+                                     release_time=datetime.fromisoformat(to_iso_format('2023-03-28T23:06:05Z')))
         if QT6:
             QLibraryInfo.LibraryLocation = QLibraryInfo.LibraryPath
     if _version_tuple(__version__) < _version_tuple('2.4.0'):
