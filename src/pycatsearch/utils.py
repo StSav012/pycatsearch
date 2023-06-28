@@ -93,7 +93,7 @@ HUMAN_READABLE: Final[dict[str, str]] = {
 def within(x: float, limits: tuple[float, float] | tuple[tuple[float, float], ...]) -> bool:
     if len(limits) < 2:
         raise ValueError('Invalid limits')
-    if all(isinstance(cast(float, limit), Real) for limit in limits):
+    if all(isinstance(limit, Real) for limit in limits):
         return min(limits) <= x <= max(limits)
     elif all(isinstance(limit, tuple) for limit in limits):
         return any(min(limit) <= x <= max(limit) for limit in limits)
@@ -470,51 +470,51 @@ def is_good_html(text: str) -> bool:
 
 def best_name(entry: dict[str, int | str | list[dict[str, float]]],
               allow_html: bool = True) -> str:
-    last: str = best_name.__dict__.get('last', dict()).get(entry[SPECIES_TAG], dict()).get(allow_html, '')
+    species_tag: int = cast(int, entry.get(SPECIES_TAG, 0))
+    last: str = best_name.__dict__.get('last', dict()).get(species_tag, dict()).get(allow_html, '')
     if last:
         return last
 
     def _best_name() -> str:
-        if allow_html and ISOTOPOLOG in entry and entry[ISOTOPOLOG]:
+        if isotopolog := entry.get(ISOTOPOLOG, ''):
             if allow_html:
-                if (is_good_html(str(entry[MOLECULE_SYMBOL]))
-                        and ((STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == entry[ISOTOPOLOG])
-                             or (STOICHIOMETRIC_FORMULA in entry
-                                 and entry[STOICHIOMETRIC_FORMULA] == entry[ISOTOPOLOG]))):
-                    if STATE_HTML in entry and entry[STATE_HTML]:
+                if (is_good_html(str(molecule_symbol := entry[MOLECULE_SYMBOL]))
+                        and (entry.get(STRUCTURAL_FORMULA, '') == isotopolog
+                             or entry.get(STOICHIOMETRIC_FORMULA, '') == isotopolog)):
+                    if state_html := cast(str, entry.get(STATE_HTML, '')):
                         # span tags are needed when the molecule symbol is malformed
-                        return f'<span>{entry[MOLECULE_SYMBOL]}</span>, ' \
-                               f'{chem_html(tex_to_html_entity(str(entry[STATE_HTML])))}'
-                    return str(entry[MOLECULE_SYMBOL])
+                        return f'<span>{molecule_symbol}</span>, ' \
+                               f'{chem_html(tex_to_html_entity(str(state_html)))}'
+                    return str(molecule_symbol)
                 else:
-                    if STATE_HTML in entry and entry[STATE_HTML]:
-                        return f'{chem_html(str(entry[ISOTOPOLOG]))}, ' \
-                               f'{chem_html(tex_to_html_entity(str(entry[STATE_HTML])))}'
-                    return chem_html(str(entry[ISOTOPOLOG]))
+                    if state_html := cast(str, entry.get(STATE_HTML, '')):
+                        return f'{chem_html(str(isotopolog))}, ' \
+                               f'{chem_html(tex_to_html_entity(str(state_html)))}'
+                    return chem_html(str(isotopolog))
             else:
-                if STATE_HTML in entry and entry[STATE_HTML]:
-                    return f'{entry[ISOTOPOLOG]}, {remove_html(tex_to_html_entity(entry[STATE_HTML]))}'
-                if STATE in entry and entry[STATE]:
-                    return f'{entry[ISOTOPOLOG]}, {remove_html(tex_to_html_entity(entry[STATE].strip("$")))}'
-                return entry[ISOTOPOLOG]
+                if state_html := cast(str, entry.get(STATE_HTML, '')):
+                    return f'{isotopolog}, {remove_html(tex_to_html_entity(state_html))}'
+                if state := cast(str, entry.get(STATE, '')):
+                    return f'{isotopolog}, {remove_html(tex_to_html_entity(state.strip("$")))}'
+                return isotopolog
 
         for key in (NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA):
-            if key in entry and entry[key]:
-                return chem_html(str(entry[key])) if allow_html else str(entry[key])
-        if TRIVIAL_NAME in entry and entry[TRIVIAL_NAME]:
-            return str(entry[TRIVIAL_NAME])
-        if SPECIES_TAG in entry and entry[SPECIES_TAG]:
-            return str(entry[SPECIES_TAG])
+            if candidate := entry.get(key, ''):
+                return chem_html(str(candidate)) if allow_html else str(candidate)
+        if trivial_name := entry.get(TRIVIAL_NAME, ''):
+            return str(trivial_name)
+        if species_tag:
+            return str(species_tag)
         return 'no name'
 
     res: str = _best_name()
-    if SPECIES_TAG not in entry:
+    if not species_tag:
         return res
     if 'last' not in best_name.__dict__:
         best_name.__dict__['last'] = dict()
-    if entry[SPECIES_TAG] not in best_name.__dict__['last']:
-        best_name.__dict__['last'][entry[SPECIES_TAG]] = dict()
-    best_name.__dict__['last'][entry[SPECIES_TAG]][allow_html] = res
+    if species_tag not in best_name.__dict__['last']:
+        best_name.__dict__['last'][species_tag] = dict()
+    best_name.__dict__['last'][species_tag][allow_html] = res
     return res
 
 
@@ -587,7 +587,7 @@ def all_cases(text: str) -> Iterator[str]:
 def save_catalog_to_file(filename: str | Path,
                          catalog: list[dict[str, int | str | list[dict[str, float]]]],
                          frequency_limits: tuple[float, float]) -> bool:
-    from catalog import Catalog
+    from .catalog import Catalog
 
     if not catalog:
         return False
@@ -626,6 +626,8 @@ class ReleaseInfo:
         return False
 
     def __eq__(self, other: str | ReleaseInfo) -> bool:
+        if not isinstance(other, (str, ReleaseInfo)):
+            return NotImplemented
         if isinstance(other, str):
             other = ReleaseInfo(version=other)
         return self.version == other.version
