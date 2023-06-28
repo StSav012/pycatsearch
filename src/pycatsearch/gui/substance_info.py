@@ -87,6 +87,12 @@ class SubstanceInfo(QDialog):
                 for key in entry:
                     if key == LINES:
                         continue
+                    elif key == ID:
+                        label = SelectableLabel(
+                            f'<a href="https://cdms.astro.uni-koeln.de/cdms/portal/catalog/{entry[key]}/">'
+                            f'{entry[key]}</a>',
+                            self)
+                        label.setOpenExternalLinks(True)
                     elif key == STATE_HTML:
                         label = SelectableLabel(chem_html(str(entry[key])), self)
                     elif key == INCHI_KEY:
