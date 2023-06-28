@@ -152,7 +152,7 @@ class SubstancesBox(QGroupBox):
     @Slot(QModelIndex)
     def _on_list_substance_double_clicked(self, index: QModelIndex) -> None:
         item: QListWidgetItem = self._list_substance.item(index.row())
-        ids: set[int] = item.data(Qt.ItemDataRole.UserRole)
+        ids: set[int] = item.data(Qt.ItemDataRole.UserRole).copy()
         if len(ids) > 1:
             sis: SubstanceInfoSelector = SubstanceInfoSelector(self.catalog, ids, parent=self)
             sis.exec()
