@@ -112,7 +112,7 @@ class LinesListModel(QAbstractTableModel):
             self.lower_state_energy: float = lower_state_energy
 
         def __eq__(self, other: LinesListModel.DataType) -> int:
-            if not isinstance(other, LinesListModel.DataTyp):
+            if not isinstance(other, LinesListModel.DataType):
                 return NotImplemented
             return (self.id == other.id
                     and self.frequency == other.frequency
