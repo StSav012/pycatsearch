@@ -87,8 +87,8 @@ class PreferencesPage(QWidget):
                 if current_text in value2.combobox_items:
                     combo_box.setCurrentIndex(value2.combobox_items.index(current_text))
                 else:
-                    combo_box.addItem(current_text)
-                    combo_box.setCurrentIndex(combo_box.count() - 1)
+                    combo_box.insertItem(0, current_text)
+                    combo_box.setCurrentIndex(0)
                 combo_box.setEditable(True)
                 combo_box.currentTextChanged.connect(partial(self._on_event, sender=combo_box))
                 layout.addRow(self.tr(key2), combo_box)
