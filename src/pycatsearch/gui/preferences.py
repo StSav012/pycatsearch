@@ -177,7 +177,7 @@ class Preferences(QDialog):
         layout: QVBoxLayout = QVBoxLayout(self)
         layout.addWidget(PreferencesBody(settings=settings, parent=parent))
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
-        buttons.rejected.connect(self.reject)
+        buttons.rejected.connect(self.close)
         layout.addWidget(buttons)
 
         self.settings.beginGroup('PreferencesDialog')
