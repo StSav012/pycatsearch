@@ -210,6 +210,7 @@ class Catalog:
                any_name: str = '',
                any_formula: str = '',
                any_name_or_formula: str = '',
+               anything: str = '',
                species_tag: int = 0,
                inchi_key: str = '',
                trivial_name: str = '',
@@ -234,6 +235,7 @@ class Catalog:
         :param str any_formula: a string to match the ``structuralformula``, ``moleculesymbol``,
                                 ``stoichiometricformula``, or ``isotopolog`` field.
         :param str any_name_or_formula: a string to match any field used by :param:any_name and :param:any_formula.
+        :param str anything: a string to match any field at all.
         :param int species_tag: a number to match the ``speciestag`` field.
         :param str inchi_key: a string to match the ``inchikey`` field.
                               See https://iupac.org/who-we-are/divisions/division-details/inchi/ for more.
@@ -279,7 +281,9 @@ class Catalog:
             return []
         start_time: float = time.monotonic()
         if (species_tag or inchi_key or trivial_name or structural_formula or name or stoichiometric_formula
-                or isotopolog or state or degrees_of_freedom or any_name or any_formula or any_name_or_formula):
+                or isotopolog or state or degrees_of_freedom or any_name or any_formula or any_name_or_formula
+                or anything):
+            anything_lowercase: str = anything.casefold()
             selected_entries = []
             for entry in self.catalog:
                 if timeout is not None and 0.0 < timeout <= time.monotonic() - start_time:
@@ -316,8 +320,13 @@ class Catalog:
                              or (MOLECULE_SYMBOL in entry and entry[MOLECULE_SYMBOL] == any_name_or_formula)
                              or (STOICHIOMETRIC_FORMULA in entry
                                  and entry[STOICHIOMETRIC_FORMULA] == any_name_or_formula)
-                             or (ISOTOPOLOG in entry and entry[ISOTOPOLOG] == any_name_or_formula))):
-                    filtered_entry = filter_by_frequency_and_intensity(entry)
+                             or (ISOTOPOLOG in entry and entry[ISOTOPOLOG] == any_name_or_formula))
+                        and (not anything
+                             or anything in map(str, entry.values())
+                             or anything_lowercase in (entry.get(TRIVIAL_NAME, '').casefold(),
+                                                       entry.get(NAME, '').casefold()))
+                ):
+                    filtered_entry: CatalogEntryType = filter_by_frequency_and_intensity(entry)
                     if filtered_entry[LINES]:
                         selected_entries.append(filtered_entry)
         else:

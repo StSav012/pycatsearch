@@ -890,7 +890,7 @@ class UI(QMainWindow):
                     self.catalog.filter(min_frequency=self.box_frequency.min_frequency,
                                         max_frequency=self.box_frequency.max_frequency,
                                         min_intensity=self.minimal_intensity,
-                                        any_name_or_formula=name,
+                                        anything=name,
                                         temperature=self.temperature,
                                         timeout=self.settings.timeout)
                     for name in self.box_substance.selected_substances

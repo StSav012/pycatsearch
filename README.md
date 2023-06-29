@@ -53,6 +53,7 @@ c.print(min_frequency=140141, max_frequency=140142)
   any_name: str = '',
   any_formula: str = '',
   any_name_or_formula: str = '',
+  anything: str = '',
   species_tag: int = 0,
   inchi: str = '',
   trivial_name: str = '',
@@ -74,6 +75,7 @@ c.print(min_frequency=140141, max_frequency=140142)
     - `str any_formula`: a string to match the ``structuralformula``, ``moleculesymbol``,
       ``stoichiometricformula``, or ``isotopolog`` field.
     - `str any_name_or_formula`: a string to match any field used by `any_name` and `any_formula`.
+    - `str anything`: a string to match any field at all.
     - `int species_tag`: a number to match the ``speciestag`` field.
     - `str inchi`: a string to match the ``inchikey`` field.
       See https://iupac.org/who-we-are/divisions/division-details/inchi/ for more.

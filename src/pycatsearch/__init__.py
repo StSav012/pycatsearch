@@ -139,6 +139,7 @@ def main() -> int:
                           help='a number to match the `species''tag` field')
     ap_group.add_argument('-n', '--any-name-or-formula', type=str,
                           help='a string to match any field used by `any_name` and `any_formula` options')
+    ap_group.add_argument('-a', '--anything', type=str, help='a string to match any field at all')
     ap_group.add_argument('--any-name', type=str, help='a string to match the `trivial''name` or the `name` field')
     ap_group.add_argument('--any-formula', type=str,
                           help='a string to match the `structural''formula`, `molecule''symbol`, '
@@ -161,7 +162,7 @@ def main() -> int:
     args: argparse.Namespace = ap.parse_intermixed_args()
 
     arg_names: list[str] = ['min_frequency', 'max_frequency', 'min_intensity', 'max_intensity',
-                            'temperature', 'species_tag', 'any_name_or_formula', 'any_name', 'any_formula',
+                            'temperature', 'species_tag', 'any_name_or_formula', 'anything', 'any_name', 'any_formula',
                             'inchi_key', 'trivial_name', 'structural_formula', 'name', 'stoichiometric_formula',
                             'isotopolog', 'state', 'degrees_of_freedom', 'timeout']
     search_args: dict[str, str | float | int] = dict((arg, getattr(args, arg)) for arg in arg_names
