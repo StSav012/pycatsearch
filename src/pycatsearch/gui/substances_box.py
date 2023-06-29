@@ -154,10 +154,16 @@ class SubstancesBox(QGroupBox):
         item: QListWidgetItem = self._list_substance.item(index.row())
         ids: set[int] = item.data(Qt.ItemDataRole.UserRole).copy()
         if len(ids) > 1:
-            sis: SubstanceInfoSelector = SubstanceInfoSelector(self.catalog, ids, parent=self)
+            sis: SubstanceInfoSelector = SubstanceInfoSelector(
+                self.catalog, ids,
+                inchi_key_search_url_template=self._settings.inchi_key_search_url_template,
+                parent=self)
             sis.exec()
         elif ids:  # if not empty
-            syn: SubstanceInfo = SubstanceInfo(self.catalog, ids.pop(), parent=self)
+            syn: SubstanceInfo = SubstanceInfo(
+                self.catalog, ids.pop(),
+                inchi_key_search_url_template=self._settings.inchi_key_search_url_template,
+                parent=self)
             syn.exec()
 
     def load_settings(self) -> None:

@@ -356,3 +356,16 @@ class Settings(QSettings):
         self.beginGroup('update')
         self.setValue('ignoredVersion', new_value)
         self.endGroup()
+
+    @property
+    def inchi_key_search_url_template(self) -> str:
+        self.beginGroup('info')
+        v: str = self.value('InChIKeySearchURLTemplate', 'https://pubchem.ncbi.nlm.nih.gov/#query={InChIKey}', str)
+        self.endGroup()
+        return v
+
+    @inchi_key_search_url_template.setter
+    def inchi_key_search_url_template(self, new_value: str) -> None:
+        self.beginGroup('info')
+        self.setValue('InChIKeySearchURLTemplate', new_value)
+        self.endGroup()

@@ -686,7 +686,8 @@ class UI(QMainWindow):
             syn: SubstanceInfo = SubstanceInfo(
                 self.catalog,
                 self.results_model.row(self.results_table.selectionModel().selectedRows()[0].row()).id,
-                self)
+                inchi_key_search_url_template=self.settings.inchi_key_search_url_template,
+                parent=self)
             syn.exec()
 
     def toggle_results_table_column_visibility(self, column: int, is_visible: bool) -> None:

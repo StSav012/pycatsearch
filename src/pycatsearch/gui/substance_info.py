@@ -8,6 +8,7 @@ from qtpy.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLabel, QLis
                             QWidget)
 
 from .selectable_label import SelectableLabel
+from .url_label import URLLabel
 from ..catalog import Catalog
 from ..utils import *
 
@@ -16,9 +17,11 @@ __all__ = ['SubstanceInfoSelector', 'SubstanceInfo']
 
 class SubstanceInfoSelector(QDialog):
     def __init__(self, catalog: Catalog, entry_ids: Collection[int],
-                 allow_html: bool = True, parent: QWidget | None = None) -> None:
+                 allow_html: bool = True, inchi_key_search_url_template: str = '',
+                 parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._catalog: Catalog = catalog
+        self._inchi_key_search_url_template: str = inchi_key_search_url_template
         self.setModal(True)
         self.setWindowTitle(self.tr('Select Substance'))
         if parent is not None:
@@ -55,7 +58,9 @@ class SubstanceInfoSelector(QDialog):
     def _on_list_double_clicked(self, index: QModelIndex) -> None:
         self.hide()
         item: QListWidgetItem = self._list_box.item(index.row())
-        syn: SubstanceInfo = SubstanceInfo(self._catalog, item.data(Qt.ItemDataRole.UserRole), self.parent())
+        syn: SubstanceInfo = SubstanceInfo(self._catalog, item.data(Qt.ItemDataRole.UserRole),
+                                           inchi_key_search_url_template=self._inchi_key_search_url_template,
+                                           parent=self.parent())
         syn.exec()
         self.accept()
 
@@ -66,7 +71,9 @@ class SubstanceInfoSelector(QDialog):
             return
         self.hide()
         item: QListWidgetItem = selected_items.pop()
-        syn: SubstanceInfo = SubstanceInfo(self._catalog, item.data(Qt.ItemDataRole.UserRole), self.parent())
+        syn: SubstanceInfo = SubstanceInfo(self._catalog, item.data(Qt.ItemDataRole.UserRole),
+                                           inchi_key_search_url_template=self._inchi_key_search_url_template,
+                                           parent=self.parent())
         syn.exec()
         self.accept()
 
@@ -74,7 +81,8 @@ class SubstanceInfoSelector(QDialog):
 class SubstanceInfo(QDialog):
     """ A simple dialog that displays the information about a substance from the loaded catalog """
 
-    def __init__(self, catalog: Catalog, entry_id: int, parent: QWidget | None = None) -> None:
+    def __init__(self, catalog: Catalog, entry_id: int, inchi_key_search_url_template: str = '',
+                 parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle(self.tr('Substance Info'))
@@ -88,17 +96,18 @@ class SubstanceInfo(QDialog):
                     if key == LINES:
                         continue
                     elif key == ID:
-                        label = SelectableLabel(
-                            f'<a href="https://cdms.astro.uni-koeln.de/cdms/portal/catalog/{entry[key]}/">'
-                            f'{entry[key]}</a>',
-                            self)
+                        label = URLLabel(
+                            url=f'https://cdms.astro.uni-koeln.de/cdms/portal/catalog/{entry[key]}/',
+                            text=f'{entry[key]}',
+                            parent=self)
                         label.setOpenExternalLinks(True)
                     elif key == STATE_HTML:
                         label = SelectableLabel(chem_html(str(entry[key])), self)
-                    elif key == INCHI_KEY:
-                        label = SelectableLabel(
-                            f'<a href="https://pubchem.ncbi.nlm.nih.gov/#query={entry[key]}">{entry[key]}</a>',
-                            self)
+                    elif key == INCHI_KEY and inchi_key_search_url_template:
+                        label = URLLabel(
+                            url=inchi_key_search_url_template.format(InChIKey=entry[key]),
+                            text=entry[key],
+                            parent=self)
                         label.setOpenExternalLinks(True)
                     else:
                         label = SelectableLabel(str(entry[key]), self)
