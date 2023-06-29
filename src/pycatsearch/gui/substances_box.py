@@ -104,6 +104,16 @@ class SubstancesBox(QGroupBox):
                         if plain_text_name not in list_items:
                             list_items[plain_text_name] = set()
                         list_items[plain_text_name].add(entry[ID])
+            # InChI Key match, see https://en.wikipedia.org/wiki/International_Chemical_Identifier#InChIKey
+            if (len(filter_text) == 27
+                    and filter_text[14] == '-' and filter_text[25] == '-'
+                    and filter_text.count('-') == 2):
+                for entry in self._catalog.catalog:
+                    plain_text_name = str(entry.get(INCHI_KEY, ''))
+                    if plain_text_name == filter_text:
+                        if plain_text_name not in list_items:
+                            list_items[plain_text_name] = set()
+                        list_items[plain_text_name].add(entry[ID])
         else:
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
                              STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
