@@ -4,8 +4,8 @@ from __future__ import annotations
 import math
 from typing import Any, Callable, Final, final
 
-from qtpy.QtCore import (QAbstractTableModel, QByteArray, QItemSelection, QMimeData, QModelIndex, QPoint, QPointF,
-                         QRect, QSize, Qt, Slot)
+from qtpy.QtCore import (QAbstractTableModel, QByteArray, QItemSelection, QMimeData, QModelIndex, QPersistentModelIndex,
+                         QPoint, QPointF, QRect, QSize, Qt, Slot)
 from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QCursor, QIcon, QPainter, QPixmap,
                         QScreen, QTextDocument)
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
@@ -59,7 +59,7 @@ class HTMLDelegate(QStyledItemDelegate):
         text_layout: QAbstractTextDocumentLayout = doc.documentLayout()
         return text_layout.anchorAt(point)
 
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex) -> None:
         self.initStyleOption(option, index)
         style: QStyle
         if option.widget:
@@ -79,7 +79,7 @@ class HTMLDelegate(QStyledItemDelegate):
         doc.documentLayout().draw(painter, ctx)
         painter.restore()
 
-    def sizeHint(self, option: QStyleOptionViewItem | None, index: QModelIndex) -> QSize:
+    def sizeHint(self, option: QStyleOptionViewItem | None, index: QModelIndex | QPersistentModelIndex) -> QSize:
         options: QStyleOptionViewItem = QStyleOptionViewItem(option)
         self.initStyleOption(options, index)
         doc: QTextDocument = QTextDocument()
@@ -112,6 +112,8 @@ class LinesListModel(QAbstractTableModel):
             self.lower_state_energy: float = lower_state_energy
 
         def __eq__(self, other: LinesListModel.DataType) -> int:
+            if not isinstance(other, LinesListModel.DataTyp):
+                return NotImplemented
             return (self.id == other.id
                     and self.frequency == other.frequency
                     and self.intensity == other.intensity
@@ -141,13 +143,13 @@ class LinesListModel(QAbstractTableModel):
         self._header[2] = substitute(unit_format, self.tr("Intensity"), self._settings.intensity_unit_str)
         self._header[3] = substitute(unit_format, self.tr("Lower state energy"), self._settings.energy_unit_str)
 
-    def rowCount(self, parent: QModelIndex = ...) -> int:
+    def rowCount(self, parent: QModelIndex | QPersistentModelIndex = ...) -> int:
         return min(len(self._data), self._rows_loaded)
 
-    def columnCount(self, parent: QModelIndex = ...) -> int:
+    def columnCount(self, parent: QModelIndex | QPersistentModelIndex = ...) -> int:
         return len(self._header)
 
-    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> str | None:
+    def data(self, index: QModelIndex | QPersistentModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> str | None:
         if index.isValid():
             if role == Qt.ItemDataRole.DisplayRole:
                 item: LinesListModel.DataType = self._data[index.row()]
@@ -260,10 +262,10 @@ class LinesListModel(QAbstractTableModel):
         self._data.sort(key=key, reverse=bool(order != Qt.SortOrder.AscendingOrder))
         self.endResetModel()
 
-    def canFetchMore(self, index: QModelIndex = QModelIndex()) -> bool:
+    def canFetchMore(self, index: QModelIndex | QPersistentModelIndex = QModelIndex()) -> bool:
         return len(self._data) > self._rows_loaded
 
-    def fetchMore(self, index: QModelIndex = QModelIndex()) -> None:
+    def fetchMore(self, index: QModelIndex | QPersistentModelIndex = QModelIndex()) -> None:
         # https://sateeshkumarb.wordpress.com/2012/04/01/paginated-display-of-table-data-in-pyqt/
         remainder: int = len(self._data) - self._rows_loaded
         items_to_fetch: int = min(remainder, LinesListModel.ROW_BATCH_COUNT)

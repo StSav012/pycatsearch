@@ -34,7 +34,7 @@ class DataModel(QAbstractTableModel):
     def columnCount(self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()) -> int:
         return 1 if all(info.build_datetime is None for info in self._data) else 2
 
-    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> str | None:
+    def data(self, index: QModelIndex | QPersistentModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> str | None:
         if index.isValid() and role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
                 return self._data[index.row()].filename
