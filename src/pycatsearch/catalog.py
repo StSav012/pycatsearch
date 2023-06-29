@@ -318,7 +318,7 @@ class Catalog:
                                                         entry.get(STOICHIOMETRIC_FORMULA, ''),
                                                         entry.get(ISOTOPOLOG, ''),))
                         and (not anything
-                             or anything in map(str, entry.values())
+                             or anything in (str(entry[key]) for key in entry if key != LINES)
                              or anything_lowercase in (entry.get(TRIVIAL_NAME, '').casefold(),
                                                        entry.get(NAME, '').casefold(),))
                 ):
