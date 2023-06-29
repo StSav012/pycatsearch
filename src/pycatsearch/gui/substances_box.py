@@ -97,10 +97,11 @@ class SubstancesBox(QGroupBox):
                         if plain_text_name not in list_items:
                             list_items[plain_text_name] = set()
                         list_items[plain_text_name].add(entry[ID])
+            # species tag suspected
             if filter_text.isdecimal():
                 for entry in self._catalog.catalog:
-                    plain_text_name = str(entry[SPECIES_TAG])
-                    if SPECIES_TAG in entry and plain_text_name.startswith(filter_text):
+                    plain_text_name = str(entry.get(SPECIES_TAG, ''))
+                    if plain_text_name.startswith(filter_text):
                         if plain_text_name not in list_items:
                             list_items[plain_text_name] = set()
                         list_items[plain_text_name].add(entry[ID])
