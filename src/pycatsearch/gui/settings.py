@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Callable, Final, Hashable, Iterable, NamedTuple
+from typing import Any, Callable, Final, Hashable, Iterable, NamedTuple, Sequence
 
 from qtpy.QtCore import QObject, QSettings
 
@@ -24,6 +24,10 @@ class Settings(QSettings):
 
     class ComboboxAndCallback(NamedTuple):
         combobox_data: Iterable[str] | dict[Hashable, str]
+        callback: str
+
+    class EditableComboboxAndCallback(NamedTuple):
+        combobox_items: Sequence[str]
         callback: str
 
     TO_MHZ: Final[list[Callable[[float], float]]] = [lambda x: x, ghz_to_mhz, rec_cm_to_mhz, nm_to_mhz]
@@ -56,6 +60,12 @@ class Settings(QSettings):
     TO_K: Final[list[Callable[[float], float]]] = [lambda x: x, lambda x: x + 273.15]
     FROM_K: Final[list[Callable[[float], float]]] = [lambda x: x, lambda x: x - 273.15]
 
+    INCHI_KEY_SEARCH_PROVIDERS: Final[list[str]] = [
+        'https://pubchem.ncbi.nlm.nih.gov/#query={InChIKey}',
+        'https://webbook.nist.gov/cgi/cbook.cgi?InChI={InChIKey}',
+        'http://www.chemspider.com/InChIKey/{InChIKey}',
+    ]
+
     def __init__(self, organization: str, application: str, parent: QObject | None = None) -> None:
         super().__init__(organization, application, parent)
 
@@ -82,9 +92,9 @@ class Settings(QSettings):
     def dialog(self) -> (dict[(str
                                | tuple[str, tuple[str, ...]]
                                | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]]),
-                              dict[str, (Settings.CallbackOnly
-                                         | Settings.SpinboxAndCallback
-                                         | Settings.ComboboxAndCallback)]]):
+    dict[str, (Settings.CallbackOnly
+               | Settings.SpinboxAndCallback
+               | Settings.ComboboxAndCallback)]]):
         return {
             (self.tr('When the program starts'), ('mdi6.rocket-launch',)): {
                 self.tr('Load catalogs'): Settings.CallbackOnly('load_last_catalogs'),
@@ -106,7 +116,15 @@ class Settings(QSettings):
                 self.tr('With units'): Settings.CallbackOnly('with_units'),
                 self.tr('Line ending:'): Settings.ComboboxAndCallback(self.LINE_ENDS, 'line_end'),
                 self.tr('CSV separator:'): Settings.ComboboxAndCallback(self.CSV_SEPARATORS, 'csv_separator'),
-            }
+            },
+            (
+                self.tr('Info'),
+                ('mdi6.flask-empty-outline', 'mdi6.information-variant'),
+                (('options', ((), (('scale_factor', 0.5),))),)
+            ): {
+                self.tr('InChI key search URL:'): Settings.EditableComboboxAndCallback(self.INCHI_KEY_SEARCH_PROVIDERS,
+                                                                                       'inchi_key_search_url_template'),
+            },
         }
 
     @property

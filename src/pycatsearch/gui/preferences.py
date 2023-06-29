@@ -20,7 +20,8 @@ class PreferencesPage(QWidget):
 
     def __init__(self, value: dict[str, (Settings.CallbackOnly
                                          | Settings.SpinboxAndCallback
-                                         | Settings.ComboboxAndCallback)],
+                                         | Settings.ComboboxAndCallback
+                                         | Settings.EditableComboboxAndCallback)],
                  settings: Settings, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
@@ -31,15 +32,19 @@ class PreferencesPage(QWidget):
             raise TypeError(f'Invalid type: {type(value)}')
         layout: QFormLayout = QFormLayout(self)
         key2: str
-        value2: Settings.CallbackOnly | Settings.SpinboxAndCallback | Settings.ComboboxAndCallback
+        value2: (Settings.CallbackOnly
+                 | Settings.SpinboxAndCallback
+                 | Settings.ComboboxAndCallback
+                 | Settings.EditableComboboxAndCallback)
 
         check_box: QCheckBox
         spin_box: QSpinBox | QDoubleSpinBox
+        combo_box: QComboBox
 
         for key2, value2 in value.items():
             if isinstance(value2, Settings.CallbackOnly):
                 if isinstance(getattr(self.settings, value2.callback), bool):
-                    check_box: QCheckBox = QCheckBox(self.tr(key2), self)
+                    check_box = QCheckBox(self.tr(key2), self)
                     setattr(check_box, 'callback', value2.callback)
                     check_box.setChecked(getattr(self.settings, value2.callback))
                     check_box.toggled.connect(partial(self._on_event, sender=check_box))
@@ -60,7 +65,7 @@ class PreferencesPage(QWidget):
                 spin_box.valueChanged.connect(partial(self._on_event, sender=spin_box))
                 layout.addRow(key2, spin_box)
             elif isinstance(value2, Settings.ComboboxAndCallback):
-                combo_box: QComboBox = QComboBox(self)
+                combo_box = QComboBox(self)
                 setattr(combo_box, 'callback', value2.callback)
                 combobox_data: dict[Hashable, str]
                 if isinstance(value2.combobox_data, dict):
@@ -69,15 +74,29 @@ class PreferencesPage(QWidget):
                     combobox_data = dict(enumerate(value2.combobox_data))
                 for index, (data, item) in enumerate(combobox_data.items()):
                     combo_box.addItem(self.tr(item), data)
+                combo_box.setEditable(False)
                 combo_box.setCurrentText(combobox_data[getattr(self.settings, value2.callback)])
                 combo_box.currentIndexChanged.connect(
                     partial(self._on_combo_box_current_index_changed, sender=combo_box))
+                layout.addRow(self.tr(key2), combo_box)
+            elif isinstance(value2, Settings.EditableComboboxAndCallback):
+                combo_box = QComboBox(self)
+                setattr(combo_box, 'callback', value2.callback)
+                combo_box.addItems(value2.combobox_items)
+                current_text: str = getattr(self.settings, value2.callback)
+                if current_text in value2.combobox_items:
+                    combo_box.setCurrentIndex(value2.combobox_items.index(current_text))
+                else:
+                    combo_box.addItem(current_text)
+                    combo_box.setCurrentIndex(combo_box.count() - 1)
+                combo_box.setEditable(True)
+                combo_box.currentTextChanged.connect(partial(self._on_event, sender=combo_box))
                 layout.addRow(self.tr(key2), combo_box)
             else:
                 logger.error(f'{value2!r} is not supported')
 
     # https://forum.qt.io/post/671245
-    def _on_event(self, x: bool | int | float, sender: QWidget) -> None:
+    def _on_event(self, x: bool | int | float | str, sender: QWidget) -> None:
         setattr(self.settings, getattr(sender, 'callback'), x)
 
     def _on_combo_box_current_index_changed(self, _: int, sender: QComboBox) -> None:
@@ -108,7 +127,8 @@ class PreferencesBody(QScrollArea):
         key: str | tuple[str, tuple[str, ...]] | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]]
         value: dict[str, (Settings.CallbackOnly
                           | Settings.SpinboxAndCallback
-                          | Settings.ComboboxAndCallback)]
+                          | Settings.ComboboxAndCallback
+                          | Settings.EditableComboboxAndCallback)]
         for key, value in self.settings.dialog.items():
             if not (isinstance(value, dict) and value):
                 logger.error(f'Invalid value of {key!r}')
