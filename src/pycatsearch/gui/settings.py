@@ -62,7 +62,11 @@ class Settings(QSettings):
 
     INCHI_KEY_SEARCH_PROVIDERS: Final[list[str]] = [
         'https://pubchem.ncbi.nlm.nih.gov/#query={InChIKey}',
+        'https://www.ebi.ac.uk/unichem/compoundsources?type=inchikey&compound={InChIKey}',
         'https://webbook.nist.gov/cgi/cbook.cgi?InChI={InChIKey}',
+        'https://www.spectrabase.com/search?q={InChIKey}',
+        'https://www.google.com/search?q={InChIKey}',
+        'http://gmd.mpimp-golm.mpg.de/search.aspx?query={InChIKey}',
         'http://www.chemspider.com/InChIKey/{InChIKey}',
     ]
 
