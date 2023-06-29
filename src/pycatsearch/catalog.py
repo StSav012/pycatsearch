@@ -283,56 +283,54 @@ class Catalog:
         if (species_tag or inchi_key or trivial_name or structural_formula or name or stoichiometric_formula
                 or isotopolog or state or degrees_of_freedom or any_name or any_formula or any_name_or_formula
                 or anything):
+            trivial_name: str = trivial_name.casefold()
+            name: str = name.casefold()
+            any_name: str = any_name.casefold()
+            any_name_or_formula_lowercase: str = any_name_or_formula.casefold()
             anything_lowercase: str = anything.casefold()
-            selected_entries = []
+            selected_entries: list[CatalogEntryType] = []
             for entry in self.catalog:
                 if timeout is not None and 0.0 < timeout <= time.monotonic() - start_time:
                     break
-                if ((not species_tag or (SPECIES_TAG in entry and entry[SPECIES_TAG] == species_tag))
-                        and (not inchi_key or (INCHI_KEY in entry and entry[INCHI_KEY] == inchi_key))
-                        and (not trivial_name
-                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME].casefold() == trivial_name.casefold()))
-                        and (not structural_formula
-                             or (STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == structural_formula))
-                        and (not name or (NAME in entry and entry[NAME].casefold() == name.casefold()))
+                if ((not species_tag or entry.get(SPECIES_TAG, 0) == species_tag)
+                        and (not inchi_key or entry.get(INCHI_KEY, '') == inchi_key)
+                        and (not trivial_name or entry.get(TRIVIAL_NAME, '').casefold() == trivial_name)
+                        and (not structural_formula or entry.get(STRUCTURAL_FORMULA, '') == structural_formula)
+                        and (not name or entry.get(NAME, '').casefold() == name)
                         and (not stoichiometric_formula
-                             or (STOICHIOMETRIC_FORMULA in entry
-                                 and entry[STOICHIOMETRIC_FORMULA] == stoichiometric_formula))
-                        and (not isotopolog or (ISOTOPOLOG in entry and entry[ISOTOPOLOG] == isotopolog))
-                        and (not state
-                             or (STATE in entry and entry[STATE] == state)
-                             or (STATE_HTML in entry and entry[STATE_HTML] == state))
-                        and (degrees_of_freedom is None
-                             or (DEGREES_OF_FREEDOM in entry and entry[DEGREES_OF_FREEDOM] == degrees_of_freedom))
+                             or entry.get(STOICHIOMETRIC_FORMULA, '') == stoichiometric_formula)
+                        and (not isotopolog or entry.get(ISOTOPOLOG, '') == isotopolog)
+                        and (not state or state in (entry.get(STATE, ''), entry.get(STATE_HTML, '')))
+                        and (degrees_of_freedom is None or entry.get(DEGREES_OF_FREEDOM, -1) == degrees_of_freedom)
                         and (not any_name
-                             or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME].casefold() == any_name.casefold())
-                             or (NAME in entry and entry[NAME].casefold() == any_name.casefold()))
+                             or any_name in (entry.get(TRIVIAL_NAME, '').casefold(),
+                                             entry.get(NAME, '').casefold(),))
                         and (not any_formula
-                             or (STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == any_formula)
-                             or (MOLECULE_SYMBOL in entry and entry[MOLECULE_SYMBOL] == any_formula)
-                             or (STOICHIOMETRIC_FORMULA in entry and entry[STOICHIOMETRIC_FORMULA] == any_formula)
-                             or (ISOTOPOLOG in entry and entry[ISOTOPOLOG] == any_formula))
+                             or any_formula in (entry.get(STRUCTURAL_FORMULA, ''),
+                                                entry.get(MOLECULE_SYMBOL, ''),
+                                                entry.get(STOICHIOMETRIC_FORMULA, ''),
+                                                entry.get(ISOTOPOLOG, ''),))
                         and (not any_name_or_formula
-                             or (TRIVIAL_NAME in entry
-                                 and entry[TRIVIAL_NAME].casefold() == any_name_or_formula.casefold())
-                             or (NAME in entry and entry[NAME].casefold() == any_name_or_formula.casefold())
-                             or (STRUCTURAL_FORMULA in entry and entry[STRUCTURAL_FORMULA] == any_name_or_formula)
-                             or (MOLECULE_SYMBOL in entry and entry[MOLECULE_SYMBOL] == any_name_or_formula)
-                             or (STOICHIOMETRIC_FORMULA in entry
-                                 and entry[STOICHIOMETRIC_FORMULA] == any_name_or_formula)
-                             or (ISOTOPOLOG in entry and entry[ISOTOPOLOG] == any_name_or_formula))
+                             or any_name_or_formula_lowercase in (entry.get(TRIVIAL_NAME, '').casefold(),
+                                                                  entry.get(NAME, '').casefold(),)
+                             or any_name_or_formula in (entry.get(STRUCTURAL_FORMULA, ''),
+                                                        entry.get(MOLECULE_SYMBOL, ''),
+                                                        entry.get(STOICHIOMETRIC_FORMULA, ''),
+                                                        entry.get(ISOTOPOLOG, ''),))
                         and (not anything
                              or anything in map(str, entry.values())
                              or anything_lowercase in (entry.get(TRIVIAL_NAME, '').casefold(),
-                                                       entry.get(NAME, '').casefold()))
+                                                       entry.get(NAME, '').casefold(),))
                 ):
                     filtered_entry: CatalogEntryType = filter_by_frequency_and_intensity(entry)
                     if filtered_entry[LINES]:
                         selected_entries.append(filtered_entry)
         else:
-            filtered_entries = [filter_by_frequency_and_intensity(entry)
-                                for entry in self._data.catalog
-                                if timeout is None or (timeout > 0.0 and timeout >= time.monotonic() - start_time)]
+            filtered_entries: list[CatalogEntryType] = [
+                filter_by_frequency_and_intensity(entry)
+                for entry in self._data.catalog
+                if timeout is None or (timeout > 0.0 and timeout >= time.monotonic() - start_time)
+            ]
             selected_entries = [entry for entry in filtered_entries if entry[LINES]]
         return selected_entries
 
