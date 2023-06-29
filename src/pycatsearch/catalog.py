@@ -211,7 +211,7 @@ class Catalog:
                any_formula: str = '',
                any_name_or_formula: str = '',
                species_tag: int = 0,
-               inchi: str = '',
+               inchi_key: str = '',
                trivial_name: str = '',
                structural_formula: str = '',
                name: str = '',
@@ -235,8 +235,8 @@ class Catalog:
                                 ``stoichiometricformula``, or ``isotopolog`` field.
         :param str any_name_or_formula: a string to match any field used by :param:any_name and :param:any_formula.
         :param int species_tag: a number to match the ``speciestag`` field.
-        :param str inchi: a string to match the ``inchikey`` field.
-                          See https://iupac.org/who-we-are/divisions/division-details/inchi/ for more.
+        :param str inchi_key: a string to match the ``inchikey`` field.
+                              See https://iupac.org/who-we-are/divisions/division-details/inchi/ for more.
         :param str trivial_name: a string to match the ``trivialname`` field.
         :param str structural_formula: a string to match the ``structuralformula`` field.
         :param str name: a string to match the ``name`` field.
@@ -278,14 +278,14 @@ class Catalog:
                 or max_frequency < self.min_frequency):
             return []
         start_time: float = time.monotonic()
-        if (species_tag or inchi or trivial_name or structural_formula or name or stoichiometric_formula
+        if (species_tag or inchi_key or trivial_name or structural_formula or name or stoichiometric_formula
                 or isotopolog or state or degrees_of_freedom or any_name or any_formula or any_name_or_formula):
             selected_entries = []
             for entry in self.catalog:
                 if timeout is not None and 0.0 < timeout <= time.monotonic() - start_time:
                     break
                 if ((not species_tag or (SPECIES_TAG in entry and entry[SPECIES_TAG] == species_tag))
-                        and (not inchi or (INCHI_KEY in entry and entry[INCHI_KEY] == inchi))
+                        and (not inchi_key or (INCHI_KEY in entry and entry[INCHI_KEY] == inchi_key))
                         and (not trivial_name
                              or (TRIVIAL_NAME in entry and entry[TRIVIAL_NAME].casefold() == trivial_name.casefold()))
                         and (not structural_formula

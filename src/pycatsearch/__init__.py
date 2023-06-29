@@ -143,7 +143,7 @@ def main() -> int:
     ap_group.add_argument('--any-formula', type=str,
                           help='a string to match the `structural''formula`, `molecule''symbol`, '
                                '`stoichiometric''formula`, or `isotopolog` field')
-    ap_group.add_argument('--InChI', '--inchi', '--inchi-key', type=str, dest='inchi',
+    ap_group.add_argument('--InChI-key', '--inchi-key', type=str, dest='inchi_key',
                           help='a string to match the `inchikey` field, '
                                'which contains the IUPAC International Chemical Identifier (InChI™)')
     ap_group.add_argument('--trivial-name', type=str, help='a string to match the `trivial''name` field')
@@ -162,7 +162,7 @@ def main() -> int:
 
     arg_names: list[str] = ['min_frequency', 'max_frequency', 'min_intensity', 'max_intensity',
                             'temperature', 'species_tag', 'any_name_or_formula', 'any_name', 'any_formula',
-                            'inchi', 'trivial_name', 'structural_formula', 'name', 'stoichiometric_formula',
+                            'inchi_key', 'trivial_name', 'structural_formula', 'name', 'stoichiometric_formula',
                             'isotopolog', 'state', 'degrees_of_freedom', 'timeout']
     search_args: dict[str, str | float | int] = dict((arg, getattr(args, arg)) for arg in arg_names
                                                      if getattr(args, arg) is not None)
