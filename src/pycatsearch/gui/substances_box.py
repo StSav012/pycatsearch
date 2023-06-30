@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import cast
+from typing import Callable, cast
 
 from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox, QGroupBox, QLineEdit, QListWidget,
@@ -70,28 +70,19 @@ class SubstancesBox(QGroupBox):
         plain_text_name: str
         if filter_text:
             filter_text_lowercase: str = filter_text.casefold()
-            for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
-                             STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                for entry in self._catalog.catalog:
-                    plain_text_name = remove_html(str(entry[name_key]))
-                    if (name_key in entry
-                            and (plain_text_name.startswith(filter_text)
-                                 or (name_key in (NAME, TRIVIAL_NAME)
-                                     and plain_text_name.casefold().startswith(filter_text_lowercase)))):
-                        if plain_text_name not in list_items:
-                            list_items[plain_text_name] = set()
-                        list_items[plain_text_name].add(entry[SPECIES_TAG])
-            for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
-                             STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                for entry in self._catalog.catalog:
-                    plain_text_name = remove_html(str(entry[name_key]))
-                    if (name_key in entry
-                            and (filter_text in plain_text_name
-                                 or (name_key in (NAME, TRIVIAL_NAME)
-                                     and filter_text_lowercase in plain_text_name.casefold()))):
-                        if plain_text_name not in list_items:
-                            list_items[plain_text_name] = set()
-                        list_items[plain_text_name].add(entry[SPECIES_TAG])
+            cmp_function: Callable[[str, str], bool]
+            for cmp_function in (str.startswith, str.__contains__):
+                for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
+                                 STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
+                    for entry in self._catalog.catalog:
+                        plain_text_name = remove_html(str(entry[name_key]))
+                        if (name_key in entry
+                                and (cmp_function(plain_text_name, filter_text)
+                                     or (name_key in (NAME, TRIVIAL_NAME)
+                                         and cmp_function(plain_text_name.casefold(), filter_text_lowercase)))):
+                            if plain_text_name not in list_items:
+                                list_items[plain_text_name] = set()
+                            list_items[plain_text_name].add(entry[SPECIES_TAG])
             # species tag suspected
             if filter_text.isdecimal():
                 for entry in self._catalog.catalog:
