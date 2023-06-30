@@ -889,8 +889,7 @@ class UI(QMainWindow):
                                         max_frequency=self.box_frequency.max_frequency,
                                         min_intensity=self.minimal_intensity,
                                         anything=name,
-                                        temperature=self.temperature,
-                                        timeout=self.settings.timeout)
+                                        temperature=self.temperature)
                     for name in self.box_substance.selected_substances
                 ),
                 []
@@ -898,8 +897,7 @@ class UI(QMainWindow):
              else self.catalog.filter(min_frequency=self.box_frequency.min_frequency,
                                       max_frequency=self.box_frequency.max_frequency,
                                       min_intensity=self.minimal_intensity,
-                                      temperature=self.temperature,
-                                      timeout=self.settings.timeout))
+                                      temperature=self.temperature))
         self.results_model.set_entries(entries)
 
         self.results_table.setSortingEnabled(True)

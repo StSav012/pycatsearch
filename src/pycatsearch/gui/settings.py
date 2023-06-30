@@ -117,7 +117,6 @@ class Settings(QSettings):
                 self.tr('Allow rich text in formulas'): Settings.CallbackOnly('rich_text_in_formulas'),
             },
             (self.tr('Search'), ('mdi6.table-search',)): {
-                self.tr('Timeout:'): Settings.SpinboxAndCallback(slice(1, 99), ('', 'sec'), 'timeout'),
             },
             (self.tr('Units'), ('mdi6.pencil-ruler',)): {
                 self.tr('Frequency:'): Settings.ComboboxAndCallback(self.FREQUENCY_UNITS, 'frequency_unit'),
@@ -360,19 +359,6 @@ class Settings(QSettings):
     def with_units(self, new_value: bool) -> None:
         self.beginGroup('export')
         self.setValue('withUnits', new_value)
-        self.endGroup()
-
-    @property
-    def timeout(self) -> float:
-        self.beginGroup('search')
-        v: float = self.value('timeout', 99.0, float)
-        self.endGroup()
-        return v
-
-    @timeout.setter
-    def timeout(self, new_value: float) -> None:
-        self.beginGroup('search')
-        self.setValue('timeout', new_value)
         self.endGroup()
 
     @property

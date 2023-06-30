@@ -6,7 +6,6 @@ import gzip
 import lzma
 import math
 import os.path
-import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from os import PathLike
@@ -223,7 +222,6 @@ class Catalog:
                isotopolog: str = '',
                state: str = '',
                degrees_of_freedom: Optional[int] = None,
-               timeout: Optional[float] = None
                ) -> list[CatalogEntryType]:
         """
         Extract only the entries that match all the specified conditions
@@ -249,7 +247,6 @@ class Catalog:
         :param str isotopolog: a string to match the ``isotopolog`` field.
         :param str state: a string to match the ``state`` or the ``state_html`` field.
         :param int degrees_of_freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
-        :param float timeout: if positive, the maximum time [seconds] for filtering.
         :return: a list of substances with non-empty lists of absorption lines that match all the conditions.
         """
 
@@ -282,7 +279,6 @@ class Catalog:
                 or min_frequency > self.max_frequency
                 or max_frequency < self.min_frequency):
             return []
-        start_time: float = time.monotonic()
         if (species_tag or inchi_key or trivial_name or structural_formula or name or stoichiometric_formula
                 or isotopolog or state or degrees_of_freedom or any_name or any_formula or any_name_or_formula
                 or anything):
@@ -293,8 +289,6 @@ class Catalog:
             anything_lowercase: str = anything.casefold()
             selected_entries: list[CatalogEntryType] = []
             for entry in self.catalog:
-                if timeout is not None and 0.0 < timeout <= time.monotonic() - start_time:
-                    break
                 if ((not species_tag or entry.get(SPECIES_TAG, 0) == species_tag)
                         and (not inchi_key or entry.get(INCHI_KEY, '') == inchi_key)
                         and (not trivial_name or entry.get(TRIVIAL_NAME, '').casefold() == trivial_name)
@@ -332,7 +326,6 @@ class Catalog:
             filtered_entries: list[CatalogEntryType] = [
                 filter_by_frequency_and_intensity(entry)
                 for entry in self._data.catalog
-                if timeout is None or (timeout > 0.0 and timeout >= time.monotonic() - start_time)
             ]
             selected_entries = [entry for entry in filtered_entries if entry[LINES]]
         return selected_entries

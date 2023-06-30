@@ -157,14 +157,13 @@ def main() -> int:
     ap_group.add_argument('--state', type=str, help='a string to match the `state` or `state_html` field')
     ap_group.add_argument('--dof', '--degrees_of_freedom', type=int, dest='degrees_of_freedom',
                           help='0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules')
-    ap_group.add_argument('--timeout', type=float, help='maximum time span for the filtering to take')
 
     args: argparse.Namespace = ap.parse_intermixed_args()
 
     arg_names: list[str] = ['min_frequency', 'max_frequency', 'min_intensity', 'max_intensity',
                             'temperature', 'species_tag', 'any_name_or_formula', 'anything', 'any_name', 'any_formula',
                             'inchi_key', 'trivial_name', 'structural_formula', 'name', 'stoichiometric_formula',
-                            'isotopolog', 'state', 'degrees_of_freedom', 'timeout']
+                            'isotopolog', 'state', 'degrees_of_freedom']
     search_args: dict[str, str | float | int] = dict((arg, getattr(args, arg)) for arg in arg_names
                                                      if getattr(args, arg) is not None)
     if search_args:
