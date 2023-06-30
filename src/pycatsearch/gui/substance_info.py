@@ -16,7 +16,7 @@ __all__ = ['SubstanceInfoSelector', 'SubstanceInfo']
 
 
 class SubstanceInfoSelector(QDialog):
-    def __init__(self, catalog: Catalog, entry_ids: Collection[int],
+    def __init__(self, catalog: Catalog, species_tags: Collection[int],
                  allow_html: bool = True, inchi_key_search_url_template: str = '',
                  parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -31,16 +31,16 @@ class SubstanceInfoSelector(QDialog):
         self._list_box.itemSelectionChanged.connect(self._on_list_selection_changed)
         self._list_box.doubleClicked.connect(self._on_list_double_clicked)
         layout.addWidget(self._list_box)
-        entry_ids = set(entry_ids)
+        species_tags = set(species_tags)
         for entry in catalog.catalog:
-            if not entry_ids:
+            if not species_tags:
                 break  # nothing to search for
-            if entry[ID] in entry_ids:
-                entry_ids.discard(entry[ID])  # don't search for the ID again
+            if entry[SPECIES_TAG] in species_tags:
+                species_tags.discard(entry[SPECIES_TAG])  # don't search for the SPECIES_TAG again
                 # don't specify the parent here: https://t.me/qtforpython/20950
                 item: QListWidgetItem = QListWidgetItem()
                 item.setData(Qt.ItemDataRole.ToolTipRole, str(entry[SPECIES_TAG]))
-                item.setData(Qt.ItemDataRole.UserRole, entry[ID])
+                item.setData(Qt.ItemDataRole.UserRole, entry[SPECIES_TAG])
                 self._list_box.addItem(item)
                 self._list_box.setItemWidget(item, QLabel(best_name(entry, allow_html=allow_html)))
         self._buttons: QDialogButtonBox = QDialogButtonBox(
@@ -81,7 +81,7 @@ class SubstanceInfoSelector(QDialog):
 class SubstanceInfo(QDialog):
     """ A simple dialog that displays the information about a substance from the loaded catalog """
 
-    def __init__(self, catalog: Catalog, entry_id: int, inchi_key_search_url_template: str = '',
+    def __init__(self, catalog: Catalog, species_tag: int, inchi_key_search_url_template: str = '',
                  parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setModal(True)
@@ -91,7 +91,7 @@ class SubstanceInfo(QDialog):
         layout: QFormLayout = QFormLayout(self)
         label: SelectableLabel
         for entry in catalog.catalog:
-            if entry[ID] == entry_id:
+            if entry[SPECIES_TAG] == species_tag:
                 for key in entry:
                     if key == LINES:
                         continue

@@ -24,8 +24,8 @@ from .substance_info import SubstanceInfo
 from .substances_box import SubstancesBox
 from .. import __version__
 from ..catalog import Catalog, CatalogEntryType
-from ..utils import (FREQUENCY, ID, INTENSITY, LINES, LOWER_STATE_ENERGY, ReleaseInfo, best_name, ensure_prefix,
-                     latest_release, remove_html, update_with_pip, wrap_in_html)
+from ..utils import (FREQUENCY, INTENSITY, LINES, LOWER_STATE_ENERGY, ReleaseInfo, SPECIES_TAG, best_name,
+                     ensure_prefix, latest_release, remove_html, update_with_pip, wrap_in_html)
 
 __all__ = ['UI']
 
@@ -87,17 +87,17 @@ class LinesListModel(QAbstractTableModel):
     ROW_BATCH_COUNT: Final[int] = 5
 
     class DataType:
-        __slots__ = ['id', 'name',
+        __slots__ = ['species_tag', 'name',
                      'frequency_str', 'frequency',
                      'intensity_str', 'intensity',
                      'lower_state_energy_str', 'lower_state_energy']
 
         def __init__(self,
-                     species_id: int, name: str,
+                     species_tag: int, name: str,
                      frequency_str: str, frequency: float,
                      intensity_str: str, intensity: float,
                      lower_state_energy_str: str, lower_state_energy: float) -> None:
-            self.id: int = species_id
+            self.species_tag: int = species_tag
             self.name: str = name
             self.frequency_str: str = frequency_str
             self.frequency: float = frequency
@@ -109,13 +109,13 @@ class LinesListModel(QAbstractTableModel):
         def __eq__(self, other: 'LinesListModel.DataType') -> int:
             if not isinstance(other, LinesListModel.DataType):
                 return NotImplemented
-            return (self.id == other.id
+            return (self.species_tag == other.species_tag
                     and self.frequency == other.frequency
                     and self.intensity == other.intensity
                     and self.lower_state_energy == other.lower_state_energy)
 
         def __hash__(self) -> int:
-            return hash(self.id) ^ hash(self.frequency) ^ hash(self.lower_state_energy)
+            return hash(self.species_tag) ^ hash(self.frequency) ^ hash(self.lower_state_energy)
 
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -234,7 +234,7 @@ class LinesListModel(QAbstractTableModel):
         rich_text_in_formulas: bool = self._settings.rich_text_in_formulas
         self._data = list(set(
             LinesListModel.DataType(
-                entry[ID],
+                entry[SPECIES_TAG],
                 best_name(entry, rich_text_in_formulas),
                 *frequency_str(line[FREQUENCY]),
                 *intensity_str(line[INTENSITY]),
@@ -679,7 +679,7 @@ class UI(QMainWindow):
         if self.results_table.selectionModel().selectedRows():
             syn: SubstanceInfo = SubstanceInfo(
                 self.catalog,
-                self.results_model.row(self.results_table.selectionModel().selectedRows()[0].row()).id,
+                self.results_model.row(self.results_table.selectionModel().selectedRows()[0].row()).species_tag,
                 inchi_key_search_url_template=self.settings.inchi_key_search_url_template,
                 parent=self)
             syn.exec()
@@ -888,9 +888,9 @@ class UI(QMainWindow):
                     self.catalog.filter(min_frequency=self.box_frequency.min_frequency,
                                         max_frequency=self.box_frequency.max_frequency,
                                         min_intensity=self.minimal_intensity,
-                                        anything=name,
+                                        species_tag=species_tag,
                                         temperature=self.temperature)
-                    for name in self.box_substance.selected_substances
+                    for species_tag in self.box_substance.selected_substances
                 ),
                 []
             ) if self.box_substance.isChecked()
