@@ -15,7 +15,7 @@ try:
 except (SyntaxError, ImportError, ModuleNotFoundError):
     from ..downloader import Downloader
 from .waiting_screen import WaitingScreen
-from ..utils import all_cases, ensure_prefix, save_catalog_to_file
+from ..utils import ensure_prefix, save_catalog_to_file
 
 
 __all__ = ['DownloadDialog']
@@ -233,11 +233,10 @@ class DownloadDialog(QWizard):
 
         if exit_code == QDialog.DialogCode.Accepted and self.catalog:
             _formats: dict[tuple[str, ...], str] = {
-                tuple(all_cases('.json.gz')): self.tr('JSON with GZip compression', 'file type'),
-                tuple(all_cases('.json.bz2')): self.tr('JSON with Bzip2 compression', 'file type'),
-                (*all_cases('.json.xz'), *all_cases('.json.lzma')):
-                    self.tr('JSON with LZMA2 compression', 'file type'),
-                tuple(all_cases('.json')): self.tr('JSON', 'file type'),
+                ('.json.gz',): self.tr('JSON with GZip compression', 'file type'),
+                ('.json.bz2',): self.tr('JSON with Bzip2 compression', 'file type'),
+                ('.json.xz', '.json.lzma',): self.tr('JSON with LZMA2 compression', 'file type'),
+                ('.json',): self.tr('JSON', 'file type'),
             }
             save_file_name: str
             save_file_name, _ = self._get_save_file_name(formats=_formats, caption=self.tr('Save As...'))

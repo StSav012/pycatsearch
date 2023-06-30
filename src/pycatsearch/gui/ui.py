@@ -528,12 +528,11 @@ class UI(QMainWindow):
     @Slot()
     def _on_action_load_triggered(self) -> None:
         self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
-        new_catalog_file_names: list[str]
         _formats: dict[tuple[str, ...], str] = {
-            (*all_cases('.json.gz'), *all_cases('.json.bz2'),
-             *all_cases('.json.xz'), *all_cases('.json.lzma')): self.tr('Compressed JSON', 'file type'),
-            tuple(all_cases('.json')): self.tr('JSON', 'file type'),
+            ('.json.gz', '.json.bz2', '.json.xz', '.json.lzma'): self.tr('Compressed JSON', 'file type'),
+            ('.json',): self.tr('JSON', 'file type'),
         }
+        new_catalog_file_names: list[str]
         new_catalog_file_names, _ = self.get_open_file_names(formats=_formats,
                                                              caption=self.tr('Load Catalog'),
                                                              directory=(*self.catalog.sources, '')[0])
