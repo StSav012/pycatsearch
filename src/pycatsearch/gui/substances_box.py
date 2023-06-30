@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from qtpy.QtCore import QModelIndex, Qt, Slot
+from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox, QGroupBox, QLineEdit, QListWidget,
                             QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
 
@@ -15,6 +15,8 @@ __all__ = ['SubstancesBox']
 
 
 class SubstancesBox(QGroupBox):
+    selectedSubstancesChanged: Signal = Signal(name='selectedSubstancesChanged')
+
     def __init__(self, catalog: Catalog, settings: Settings, parent: QWidget | None = None) -> None:
         from . import icon  # import locally to avoid a circular import
 
@@ -57,21 +59,11 @@ class SubstancesBox(QGroupBox):
         self._check_keep_selection.toggled.connect(self._on_check_save_selection_toggled)
         self._button_select_none.clicked.connect(self._on_button_select_none_clicked)
         self._list_substance.doubleClicked.connect(self._on_list_substance_double_clicked)
+        self._list_substance.itemChanged.connect(self._on_list_substance_item_changed)
 
         self.load_settings()
 
-    def update_selected_substances(self) -> None:
-        if self.isChecked():
-            for i in range(self._list_substance.count()):
-                item: QListWidgetItem = self._list_substance.item(i)
-                if item.checkState() == Qt.CheckState.Checked:
-                    self._selected_substances.add(item.text())
-                else:
-                    self._selected_substances.discard(item.text())
-        else:
-            self._selected_substances.clear()
-
-    def filter_substances_list(self, filter_text: str) -> dict[str, set[int]]:
+    def _filter_substances_list(self, filter_text: str) -> dict[str, set[int]]:
         list_items: dict[str, set[int]] = dict()
         plain_text_name: str
         if filter_text:
@@ -127,16 +119,15 @@ class SubstancesBox(QGroupBox):
             list_items = dict(sorted(list_items.items()))
         return list_items
 
-    def fill_substances_list(self, filter_text: str | None = None) -> None:
+    def _fill_substances_list(self, filter_text: str | None = None) -> None:
         if not filter_text:
             filter_text = self._text_substance.text()
 
-        self.update_selected_substances()
         self._list_substance.clear()
 
         text: str
         ids: set[int]
-        for text, ids in self.filter_substances_list(filter_text).items():
+        for text, ids in self._filter_substances_list(filter_text).items():
             new_item: QListWidgetItem = QListWidgetItem(text)
             new_item.setData(Qt.ItemDataRole.UserRole, ids)
             new_item.setFlags(new_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
@@ -147,19 +138,26 @@ class SubstancesBox(QGroupBox):
 
     @Slot(str)
     def _on_text_changed(self, current_text: str) -> None:
-        self.fill_substances_list(current_text)
+        self._fill_substances_list(current_text)
 
     @Slot(bool)
     def _on_check_save_selection_toggled(self, new_state: bool) -> None:
         if not new_state:
-            self._selected_substances.clear()
-            self.update_selected_substances()
+            newly_selected_substances: set[str] = set(
+                self._list_substance.item(row).text()
+                for row in range(self._list_substance.count())
+                if self._list_substance.item(row).checkState() == Qt.CheckState.Checked
+            )
+            if newly_selected_substances != self._selected_substances:
+                self._selected_substances = newly_selected_substances
+                self.selectedSubstancesChanged.emit()
 
     @Slot()
     def _on_button_select_none_clicked(self) -> None:
         for i in range(self._list_substance.count()):
             self._list_substance.item(i).setCheckState(Qt.CheckState.Unchecked)
         self._selected_substances.clear()
+        self.selectedSubstancesChanged.emit()
 
     @Slot(QModelIndex)
     def _on_list_substance_double_clicked(self, index: QModelIndex) -> None:
@@ -177,6 +175,17 @@ class SubstancesBox(QGroupBox):
                 inchi_key_search_url_template=self._settings.inchi_key_search_url_template,
                 parent=self)
             syn.exec()
+
+    @Slot(QListWidgetItem)
+    def _on_list_substance_item_changed(self, item: QListWidgetItem) -> None:
+        if item.checkState() == Qt.CheckState.Checked:
+            if item.text() not in self._selected_substances:
+                self._selected_substances.add(item.text())
+                self.selectedSubstancesChanged.emit()
+        else:
+            if item.text() in self._selected_substances:
+                self._selected_substances.discard(item.text())
+                self.selectedSubstancesChanged.emit()
 
     def load_settings(self) -> None:
         self._settings.beginGroup('search')
@@ -203,8 +212,10 @@ class SubstancesBox(QGroupBox):
     @catalog.setter
     def catalog(self, new_value: Catalog) -> None:
         self._catalog = new_value
-        self.fill_substances_list()
+        self._fill_substances_list()
 
     @property
     def selected_substances(self) -> set[str]:
+        if not self.isChecked():
+            return set()
         return self._selected_substances

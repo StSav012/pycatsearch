@@ -399,8 +399,6 @@ class UI(QMainWindow):
 
         self.preferences_dialog: Preferences = Preferences(self.settings, self)
 
-        self.results_shown: bool = False
-
         self.preset_table()
 
         self.load_settings()
@@ -410,7 +408,9 @@ class UI(QMainWindow):
         self.results_table.doubleClicked.connect(self._on_action_substance_info_triggered)
         self.spin_intensity.valueChanged.connect(self._on_spin_intensity_changed)
         self.spin_temperature.valueChanged.connect(self._on_spin_temperature_changed)
-        self.button_search.clicked.connect(self._on_button_search_clicked)
+        self.button_search.clicked.connect(self._on_search_requested)
+        self.box_frequency.frequencyLimitsChanged.connect(self._on_search_requested)
+        self.box_substance.selectedSubstancesChanged.connect(self._on_search_requested)
         self.menu_bar.action_load.triggered.connect(self._on_action_load_triggered)
         self.menu_bar.action_quit.triggered.connect(self._on_action_quit_triggered)
         self.menu_bar.action_check_updates.triggered.connect(self._on_action_check_updates_triggered)
@@ -480,8 +480,7 @@ class UI(QMainWindow):
     @Slot(float)
     def _on_spin_intensity_changed(self, arg1: float) -> None:
         self.minimal_intensity = self.settings.to_log10_sq_nm_mhz(arg1)
-        if self.results_shown:
-            self.fill_table()
+        self.fill_table()
 
     @Slot(QPoint)
     def _on_table_context_menu_requested(self, pos: QPoint) -> None:
@@ -843,7 +842,6 @@ class UI(QMainWindow):
         self.settings.sync()
 
     def preset_table(self) -> None:
-        self.results_shown = False
         self.results_table.clearSelection()
         self.menu_bar.action_copy.setDisabled(True)
         self.menu_bar.action_substance_info.setDisabled(True)
@@ -877,6 +875,11 @@ class UI(QMainWindow):
 
     def fill_table(self) -> None:
         self.preset_table()
+
+        if self.box_substance.isChecked() and not self.box_substance.selected_substances:
+            self.results_model.clear()
+            return
+
         self.results_table.setSortingEnabled(False)
 
         entries: list[dict[str, int | str | list[dict[str, float]]]] = \
@@ -891,7 +894,7 @@ class UI(QMainWindow):
                     for name in self.box_substance.selected_substances
                 ),
                 []
-            ) if self.box_substance.selected_substances and self.box_substance.isChecked()
+            ) if self.box_substance.isChecked()
              else self.catalog.filter(min_frequency=self.box_frequency.min_frequency,
                                       max_frequency=self.box_frequency.max_frequency,
                                       min_intensity=self.minimal_intensity,
@@ -903,16 +906,14 @@ class UI(QMainWindow):
         self.menu_bar.action_select_all.setEnabled(bool(entries))
         self.menu_bar.action_clear.setEnabled(bool(entries))
         self.menu_bar.menu_copy_only.setEnabled(bool(entries))
-        self.results_shown = True
 
     @Slot()
-    def _on_button_search_clicked(self) -> None:
+    def _on_search_requested(self) -> None:
         self.status_bar.showMessage(self.tr('Searching...'))
         self.setDisabled(True)
         last_cursor: QCursor = self.cursor()
         self.setCursor(Qt.CursorShape.WaitCursor)
         self.repaint()
-        self.box_substance.update_selected_substances()
         self.fill_table()
         self.setCursor(last_cursor)
         self.setEnabled(True)
