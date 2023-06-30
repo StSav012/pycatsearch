@@ -4,9 +4,9 @@ from __future__ import annotations
 import html
 import html.entities
 import itertools
-import math
 import os
 import sys
+from math import e as _e, inf, log10, nan, pow
 from numbers import Real
 from pathlib import Path
 from typing import Any, Callable, Final, Iterable, Protocol, Sequence, TypeVar, cast, overload
@@ -34,7 +34,7 @@ __all__ = ['M_LOG10E',
            'save_catalog_to_file',
            'ReleaseInfo', 'latest_release', 'update_with_pip']
 
-M_LOG10E: Final[float] = math.log10(math.e)
+M_LOG10E: Final[float] = log10(_e)
 
 T0: Final[float] = 300.00  # [K], see https://spec.jpl.nasa.gov/ftp/pub/catalog/doc/catdoc.pdf
 k: Final[float] = 1.380649000e-23  # [J/K],  see https://physics.nist.gov/cgi-bin/cuu/Value?k
@@ -309,35 +309,35 @@ def j_to_rec_cm(energy_j: float) -> float:
 
 
 def log10_sq_nm_mhz_to_sq_nm_mhz(intensity_log10_sq_nm_mhz: float) -> float:
-    return math.pow(10.0, intensity_log10_sq_nm_mhz)
+    return pow(10.0, intensity_log10_sq_nm_mhz)
 
 
 def log10_sq_nm_mhz_to_log10_cm_per_molecule(intensity_log10_sq_nm_mhz: float) -> float:
-    return -10. + intensity_log10_sq_nm_mhz - math.log10(c)
+    return -10. + intensity_log10_sq_nm_mhz - log10(c)
 
 
 def log10_sq_nm_mhz_to_cm_per_molecule(intensity_log10_sq_nm_mhz: float) -> float:
-    return math.pow(10.0, log10_sq_nm_mhz_to_log10_cm_per_molecule(intensity_log10_sq_nm_mhz))
+    return pow(10.0, log10_sq_nm_mhz_to_log10_cm_per_molecule(intensity_log10_sq_nm_mhz))
 
 
 def sq_nm_mhz_to_log10_sq_nm_mhz(intensity_sq_nm_mhz: float) -> float:
     if intensity_sq_nm_mhz == 0.0:
-        return -math.inf
+        return -inf
     if intensity_sq_nm_mhz < 0.0:
-        return math.nan
-    return math.log10(intensity_sq_nm_mhz)
+        return nan
+    return log10(intensity_sq_nm_mhz)
 
 
 def log10_cm_per_molecule_to_log10_sq_nm_mhz(intensity_log10_cm_per_molecule: float) -> float:
-    return intensity_log10_cm_per_molecule + 10. + math.log10(c)
+    return intensity_log10_cm_per_molecule + 10. + log10(c)
 
 
 def cm_per_molecule_to_log10_sq_nm_mhz(intensity_cm_per_molecule: float) -> float:
     if intensity_cm_per_molecule == 0.0:
-        return -math.inf
+        return -inf
     if intensity_cm_per_molecule < 0.0:
-        return math.nan
-    return log10_cm_per_molecule_to_log10_sq_nm_mhz(math.log10(intensity_cm_per_molecule))
+        return nan
+    return log10_cm_per_molecule_to_log10_sq_nm_mhz(log10(intensity_cm_per_molecule))
 
 
 def tex_to_html_entity(s: str) -> str:

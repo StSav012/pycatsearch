@@ -10,7 +10,7 @@ from qtpy.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLabel, QLis
 from .selectable_label import SelectableLabel
 from .url_label import URLLabel
 from ..catalog import Catalog
-from ..utils import *
+from ..utils import HUMAN_READABLE, ID, INCHI_KEY, LINES, SPECIES_TAG, STATE_HTML, best_name, chem_html
 
 __all__ = ['SubstanceInfoSelector', 'SubstanceInfo']
 

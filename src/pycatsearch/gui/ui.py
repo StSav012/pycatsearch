@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import math
+from math import inf
 from typing import Any, Callable, Final, final
 
 from qtpy.QtCore import (QAbstractTableModel, QByteArray, QItemSelection, QMimeData, QModelIndex, QPersistentModelIndex,
-                         QPoint, QPointF, QRect, QSize, Qt, Slot)
+                         QPoint, QRect, QSize, Qt, Slot)
 from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QCursor, QIcon, QPainter, QPixmap,
                         QScreen, QTextDocument)
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
@@ -24,7 +24,8 @@ from .substance_info import SubstanceInfo
 from .substances_box import SubstancesBox
 from .. import __version__
 from ..catalog import Catalog, CatalogEntryType
-from ..utils import *
+from ..utils import (FREQUENCY, ID, INTENSITY, LINES, LOWER_STATE_ENERGY, ReleaseInfo, best_name, ensure_prefix,
+                     latest_release, remove_html, update_with_pip, wrap_in_html)
 
 __all__ = ['UI']
 
@@ -52,14 +53,8 @@ def substitute(fmt: str, *args: Any) -> str:
 
 
 class HTMLDelegate(QStyledItemDelegate):
-    @staticmethod
-    def anchorAt(html: str, point: QPoint | QPointF) -> str:
-        doc: QTextDocument = QTextDocument()
-        doc.setHtml(html)
-        text_layout: QAbstractTextDocumentLayout = doc.documentLayout()
-        return text_layout.anchorAt(point)
-
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex) -> None:
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem,
+              index: QModelIndex | QPersistentModelIndex) -> None:
         self.initStyleOption(option, index)
         style: QStyle
         if option.widget:
@@ -111,7 +106,7 @@ class LinesListModel(QAbstractTableModel):
             self.lower_state_energy_str: str = lower_state_energy_str
             self.lower_state_energy: float = lower_state_energy
 
-        def __eq__(self, other: LinesListModel.DataType) -> int:
+        def __eq__(self, other: 'LinesListModel.DataType') -> int:
             if not isinstance(other, LinesListModel.DataType):
                 return NotImplemented
             return (self.id == other.id
@@ -164,7 +159,7 @@ class LinesListModel(QAbstractTableModel):
                     return item.lower_state_energy_str
         return None
 
-    def row(self, row_index: int) -> LinesListModel.DataType:
+    def row(self, row_index: int) -> DataType:
         return self._data[row_index]
 
     def headerData(self, col: int, orientation: Qt.Orientation, role: int = ...) -> str | None:
@@ -357,8 +352,7 @@ class UI(QMainWindow):
                                              | Qt.AlignmentFlag.AlignVCenter)
             self.spin_intensity.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
             self.spin_intensity.setDecimals(2)
-            self.spin_intensity.setMinimum(-math.inf)
-            self.spin_intensity.setMaximum(math.inf)
+            self.spin_intensity.setRange(-inf, inf)
             self.spin_intensity.setSingleStep(0.1)
             self.spin_intensity.setValue(-6.54)
             self.spin_intensity.setStatusTip(self.spin_intensity.tr('Limit shown spectral lines'))
@@ -399,7 +393,7 @@ class UI(QMainWindow):
         setup_ui()
 
         self.temperature: float = 300.0  # [K]
-        self.minimal_intensity: float = -math.inf  # [log10(nm²×MHz)]
+        self.minimal_intensity: float = -inf  # [log10(nm²×MHz)]
 
         self.button_search.setDisabled(self.catalog.is_empty)
 
@@ -573,6 +567,8 @@ class UI(QMainWindow):
             self.settings.energy_unit_str,
         ]
         with_units: bool = self.settings.with_units
+        csv_separator: str = self.settings.csv_separator
+        actions_checked: list[bool] = [_a.isChecked() for _a in self.menu_bar.menu_columns.actions()]
 
         def format_value(value: Any, unit: str) -> str:
             return (self.tr('{value} {unit}', 'format value in html').format(value=value, unit=unit)
@@ -581,9 +577,9 @@ class UI(QMainWindow):
 
         columns_order: list[int] = [self.results_table.horizontalHeader().logicalIndex(_c)
                                     for _c, _a in zip(range(self.results_table.horizontalHeader().count()),
-                                                      self.menu_bar.menu_columns.actions(),
+                                                      actions_checked,
                                                       strict=True)
-                                    if _a.isChecked()]
+                                    if _a]
         text: list[str] = ['<table>']
         values: list[str]
         index: QModelIndex
@@ -593,13 +589,13 @@ class UI(QMainWindow):
                 format_value(_v, _u)
                 for _u, _v, _a in zip(units,
                                       (row.name, row.frequency, row.intensity, row.lower_state_energy),
-                                      self.menu_bar.menu_columns.actions(),
+                                      actions_checked,
                                       strict=True)
-                if _a.isChecked()
+                if _a
             ]
             text.append(
                 '<tr><td>' +
-                f'</td>{self.settings.csv_separator}<td>'.join(values[_c] for _c in columns_order) +
+                f'</td>{csv_separator}<td>'.join(values[_c] for _c in columns_order) +
                 '</td></tr>'
             )
         text.append('</table>')

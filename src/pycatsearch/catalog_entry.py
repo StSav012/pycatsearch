@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import math
+from math import inf, log10, nan
 
-from .utils import *
+from .utils import FREQUENCY, INTENSITY, LOWER_STATE_ENERGY, M_LOG10E, T0, c, h, k
 
 __all__ = ['CatalogEntry']
 
 
 class CatalogEntry:
-    def __init__(self, spcat_line: str = '', *, frequency: float = math.nan, intensity: float = math.nan,
-                 degrees_of_freedom: int = -1, lower_state_energy: float = math.nan) -> None:
+    def __init__(self, spcat_line: str = '', *, frequency: float = nan, intensity: float = nan,
+                 degrees_of_freedom: int = -1, lower_state_energy: float = nan) -> None:
         self.FREQ: float  # frequency, MHz, mandatory
         self.INT: float  # intensity, log10(nm²×MHz), mandatory
         self.DR: int  # degrees of freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
@@ -33,9 +33,9 @@ class CatalogEntry:
     def frequency(self) -> float:
         return self.FREQ
 
-    def intensity(self, temperature: float = -math.inf) -> float:
+    def intensity(self, temperature: float = -inf) -> float:
         if self.DR >= 0 and temperature > 0. and temperature != T0:
-            return self.INT + (0.5 * self.DR + 1.0) * math.log10(T0 / temperature) + (
+            return self.INT + (0.5 * self.DR + 1.0) * log10(T0 / temperature) + (
                     -(1 / temperature - 1 / T0) * self.ELO * 100. * h * c / k) * M_LOG10E
         else:
             return self.INT

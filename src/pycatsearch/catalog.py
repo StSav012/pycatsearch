@@ -18,7 +18,10 @@ try:
 except ImportError:
     import json
 
-from .utils import *
+from .utils import (M_LOG10E, T0, c, h, k, CATALOG, BUILD_TIME, LINES, FREQUENCY, INTENSITY, STRUCTURAL_FORMULA,
+                    STOICHIOMETRIC_FORMULA, MOLECULE_SYMBOL, SPECIES_TAG, NAME, TRIVIAL_NAME, ISOTOPOLOG, STATE,
+                    STATE_HTML, INCHI_KEY, DEGREES_OF_FREEDOM, LOWER_STATE_ENERGY,
+                    merge_sorted, search_sorted)
 
 __all__ = ['Catalog', 'CatalogSourceInfo', 'LineType', 'LinesType', 'CatalogEntryType']
 

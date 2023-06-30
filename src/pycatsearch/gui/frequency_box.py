@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from math import inf
+from typing import Callable
 
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, QWidget
 
 from .settings import Settings
-from ..utils import *
 
 __all__ = ['FrequencyBox']
 
@@ -134,18 +134,19 @@ class FrequencyBox(QTabWidget):
     def fill_parameters(self) -> None:
         frequency_suffix: int = self._settings.frequency_unit
         frequency_suffix_str: str = ' ' + self._settings.FREQUENCY_UNITS[frequency_suffix]
+        from_mhz: Callable[[float], float] = self._settings.from_mhz
         if frequency_suffix in (0, 1, 2):  # MHz, GHz, cm⁻¹
-            self._spin_frequency_from.setValue(self._settings.from_mhz(self._frequency_from))
-            self._spin_frequency_to.setValue(self._settings.from_mhz(self._frequency_to))
-            self._spin_frequency_center.setValue(self._settings.from_mhz(self._frequency_center))
-            self._spin_frequency_deviation.setValue(self._settings.from_mhz(self._frequency_deviation))
+            self._spin_frequency_from.setValue(from_mhz(self._frequency_from))
+            self._spin_frequency_to.setValue(from_mhz(self._frequency_to))
+            self._spin_frequency_center.setValue(from_mhz(self._frequency_center))
+            self._spin_frequency_deviation.setValue(from_mhz(self._frequency_deviation))
         elif frequency_suffix == 3:  # nm
-            self._spin_frequency_from.setValue(mhz_to_nm(self._frequency_from))
-            self._spin_frequency_to.setValue(mhz_to_nm(self._frequency_to))
-            self._spin_frequency_center.setValue(mhz_to_nm(self._frequency_center))
+            self._spin_frequency_from.setValue(from_mhz(self._frequency_from))
+            self._spin_frequency_to.setValue(from_mhz(self._frequency_to))
+            self._spin_frequency_center.setValue(from_mhz(self._frequency_center))
             self._spin_frequency_deviation.setValue(
-                abs(mhz_to_nm(self._frequency_center - self._frequency_deviation) -
-                    mhz_to_nm(self._frequency_center + self._frequency_deviation)) / 2.0)
+                abs(from_mhz(self._frequency_center - self._frequency_deviation) -
+                    from_mhz(self._frequency_center + self._frequency_deviation)) / 2.0)
         else:
             raise IndexError('Wrong frequency unit index', frequency_suffix)
         precision: int = [4, 7, 8, 8][frequency_suffix]

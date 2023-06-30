@@ -6,7 +6,11 @@ from typing import Any, Callable, Final, Hashable, Iterable, NamedTuple, Sequenc
 
 from qtpy.QtCore import QObject, QSettings
 
-from ..utils import *
+from ..utils import (cm_per_molecule_to_log10_sq_nm_mhz, ghz_to_mhz, j_to_rec_cm,
+                     log10_cm_per_molecule_to_log10_sq_nm_mhz, log10_sq_nm_mhz_to_cm_per_molecule,
+                     log10_sq_nm_mhz_to_log10_cm_per_molecule, log10_sq_nm_mhz_to_sq_nm_mhz, meV_to_rec_cm, mhz_to_ghz,
+                     mhz_to_nm, mhz_to_rec_cm, nm_to_mhz, rec_cm_to_j, rec_cm_to_meV, rec_cm_to_mhz,
+                     sq_nm_mhz_to_log10_sq_nm_mhz)
 
 __all__ = ['Settings']
 
@@ -93,12 +97,17 @@ class Settings(QSettings):
         self.TEMPERATURE_UNITS: Final[list[str]] = [self.tr('K'), self.tr('°C')]
 
     @property
-    def dialog(self) -> (dict[(str
-                               | tuple[str, tuple[str, ...]]
-                               | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]]),
-    dict[str, (Settings.CallbackOnly
-               | Settings.SpinboxAndCallback
-               | Settings.ComboboxAndCallback)]]):
+    def dialog(self) -> (
+            dict[
+                (str
+                 | tuple[str, tuple[str, ...]]
+                 | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]]
+                ),
+                dict[str, (CallbackOnly
+                           | SpinboxAndCallback
+                           | ComboboxAndCallback)]
+            ]
+    ):
         return {
             (self.tr('When the program starts'), ('mdi6.rocket-launch',)): {
                 self.tr('Load catalogs'): Settings.CallbackOnly('load_last_catalogs'),

@@ -8,7 +8,8 @@ from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox, Q
 from .settings import Settings
 from .substance_info import SubstanceInfo, SubstanceInfoSelector
 from ..catalog import Catalog
-from ..utils import *
+from ..utils import (ID, INCHI_KEY, ISOTOPOLOG, NAME, SPECIES_TAG, STOICHIOMETRIC_FORMULA, STRUCTURAL_FORMULA,
+                     TRIVIAL_NAME, remove_html)
 
 __all__ = ['SubstancesBox']
 

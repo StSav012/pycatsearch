@@ -21,7 +21,7 @@ except ImportError:
     import json
 
 from .catalog_entry import CatalogEntry
-from .utils import *
+from .utils import LINES, SPECIES_TAG, DEGREES_OF_FREEDOM, within, save_catalog_to_file
 
 __all__ = ['Downloader', 'get_catalog', 'save_catalog', 'download']
 

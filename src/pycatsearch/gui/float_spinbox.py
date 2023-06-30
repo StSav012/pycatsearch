@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import math
-from typing import Final, Optional
+import enum
+from math import floor, log10
 
 from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QDoubleSpinBox, QWidget
@@ -11,36 +11,39 @@ __all__ = ['FloatSpinBox']
 
 
 class FloatSpinBox(QDoubleSpinBox):
-    MODES: Final[list[str]] = ['auto', 'fixed', 'scientific']
+    class Mode(enum.Enum):
+        auto = enum.auto()
+        fixed = enum.auto()
+        scientific = enum.auto()
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self._mode: str = 'auto'
+        self._mode: FloatSpinBox.Mode = FloatSpinBox.Mode.auto
         self._decimals: int = 2
         super().setDecimals(1000)
 
     @property
-    def mode(self) -> str:
+    def mode(self) -> Mode:
         return self._mode
 
     @mode.setter
-    def mode(self, new_mode: str) -> None:
-        if new_mode not in self.MODES:
-            raise ValueError(f'Invalid mode: {new_mode}')
+    def mode(self, new_mode: 'FloatSpinBox.Mode') -> None:
+        if not isinstance(new_mode, FloatSpinBox.Mode):
+            raise TypeError(f'Invalid mode: {new_mode}')
         self._mode = new_mode
 
     def valueFromText(self, text: str) -> float:
         return float(text.strip().split()[0])
 
     def textFromValue(self, v: float) -> str:
-        if self._mode == 'auto':
+        if self._mode == FloatSpinBox.Mode.auto:
             if abs(v) < self.singleStep() and v != 0.0:
                 return f'{v:.{self._decimals}e}'
             else:
                 return f'{v:.{self._decimals}f}'
-        elif self._mode == 'fixed':
+        elif self._mode == FloatSpinBox.Mode.fixed:
             return f'{v:.{self._decimals}f}'
-        elif self._mode == 'scientific':
+        elif self._mode == FloatSpinBox.Mode.scientific:
             return f'{v:.{self._decimals}e}'
         else:
             raise RuntimeError(f'Unknown mode {self._mode}')
@@ -65,7 +68,7 @@ class FloatSpinBox(QDoubleSpinBox):
 
     def stepBy(self, steps: int) -> None:
         if self.value() != 0.0:
-            exp: int = round(math.floor(math.log10(abs(self.value()))))
+            exp: int = round(floor(log10(abs(self.value()))))
             self.setValue(self.value() + self.singleStep() * steps * 10.0 ** exp)
         else:
             self.setValue(self.singleStep() * steps)
