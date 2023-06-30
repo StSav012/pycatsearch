@@ -386,6 +386,15 @@ def chem_html(formula: str) -> str:
         # we can not tell whether it's a tag or a mathematical sign
         return formula
 
+    def sub_tag(s: str) -> str:
+        return '<sub>' + s + '</sub>'
+
+    def sup_tag(s: str) -> str:
+        return '<sup>' + s + '</sup>'
+
+    def i_tag(s: str) -> str:
+        return '<i>' + s + '</i>'
+
     def subscript(s: str) -> str:
         number_start: int = -1
         number_started: bool = False
@@ -396,8 +405,8 @@ def chem_html(formula: str) -> str:
             _c: str = s[_i]
             if number_started and not _c.isdigit():
                 number_started = False
-                s = s[:number_start] + '<sub>' + s[number_start:_i] + '</sub>' + s[_i:]
-                _i += 11
+                s = s[:number_start] + sub_tag(s[number_start:_i]) + s[_i:]
+                _i += 1
             if (cap_alpha_started or low_alpha_started) and _c.isdigit() and not number_started:
                 number_start = _i
                 number_started = True
@@ -409,7 +418,7 @@ def chem_html(formula: str) -> str:
             cap_alpha_started = _c.isupper()
             _i += 1
         if number_started:
-            s = s[:number_start] + '<sub>' + s[number_start:] + '</sub>'
+            s = s[:number_start] + sub_tag(s[number_start:])
         return s
 
     def prefix(s: str) -> str:
@@ -429,12 +438,12 @@ def chem_html(formula: str) -> str:
                     no_digits = False
                     break
             if no_digits and (unescaped_prefix[0].islower() or unescaped_prefix[0] == '('):
-                return '<i>' + s[:_i] + '</i>' + s[_i:]
+                return i_tag(s[:_i]) + s[_i:]
         return s
 
     def charge(s: str) -> str:
         if s[-1] in '+-':
-            return s[:-1] + '<sup>' + s[-1] + '</sup>'
+            return s[:-1] + sup_tag(s[-1])
         return s
 
     def v(s: str) -> str:
@@ -443,7 +452,7 @@ def chem_html(formula: str) -> str:
         ss: list[str] = list(map(str.strip, s.split('=')))
         for _i in range(len(ss)):
             if ss[_i].startswith('v'):
-                ss[_i] = ss[_i][0] + '<sub>' + ss[_i][1:] + '</sub>'
+                ss[_i] = ss[_i][0] + sub_tag(ss[_i][1:])
         return ' = '.join(ss)
 
     html_formula: str = html.escape(formula)
