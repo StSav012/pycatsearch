@@ -127,19 +127,26 @@ class SubstancesBox(QGroupBox):
 
         self._list_substance.clear()
 
+        filtered_items: dict[str, set[int]] = self._filter_substances_list(filter_text)
         text: str
         species_tags: set[int]
-        for text, species_tags in self._filter_substances_list(filter_text).items():
-            new_item: QListWidgetItem = QListWidgetItem(text)
-            new_item.setData(Qt.ItemDataRole.UserRole, species_tags)
-            new_item.setFlags(new_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            if species_tags <= self._selected_substances:
-                new_item.setCheckState(Qt.CheckState.Checked)
-            elif species_tags & self._selected_substances:
-                new_item.setCheckState(Qt.CheckState.PartiallyChecked)
-            else:
-                new_item.setCheckState(Qt.CheckState.Unchecked)
-            self._list_substance.addItem(new_item)
+        check_state: Qt.CheckState
+        for check_state in (Qt.CheckState.Checked, Qt.CheckState.PartiallyChecked, Qt.CheckState.Unchecked):
+            for text, species_tags in filtered_items.items():
+                new_item_check_state: Qt.CheckState
+                if species_tags <= self._selected_substances:
+                    new_item_check_state = Qt.CheckState.Checked
+                elif species_tags & self._selected_substances:
+                    new_item_check_state = Qt.CheckState.PartiallyChecked
+                else:
+                    new_item_check_state = Qt.CheckState.Unchecked
+                if check_state != new_item_check_state:
+                    continue
+                new_item: QListWidgetItem = QListWidgetItem(text)
+                new_item.setData(Qt.ItemDataRole.UserRole, species_tags)
+                new_item.setFlags(new_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                new_item.setCheckState(new_item_check_state)
+                self._list_substance.addItem(new_item)
 
     @Slot(str)
     def _on_text_changed(self, current_text: str) -> None:
