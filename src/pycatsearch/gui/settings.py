@@ -116,8 +116,6 @@ class Settings(QSettings):
             (self.tr('Display'), ('mdi6.binoculars',)): {
                 self.tr('Allow rich text in formulas'): Settings.CallbackOnly('rich_text_in_formulas'),
             },
-            (self.tr('Search'), ('mdi6.table-search',)): {
-            },
             (self.tr('Units'), ('mdi6.pencil-ruler',)): {
                 self.tr('Frequency:'): Settings.ComboboxAndCallback(self.FREQUENCY_UNITS, 'frequency_unit'),
                 self.tr('Intensity:'): Settings.ComboboxAndCallback(self.INTENSITY_UNITS, 'intensity_unit'),
