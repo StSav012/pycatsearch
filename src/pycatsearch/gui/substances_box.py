@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import Callable, cast
+from typing import Callable
 
 from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox, QGroupBox, QLineEdit, QListWidget,
@@ -223,7 +223,7 @@ class SubstancesBox(QGroupBox):
 
     @Slot(QListWidgetItem)
     def _on_list_substance_item_changed(self, item: QListWidgetItem) -> None:
-        species_tags: set[int] = cast(set[int], item.data(Qt.ItemDataRole.UserRole))
+        species_tags: set[int] = item.data(Qt.ItemDataRole.UserRole)
         if item.checkState() == Qt.CheckState.Checked:
             if not self._selected_substances.issuperset(species_tags):
                 self._selected_substances |= species_tags
@@ -236,7 +236,7 @@ class SubstancesBox(QGroupBox):
         another_item: QListWidgetItem
         for i in range(self._list_substance.count()):
             another_item = self._list_substance.item(i)
-            another_item_species_tags: set[int] = cast(set[int], another_item.data(Qt.ItemDataRole.UserRole))
+            another_item_species_tags: set[int] = another_item.data(Qt.ItemDataRole.UserRole)
             if another_item_species_tags <= self._selected_substances:
                 another_item.setCheckState(Qt.CheckState.Checked)
             elif another_item_species_tags & self._selected_substances:
