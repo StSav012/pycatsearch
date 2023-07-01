@@ -5,7 +5,7 @@ from math import inf
 from typing import Any, Callable, Final, final
 
 from qtpy.QtCore import (QAbstractTableModel, QByteArray, QItemSelection, QMimeData, QModelIndex, QPersistentModelIndex,
-                         QPoint, Qt, Slot)
+                         QPoint, Qt, Slot, QLocale)
 from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPixmap, QScreen
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
                             QMainWindow, QMessageBox, QPushButton, QSplitter, QStatusBar, QTableView, QVBoxLayout,
@@ -153,28 +153,30 @@ class LinesListModel(QAbstractTableModel):
         from_rec_cm: Callable[[float], float] = self._settings.from_rec_cm
         frequency_suffix: int = self._settings.frequency_unit
         precision: int = [4, 7, 8, 8][frequency_suffix]
+        locale: QLocale = QLocale()
+        decimal_point: str = locale.decimalPoint()
 
         def frequency_str(frequency: float) -> tuple[str, float]:
             frequency = from_mhz(frequency)
-            return f'{frequency:.{precision}f}', frequency
+            return f'{frequency:.{precision}f}'.replace('.', decimal_point), frequency
 
         def intensity_str(intensity: float) -> tuple[str, float]:
             intensity = from_log10_sq_nm_mhz(intensity)
             if intensity == 0.0:
                 return '0', intensity
             elif abs(intensity) < 0.1:
-                return f'{intensity:.4e}', intensity
+                return f'{intensity:.4e}'.replace('.', decimal_point), intensity
             else:
-                return f'{intensity:.4f}', intensity
+                return f'{intensity:.4f}'.replace('.', decimal_point), intensity
 
         def lower_state_energy_str(lower_state_energy: float) -> tuple[str, float]:
             lower_state_energy = from_rec_cm(lower_state_energy)
             if lower_state_energy == 0.0:
                 return '0', lower_state_energy
             elif abs(lower_state_energy) < 0.1:
-                return f'{lower_state_energy:.4e}', lower_state_energy
+                return f'{lower_state_energy:.4e}'.replace('.', decimal_point), lower_state_energy
             else:
-                return f'{lower_state_energy:.4f}', lower_state_energy
+                return f'{lower_state_energy:.4f}'.replace('.', decimal_point), lower_state_energy
 
         self.beginResetModel()
         unique_entries: list[CatalogEntryType] = []
