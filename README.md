@@ -42,7 +42,7 @@ c.print(min_frequency=140141, max_frequency=140142)
 
 ###### Functions:
 
-- `__init__(self, *catalog_file_names: str)` accepts names of JSON or GZipped JSON files.
+- `__init__(self, *catalog_file_names: str)` accepts names of JSON or GZip/BZip2/LZMA-compressed JSON files.
   It loads them into memory joined.
 - `filter(self, *,
   min_frequency: float = 0.0,

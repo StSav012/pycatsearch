@@ -44,8 +44,7 @@ class MenuBar(QMenuBar):
         self.action_copy_name: QAction = self.menu_copy_only.addAction(self.tr('&Substance Name'))
         self.action_copy_frequency: QAction = self.menu_copy_only.addAction(self.tr('&Frequency'))
         self.action_copy_intensity: QAction = self.menu_copy_only.addAction(self.tr('&Intensity'))
-        self.action_copy_lower_state_energy: QAction = self.menu_copy_only.addAction(
-            self.menu_copy_only.tr('&Lower State Energy'))
+        self.action_copy_lower_state_energy: QAction = self.menu_copy_only.addAction(self.tr('&Lower State Energy'))
         self.action_copy: QAction = self.menu_edit.addAction(
             self._icon('edit-copy', 'mdi6.content-copy'),
             self.tr('Co&py Selection'))

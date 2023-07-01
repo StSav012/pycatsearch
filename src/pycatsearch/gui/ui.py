@@ -324,20 +324,20 @@ class UI(QMainWindow):
             self.spin_intensity.setRange(-inf, inf)
             self.spin_intensity.setSingleStep(0.1)
             self.spin_intensity.setValue(-6.54)
-            self.spin_intensity.setStatusTip(self.spin_intensity.tr('Limit shown spectral lines'))
-            layout_options.addRow(layout_options.tr('Minimal Intensity:'), self.spin_intensity)
+            self.spin_intensity.setStatusTip(self.tr('Limit shown spectral lines'))
+            layout_options.addRow(self.tr('Minimal Intensity:'), self.spin_intensity)
             self.spin_temperature.setAlignment(Qt.AlignmentFlag.AlignRight
                                                | Qt.AlignmentFlag.AlignTrailing
                                                | Qt.AlignmentFlag.AlignVCenter)
             self.spin_temperature.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
             self.spin_temperature.setMaximum(999.99)
             self.spin_temperature.setValue(300.0)
-            self.spin_temperature.setStatusTip(self.spin_temperature.tr('Temperature to calculate intensity'))
-            self.spin_temperature.setSuffix(self.spin_temperature.tr(' K'))
-            layout_options.addRow(layout_options.tr('Temperature:'), self.spin_temperature)
+            self.spin_temperature.setStatusTip(self.tr('Temperature to calculate intensity'))
+            self.spin_temperature.setSuffix(self.tr(' K'))
+            layout_options.addRow(self.tr('Temperature:'), self.spin_temperature)
             layout_right.addLayout(layout_options, 0)
 
-            self.button_search.setText(self.button_search.tr('Show'))
+            self.button_search.setText(self.tr('Show'))
             layout_right.addWidget(self.button_search, 0)
 
             self._right_matter.setLayout(layout_right)
@@ -714,12 +714,12 @@ class UI(QMainWindow):
                           + "</p><p>"
                           + self.tr("It relies on the data stored in JSON files.")
                           + "</p><p>"
-                          + self.tr("One can write his own catalogs as well as convert data from "
+                          + self.tr("One can write their own catalogs as well as download data from "
                                     "<a href='https://spec.jpl.nasa.gov/'>JPL</a> and "
                                     "<a href='https://astro.uni-koeln.de/'>CDMS</a> spectroscopy databases "
-                                    "freely available in the Internet or other sources.")
+                                    "available in the Internet.")
                           + "</p><p>"
-                          + self.tr("Both plain text JSON and GZip compressed JSON are supported.")
+                          + self.tr("Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported.")
                           + "</p><p>"
                           + self.tr('See {0} for more info.')
                           .format('<a href="https://github.com/StSav012/pycatsearch/blob/master/README.md">{0}</a>')

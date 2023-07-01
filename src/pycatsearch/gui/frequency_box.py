@@ -54,17 +54,17 @@ class FrequencyBox(QTabWidget):
 
         self._layout_by_range.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
         self._spin_frequency_from.setValue(118747.341)
-        self._layout_by_range.addRow(self._layout_by_range.tr('From:'), self._spin_frequency_from)
+        self._layout_by_range.addRow(self.tr('From:'), self._spin_frequency_from)
         self._spin_frequency_to.setValue(118753.341)
-        self._layout_by_range.addRow(self._layout_by_range.tr('To:'), self._spin_frequency_to)
+        self._layout_by_range.addRow(self.tr('To:'), self._spin_frequency_to)
         self.addTab(self._page_by_range, icon('mdi6.arrow-expand-horizontal'), self.tr('Range'))
 
         self._spin_frequency_center.setValue(118750.341)
-        self._layout_by_center.addRow(self._layout_by_center.tr('Center:'), self._spin_frequency_center)
+        self._layout_by_center.addRow(self.tr('Center:'), self._spin_frequency_center)
         self._spin_frequency_deviation.setMaximum(99.9999)
         self._spin_frequency_deviation.setSingleStep(0.1)
         self._spin_frequency_deviation.setValue(0.4)
-        self._layout_by_center.addRow(self._layout_by_center.tr('Deviation:'), self._spin_frequency_deviation)
+        self._layout_by_center.addRow(self.tr('Deviation:'), self._spin_frequency_deviation)
         self.addTab(self._page_by_center, icon('mdi6.format-horizontal-align-center'), self.tr('Center'))
 
         self.load_settings()
