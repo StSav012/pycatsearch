@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from typing import Collection
 
-from qtpy.QtCore import QModelIndex, Qt, Slot
-from qtpy.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLabel, QListWidget, QListWidgetItem, QVBoxLayout,
-                            QWidget)
+from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
+from qtpy.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
+from .html_style_delegate import HTMLDelegate
 from .selectable_label import SelectableLabel
 from .url_label import URLLabel
 from ..catalog import Catalog
@@ -16,7 +16,10 @@ __all__ = ['SubstanceInfoSelector', 'SubstanceInfo']
 
 
 class SubstanceInfoSelector(QDialog):
-    def __init__(self, catalog: Catalog, species_tags: Collection[int],
+    tagSelectionChanged: Signal = Signal(int, bool, name='tagSelectionChanged')
+
+    def __init__(self, catalog: Catalog, species_tags: Collection[int], *,
+                 selected_species_tags: Collection[int] = (),
                  allow_html: bool = True, inchi_key_search_url_template: str = '',
                  parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -28,54 +31,39 @@ class SubstanceInfoSelector(QDialog):
             self.setWindowIcon(parent.windowIcon())
         layout: QVBoxLayout = QVBoxLayout(self)
         self._list_box: QListWidget = QListWidget(self)
-        self._list_box.itemSelectionChanged.connect(self._on_list_selection_changed)
+        self._list_box.itemChanged.connect(self._on_list_item_changed)
         self._list_box.doubleClicked.connect(self._on_list_double_clicked)
+        self._list_box.setItemDelegateForColumn(0, HTMLDelegate())
         layout.addWidget(self._list_box)
         species_tags = set(species_tags)
         for entry in catalog.catalog:
             if not species_tags:
                 break  # nothing to search for
-            if entry[SPECIES_TAG] in species_tags:
-                species_tags.discard(entry[SPECIES_TAG])  # don't search for the SPECIES_TAG again
+            if (species_tag := entry[SPECIES_TAG]) in species_tags:
+                species_tags.discard(species_tag)  # don't search for the SPECIES_TAG again
                 # don't specify the parent here: https://t.me/qtforpython/20950
-                item: QListWidgetItem = QListWidgetItem()
-                item.setData(Qt.ItemDataRole.ToolTipRole, str(entry[SPECIES_TAG]))
-                item.setData(Qt.ItemDataRole.UserRole, entry[SPECIES_TAG])
+                item: QListWidgetItem = QListWidgetItem(best_name(entry, allow_html=allow_html))
+                item.setData(Qt.ItemDataRole.ToolTipRole, str(species_tag))
+                item.setData(Qt.ItemDataRole.UserRole, species_tag)
+                item.setCheckState(Qt.CheckState.Checked
+                                   if species_tag in selected_species_tags
+                                   else Qt.CheckState.Unchecked)
                 self._list_box.addItem(item)
-                self._list_box.setItemWidget(item, QLabel(best_name(entry, allow_html=allow_html)))
-        self._buttons: QDialogButtonBox = QDialogButtonBox(
-            (QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Close), self)
-        self._buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
-        self._buttons.accepted.connect(self._on_accept)
+        self._buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         self._buttons.rejected.connect(self.reject)
         layout.addWidget(self._buttons)
 
-    @Slot()
-    def _on_list_selection_changed(self) -> None:
-        self._buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(bool(self._list_box.selectedIndexes()))
+    @Slot(QListWidgetItem)
+    def _on_list_item_changed(self, item: QListWidgetItem) -> None:
+        self.tagSelectionChanged.emit(item.data(Qt.ItemDataRole.UserRole), item.checkState() == Qt.CheckState.Checked)
 
     @Slot(QModelIndex)
     def _on_list_double_clicked(self, index: QModelIndex) -> None:
-        self.hide()
         item: QListWidgetItem = self._list_box.item(index.row())
         syn: SubstanceInfo = SubstanceInfo(self._catalog, item.data(Qt.ItemDataRole.UserRole),
                                            inchi_key_search_url_template=self._inchi_key_search_url_template,
-                                           parent=self.parent())
+                                           parent=self)
         syn.exec()
-        self.accept()
-
-    @Slot()
-    def _on_accept(self) -> None:
-        selected_items: list[QListWidgetItem] = self._list_box.selectedItems()
-        if not selected_items:
-            return
-        self.hide()
-        item: QListWidgetItem = selected_items.pop()
-        syn: SubstanceInfo = SubstanceInfo(self._catalog, item.data(Qt.ItemDataRole.UserRole),
-                                           inchi_key_search_url_template=self._inchi_key_search_url_template,
-                                           parent=self.parent())
-        syn.exec()
-        self.accept()
 
 
 class SubstanceInfo(QDialog):

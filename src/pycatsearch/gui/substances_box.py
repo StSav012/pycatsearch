@@ -7,11 +7,12 @@ from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox, QGroupBox, QLineEdit, QListWidget,
                             QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
 
+from .html_style_delegate import HTMLDelegate
 from .settings import Settings
 from .substance_info import SubstanceInfo, SubstanceInfoSelector
 from ..catalog import Catalog
 from ..utils import (INCHI_KEY, ISOTOPOLOG, NAME, SPECIES_TAG, STOICHIOMETRIC_FORMULA, STRUCTURAL_FORMULA, TRIVIAL_NAME,
-                     remove_html)
+                     best_name, remove_html)
 
 __all__ = ['SubstancesBox']
 
@@ -46,6 +47,7 @@ class SubstancesBox(QGroupBox):
         self._list_substance.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._list_substance.setSortingEnabled(False)
         self._list_substance.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self._list_substance.setItemDelegateForColumn(0, HTMLDelegate())
         self._layout_substance.addWidget(self._list_substance)
         self._check_keep_selection.setStatusTip(
             self._check_keep_selection.tr('Keep substances list selection through filter changes'))
@@ -67,6 +69,7 @@ class SubstancesBox(QGroupBox):
 
     def _filter_substances_list(self, filter_text: str) -> dict[str, set[int]]:
         list_items: dict[str, set[int]] = dict()
+        allow_html: bool = self._settings.rich_text_in_formulas
         plain_text_name: str
         if filter_text:
             filter_text_lowercase: str = filter_text.casefold()
@@ -83,10 +86,13 @@ class SubstancesBox(QGroupBox):
                             if plain_text_name not in list_items:
                                 list_items[plain_text_name] = set()
                             list_items[plain_text_name].add(entry[SPECIES_TAG])
+                            if (html_name := best_name(entry, allow_html=allow_html)) not in list_items:
+                                list_items[html_name] = set()
+                            list_items[html_name].add(entry[SPECIES_TAG])
             # species tag suspected
             if filter_text.isdecimal():
                 for entry in self._catalog.catalog:
-                    plain_text_name = str(entry.get(SPECIES_TAG, ''))
+                    plain_text_name = str(entry[SPECIES_TAG])
                     if plain_text_name.startswith(filter_text):
                         if plain_text_name not in list_items:
                             list_items[plain_text_name] = set()
@@ -135,9 +141,18 @@ class SubstancesBox(QGroupBox):
                     continue
                 new_item: QListWidgetItem = QListWidgetItem(text)
                 new_item.setData(Qt.ItemDataRole.UserRole, species_tags)
-                new_item.setFlags(new_item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
                 new_item.setCheckState(new_item_check_state)
                 self._list_substance.addItem(new_item)
+
+        if not self._check_keep_selection.isChecked():
+            newly_selected_substances: set[int] = set().union(
+                *((self._list_substance.item(row).data(Qt.ItemDataRole.UserRole) & self._selected_substances)
+                for row in range(self._list_substance.count()))
+            )
+            if newly_selected_substances != self._selected_substances:
+                self._selected_substances = newly_selected_substances
+                self.selectedSubstancesChanged.emit()
+        self._text_substance.setFocus()
 
     @Slot(str)
     def _on_text_changed(self, current_text: str) -> None:
@@ -146,10 +161,9 @@ class SubstancesBox(QGroupBox):
     @Slot(bool)
     def _on_check_save_selection_toggled(self, new_state: bool) -> None:
         if not new_state:
-            newly_selected_substances: set[str] = set(
-                self._list_substance.item(row).text()
-                for row in range(self._list_substance.count())
-                if self._list_substance.item(row).checkState() == Qt.CheckState.Checked
+            newly_selected_substances: set[int] = set().union(
+                *((self._list_substance.item(row).data(Qt.ItemDataRole.UserRole) & self._selected_substances)
+                for row in range(self._list_substance.count()))
             )
             if newly_selected_substances != self._selected_substances:
                 self._selected_substances = newly_selected_substances
@@ -157,20 +171,48 @@ class SubstancesBox(QGroupBox):
 
     @Slot()
     def _on_button_select_none_clicked(self) -> None:
+        self._list_substance.blockSignals(True)
         for i in range(self._list_substance.count()):
             self._list_substance.item(i).setCheckState(Qt.CheckState.Unchecked)
+        self._list_substance.blockSignals(False)
         self._selected_substances.clear()
         self.selectedSubstancesChanged.emit()
 
     @Slot(QModelIndex)
     def _on_list_substance_double_clicked(self, index: QModelIndex) -> None:
+        @Slot(int, bool)
+        def on_tag_selection_changed(species_tag: int, selected: bool) -> None:
+            if selected:
+                self._selected_substances.add(species_tag)
+            else:
+                self._selected_substances.discard(species_tag)
+            for i in range(self._list_substance.count()):
+                _item: QListWidgetItem = self._list_substance.item(i)
+                _species_tags: set[int] = _item.data(Qt.ItemDataRole.UserRole)
+                new_item_check_state: Qt.CheckState
+                if _species_tags <= self._selected_substances:
+                    new_item_check_state = Qt.CheckState.Checked
+                elif _species_tags & self._selected_substances:
+                    new_item_check_state = Qt.CheckState.PartiallyChecked
+                else:
+                    new_item_check_state = Qt.CheckState.Unchecked
+                if _item.checkState() != new_item_check_state:
+                    self._list_substance.blockSignals(True)
+                    _item.setCheckState(new_item_check_state)
+                    self._list_substance.blockSignals(False)
+                    self.selectedSubstancesChanged.emit()
+
         item: QListWidgetItem = self._list_substance.item(index.row())
         species_tags: set[int] = item.data(Qt.ItemDataRole.UserRole).copy()
         if len(species_tags) > 1:
+            allow_html: bool = self._settings.rich_text_in_formulas
             sis: SubstanceInfoSelector = SubstanceInfoSelector(
                 self.catalog, species_tags,
+                selected_species_tags=self._selected_substances,
                 inchi_key_search_url_template=self._settings.inchi_key_search_url_template,
+                allow_html=allow_html,
                 parent=self)
+            sis.tagSelectionChanged.connect(on_tag_selection_changed)
             sis.exec()
         elif species_tags:  # if not empty
             syn: SubstanceInfo = SubstanceInfo(
