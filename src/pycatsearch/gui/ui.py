@@ -5,18 +5,18 @@ from math import inf
 from typing import Any, Callable, Final, final
 
 from qtpy.QtCore import (QAbstractTableModel, QByteArray, QItemSelection, QMimeData, QModelIndex, QPersistentModelIndex,
-                         QPoint, QRect, QSize, Qt, Slot)
-from qtpy.QtGui import (QAbstractTextDocumentLayout, QClipboard, QCloseEvent, QCursor, QIcon, QPainter, QPixmap,
-                        QScreen, QTextDocument)
+                         QPoint, Qt, Slot)
+from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPixmap, QScreen
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
-                            QMainWindow, QMessageBox, QPushButton, QSplitter, QStatusBar, QStyle, QStyleOptionViewItem,
-                            QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
+                            QMainWindow, QMessageBox, QPushButton, QSplitter, QStatusBar, QTableView, QVBoxLayout,
+                            QWidget)
 from qtpy.compat import getopenfilenames
 
 from .catalog_info import CatalogInfo
 from .download_dialog import DownloadDialog
 from .float_spinbox import FloatSpinBox
 from .frequency_box import FrequencyBox
+from .html_style_delegate import HTMLDelegate
 from .menu_bar import MenuBar
 from .preferences import Preferences
 from .settings import Settings
@@ -50,37 +50,6 @@ def substitute(fmt: str, *args: Any) -> str:
     for index, value in enumerate(args):
         res = res.replace(f'{{{index}}}', str(value))
     return res
-
-
-class HTMLDelegate(QStyledItemDelegate):
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem,
-              index: QModelIndex | QPersistentModelIndex) -> None:
-        self.initStyleOption(option, index)
-        style: QStyle
-        if option.widget:
-            style = option.widget.style()
-        else:
-            style = QApplication.style()
-        doc: QTextDocument = QTextDocument()
-        doc.setHtml(option.text)
-        option.text = ''
-        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, option, painter)
-        ctx: QAbstractTextDocumentLayout.PaintContext = QAbstractTextDocumentLayout.PaintContext()
-        text_rect: QRect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, option)
-        painter.save()
-        painter.translate(text_rect.topLeft())
-        painter.setClipRect(text_rect.translated(-text_rect.topLeft()))
-        painter.translate(0, 0.5 * (option.rect.height() - doc.size().height()))
-        doc.documentLayout().draw(painter, ctx)
-        painter.restore()
-
-    def sizeHint(self, option: QStyleOptionViewItem | None, index: QModelIndex | QPersistentModelIndex) -> QSize:
-        options: QStyleOptionViewItem = QStyleOptionViewItem(option)
-        self.initStyleOption(options, index)
-        doc: QTextDocument = QTextDocument()
-        doc.setHtml(options.text)
-        doc.setTextWidth(options.rect.width())
-        return QSize(round(doc.idealWidth()), round(doc.size().height()))
 
 
 class LinesListModel(QAbstractTableModel):
