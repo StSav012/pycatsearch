@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import sys
 from math import inf
 from typing import Any, Callable, Final, final
 
@@ -26,6 +27,9 @@ from .. import __version__
 from ..catalog import Catalog, CatalogEntryType
 from ..utils import (FREQUENCY, INTENSITY, LINES, LOWER_STATE_ENERGY, ReleaseInfo, SPECIES_TAG, best_name,
                      ensure_prefix, latest_release, remove_html, update_with_pip, wrap_in_html)
+
+if sys.version_info < (3, 10):
+    from ..utils import zip
 
 __all__ = ['UI']
 
