@@ -104,8 +104,8 @@ def _make_old_qt_compatible_again() -> None:
         from functools import partialmethod
 
         from qtpy.QtCore import QObject
-        from qtpy.QtGui import QAction, QIcon, QKeySequence
-        from qtpy.QtWidgets import QMenu, QToolBar
+        from qtpy.QtGui import QIcon, QKeySequence
+        from qtpy.QtWidgets import QAction, QMenu, QToolBar
 
         QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling)
         QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
