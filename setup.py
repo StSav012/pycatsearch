@@ -60,10 +60,7 @@ def required_packages() -> list[str]:
             return package_requirement[0]
 
         if isinstance(package_requirement, PackageRequirement):
-            if is_package_importable(package_requirement):
-                return package_requirement
-            else:
-                return package_requirement
+            return package_requirement
         raise ValueError('Invalid requirements')
 
     qt_list: list[PackageRequirement]
