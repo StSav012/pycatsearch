@@ -391,4 +391,4 @@ class Catalog:
 
         f: BinaryIO
         with opener.open('wb') as f:
-            f.write(ensure_bytes(json.dumps(data_to_save, indent=4)))
+            f.write(ensure_bytes(json.dumps(data_to_save)))
