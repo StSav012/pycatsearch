@@ -5,8 +5,8 @@ import sys
 from math import inf
 from typing import Any, Callable, Final, final
 
-from qtpy.QtCore import (QAbstractTableModel, QByteArray, QItemSelection, QMimeData, QModelIndex, QPersistentModelIndex,
-                         QPoint, Qt, Slot, QLocale)
+from qtpy.QtCore import (QAbstractTableModel, QByteArray, QItemSelection, QLocale, QMimeData, QModelIndex,
+                         QPersistentModelIndex, QPoint, Qt, Slot)
 from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPixmap, QScreen
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
                             QMainWindow, QMessageBox, QPushButton, QSplitter, QStatusBar, QTableView, QVBoxLayout,
@@ -47,13 +47,6 @@ def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.
     else:
         mime_data.setText(text)
     clipboard.setMimeData(mime_data, QClipboard.Mode.Clipboard)
-
-
-def substitute(fmt: str, *args: Any) -> str:
-    res: str = fmt
-    for index, value in enumerate(args):
-        res = res.replace(f'{{{index}}}', str(value))
-    return res
 
 
 class LinesListModel(QAbstractTableModel):
@@ -97,19 +90,19 @@ class LinesListModel(QAbstractTableModel):
         self._data: list[LinesListModel.DataType] = []
         self._rows_loaded: int = LinesListModel.ROW_BATCH_COUNT
 
-        unit_format: Final[str] = self.tr('{0} [{1}]', 'unit format')
+        unit_format: Final[str] = self.tr('{value} [{unit}]', 'unit format')
         self._header: Final[list[str]] = [
             self.tr('Substance'),
-            substitute(unit_format, self.tr("Frequency"), self._settings.frequency_unit_str),
-            substitute(unit_format, self.tr("Intensity"), self._settings.intensity_unit_str),
-            substitute(unit_format, self.tr("Lower state energy"), self._settings.energy_unit_str),
+            unit_format.format(value=self.tr('Frequency'), unit=self._settings.frequency_unit_str),
+            unit_format.format(value=self.tr('Intensity'), unit=self._settings.intensity_unit_str),
+            unit_format.format(value=self.tr('Lower state energy'), unit=self._settings.energy_unit_str),
         ]
 
     def update_units(self) -> None:
-        unit_format: Final[str] = self.tr('{0} [{1}]', 'unit format')
-        self._header[1] = substitute(unit_format, self.tr("Frequency"), self._settings.frequency_unit_str)
-        self._header[2] = substitute(unit_format, self.tr("Intensity"), self._settings.intensity_unit_str)
-        self._header[3] = substitute(unit_format, self.tr("Lower state energy"), self._settings.energy_unit_str)
+        unit_format: Final[str] = self.tr('{value} [{unit}]', 'unit format')
+        self._header[1] = unit_format.format(value=self.tr('Frequency'), unit=self._settings.frequency_unit_str)
+        self._header[2] = unit_format.format(value=self.tr('Intensity'), unit=self._settings.intensity_unit_str)
+        self._header[3] = unit_format.format(value=self.tr('Lower state energy'), unit=self._settings.energy_unit_str)
 
     def rowCount(self, parent: QModelIndex | QPersistentModelIndex = ...) -> int:
         return min(len(self._data), self._rows_loaded)
@@ -339,7 +332,7 @@ class UI(QMainWindow):
             self.spin_temperature.setMaximum(999.99)
             self.spin_temperature.setValue(300.0)
             self.spin_temperature.setStatusTip(self.tr('Temperature to calculate intensity'))
-            self.spin_temperature.setSuffix(self.tr(' K'))
+            self.spin_temperature.setSuffix(self.tr(' K'))
             layout_options.addRow(self.tr('Temperature:'), self.spin_temperature)
             layout_right.addLayout(layout_options, 0)
 
@@ -506,7 +499,7 @@ class UI(QMainWindow):
                                                              directory=(*self.catalog.sources, '')[0])
 
         if new_catalog_file_names:
-            self.status_bar.showMessage(self.tr('Loading...'))
+            self.status_bar.showMessage(self.tr('Loading…'))
             if self.load_catalog(*new_catalog_file_names):
                 self.status_bar.showMessage(self.tr('Catalogs loaded.'))
             else:
@@ -518,7 +511,7 @@ class UI(QMainWindow):
     @Slot()
     def _on_action_reload_triggered(self) -> None:
         if self.catalog.sources:
-            self.status_bar.showMessage(self.tr('Loading...'))
+            self.status_bar.showMessage(self.tr('Loading…'))
             if self.load_catalog(*self.catalog.sources):
                 self.status_bar.showMessage(self.tr('Catalogs loaded.'))
             else:
@@ -712,32 +705,33 @@ class UI(QMainWindow):
 
     @Slot()
     def _on_action_about_triggered(self) -> None:
-        QMessageBox.about(self,
-                          self.tr("About CatSearch"),
-                          "<html><p>"
-                          + self.tr("CatSearch is a means of searching through spectroscopy lines catalogs. "
-                                    "It's an offline application.")
-                          + "</p><p>"
-                          + self.tr("It relies on the data stored in JSON files.")
-                          + "</p><p>"
-                          + self.tr("One can write their own catalogs as well as download data from "
-                                    "<a href='https://spec.jpl.nasa.gov/'>JPL</a> and "
-                                    "<a href='https://astro.uni-koeln.de/'>CDMS</a> spectroscopy databases "
-                                    "available in the Internet.")
-                          + "</p><p>"
-                          + self.tr("Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported.")
-                          + "</p><p>"
-                          + self.tr('See {0} for more info.')
-                          .format('<a href="https://github.com/StSav012/pycatsearch/blob/master/README.md">{0}</a>')
-                          .format(self.tr('readme'))
-                          + "</p><br><p>"
-                          + self.tr("CatSearch is licensed under the {0}.")
-                          .format("<a href='https://www.gnu.org/copyleft/lesser.html'>{0}</a>"
-                                  .format(self.tr("GNU LGPL version 3")))
-                          + "</p><p>"
-                          + self.tr("The source code is available on {0}.").format(
-                              "<a href='https://github.com/StSav012/pycatsearch'>GitHub</a>")
-                          + "</p></html>")
+        def a_tag(text: str, url: str) -> str:
+            return f'<a href="{url}">{text}</a>'
+
+        QMessageBox.about(
+            self,
+            self.tr('About CatSearch'),
+            '<html><p>'
+            + '</p><p>'.join((
+                self.tr('CatSearch is a means of searching through spectroscopy lines catalogs. '
+                        "It's an offline application."),
+                self.tr('It relies on the data stored in JSON files.'),
+                self.tr('One can use their own catalogs as well as download data from '
+                        '<a href="https://spec.jpl.nasa.gov/">JPL</a> and '
+                        '<a href="https://astro.uni-koeln.de/">CDMS</a> spectroscopy databases '
+                        'available on the Internet.'),
+                self.tr('Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported.'),
+                self.tr('See {readme_link} for more info.')
+                .format(readme_link=a_tag(url='https://github.com/StSav012/pycatsearch/blob/master/README.md',
+                                          text=self.tr('readme'))),
+                self.tr('CatSearch is licensed under the {license_link}.')
+                .format(license_link=a_tag(url='https://www.gnu.org/copyleft/lesser.html',
+                                           text=self.tr('GNU LGPL version 3'))),
+                self.tr('The source code is available on {repo_link}.')
+                .format(repo_link=a_tag(url='https://github.com/StSav012/pycatsearch', text='GitHub')),
+            ))
+            + '</p></html>'
+        )
 
     @Slot()
     def _on_action_about_qt_triggered(self) -> None:
@@ -882,7 +876,7 @@ class UI(QMainWindow):
 
     @Slot()
     def _on_search_requested(self) -> None:
-        self.status_bar.showMessage(self.tr('Searching...'))
+        self.status_bar.showMessage(self.tr('Searching…'))
         self.setDisabled(True)
         last_cursor: QCursor = self.cursor()
         self.setCursor(Qt.CursorShape.WaitCursor)

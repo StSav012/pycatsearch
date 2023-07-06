@@ -140,7 +140,8 @@ class CatalogInfo(QDialog):
         frequency_limits_list.setTitle(self.tr('Frequency limits:'))
         layout.addWidget(frequency_limits_list)
         frequency_limits_list.addItems([
-            self.tr('{frequency_limit[0]} to {frequency_limit[1]} MHz').format(frequency_limit=frequency_limit)
+            self.tr('{min_frequency} to {max_frequency} MHz').format(min_frequency=min(frequency_limit),
+                                                                     max_frequency=max(frequency_limit))
             for frequency_limit in catalog.frequency_limits])
 
         stat_layout: QFormLayout = QFormLayout()

@@ -23,7 +23,7 @@ class FrequencySpinBox(QDoubleSpinBox):
         self.setAccelerated(True)
         self.setDecimals(4)
         self.setMaximum(9999999.9999)
-        self.setSuffix(self.tr(' MHz'))
+        self.setSuffix(self.tr(' MHz'))
         self.setCorrectionMode(QAbstractSpinBox.CorrectionMode.CorrectToNearestValue)
         self.setKeyboardTracking(False)  # not to emit signals while typing
 

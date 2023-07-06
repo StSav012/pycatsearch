@@ -37,8 +37,8 @@ class SettingsPage(QWizardPage):
         self.spin_max_frequency.valueChanged.connect(self.spin_min_frequency.setMaximum)
         self.spin_min_frequency.setPrefix(self.tr('', 'spin prefix'))
         self.spin_max_frequency.setPrefix(self.tr('', 'spin prefix'))
-        self.spin_min_frequency.setSuffix(self.tr(' MHz', 'spin suffix'))
-        self.spin_max_frequency.setSuffix(self.tr(' MHz', 'spin suffix'))
+        self.spin_min_frequency.setSuffix(self.tr(' MHz', 'spin suffix'))
+        self.spin_max_frequency.setSuffix(self.tr(' MHz', 'spin suffix'))
         layout.addRow(self.tr('Minimal frequency:'), self.spin_min_frequency)
         layout.addRow(self.tr('Maximal frequency:'), self.spin_max_frequency)
 
@@ -241,13 +241,13 @@ class DownloadDialog(QWizard):
                 ('.json',): self.tr('JSON', 'file type'),
             }
             save_file_name: str
-            save_file_name, _ = self._get_save_file_name(formats=_formats, caption=self.tr('Save As...'))
+            save_file_name, _ = self._get_save_file_name(formats=_formats, caption=self.tr('Save As…'))
             if not save_file_name:
                 return
 
             ws: WaitingScreen = WaitingScreen(
                 self,
-                label=self.tr('Please wait...'),
+                label=self.tr('Please wait…'),
                 target=save_catalog_to_file,
                 kwargs={
                     'filename': save_file_name,

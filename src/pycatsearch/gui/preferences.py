@@ -44,7 +44,7 @@ class PreferencesPage(QWidget):
         for key2, value2 in value.items():
             if isinstance(value2, Settings.CallbackOnly):
                 if isinstance(getattr(self.settings, value2.callback), bool):
-                    check_box = QCheckBox(self.tr(key2), self)
+                    check_box = QCheckBox(self.settings.tr(key2), self)
                     setattr(check_box, 'callback', value2.callback)
                     check_box.setChecked(getattr(self.settings, value2.callback))
                     check_box.toggled.connect(partial(self._on_event, sender=check_box))
@@ -73,12 +73,12 @@ class PreferencesPage(QWidget):
                 else:
                     combobox_data = dict(enumerate(value2.combobox_data))
                 for index, (data, item) in enumerate(combobox_data.items()):
-                    combo_box.addItem(self.tr(item), data)
+                    combo_box.addItem(self.settings.tr(item), data)
                 combo_box.setEditable(False)
                 combo_box.setCurrentText(combobox_data[getattr(self.settings, value2.callback)])
                 combo_box.currentIndexChanged.connect(
                     partial(self._on_combo_box_current_index_changed, sender=combo_box))
-                layout.addRow(self.tr(key2), combo_box)
+                layout.addRow(self.settings.tr(key2), combo_box)
             elif isinstance(value2, Settings.EditableComboboxAndCallback):
                 combo_box = QComboBox(self)
                 setattr(combo_box, 'callback', value2.callback)
@@ -91,7 +91,7 @@ class PreferencesPage(QWidget):
                     combo_box.setCurrentIndex(0)
                 combo_box.setEditable(True)
                 combo_box.currentTextChanged.connect(partial(self._on_event, sender=combo_box))
-                layout.addRow(self.tr(key2), combo_box)
+                layout.addRow(self.settings.tr(key2), combo_box)
             else:
                 logger.error(f'{value2!r} is not supported')
 

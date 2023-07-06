@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
 from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox, QGroupBox, QLineEdit, QListWidget,
@@ -65,6 +65,30 @@ class SubstancesBox(QGroupBox):
         self._list_substance.itemChanged.connect(self._on_list_substance_item_changed)
 
         self.load_settings()
+
+        # add the texts to the translation table but don't run the code at runtime
+        if TYPE_CHECKING:
+            self.tr('Catalog')
+            self.tr('Lines')
+            self.tr('Frequency')
+            self.tr('Intensity')
+            self.tr('ID')
+            self.tr('Molecule')
+            self.tr('Structural formula')
+            self.tr('Stoichiometric formula')
+            self.tr('Molecule symbol')
+            self.tr('Species tag')
+            self.tr('Name')
+            self.tr('Trivial name')
+            self.tr('Isotopolog')
+            self.tr('State (TeX)')
+            self.tr('State (HTML)')
+            self.tr('InChI key')
+            self.tr('Contributor')
+            self.tr('Version')
+            self.tr('Date of entry')
+            self.tr('Degrees of freedom')
+            self.tr('Lower state energy')
 
     def _filter_substances_list(self, filter_text: str) -> dict[str, set[int]]:
         list_items: dict[str, set[int]] = dict()

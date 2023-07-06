@@ -16,7 +16,7 @@ class MenuBar(QMenuBar):
         self.menu_file: QMenu = self.addMenu(self.tr('&File'))
         self.action_load: QAction = self.menu_file.addAction(
             self._icon('document-open', 'mdi6.folder-open', standard_pixmap=QStyle.StandardPixmap.SP_DialogOpenButton),
-            self.tr('&Load Catalog...'),
+            self.tr('&Load Catalog…'),
             QKeySequence.StandardKey.Open
         )
         self.action_reload: QAction = self.menu_file.addAction(
@@ -27,12 +27,12 @@ class MenuBar(QMenuBar):
         self.menu_file.addSeparator()
         self.action_download_catalog: QAction = self.menu_file.addAction(
             self._icon('network-receive', 'mdi6.download'),
-            self.tr('&Download Catalog...')
+            self.tr('&Download Catalog…')
         )
         self.menu_file.addSeparator()
         self.action_preferences: QAction = self.menu_file.addAction(
             self._icon('preferences-other', 'mdi6.application-settings'),
-            self.tr('&Preferences...'),
+            self.tr('&Preferences…'),
             QKeySequence.StandardKey.Preferences
         )
         self.menu_file.addSeparator()
@@ -45,7 +45,7 @@ class MenuBar(QMenuBar):
         self.menu_edit: QMenu = self.addMenu(self.tr('&Edit'))
         self.action_clear: QAction = self.menu_edit.addAction(
             self._icon('edit-clear', 'mdi6.broom', standard_pixmap=QStyle.StandardPixmap.SP_DialogResetButton),
-            self.tr('&Clear Results')
+            self.tr('Clea&r Results')
         )
         self.menu_edit.addSeparator()
         self.menu_copy_only: QMenu = self.menu_edit.addMenu(self.tr('Copy &Only'))
@@ -72,13 +72,13 @@ class MenuBar(QMenuBar):
         )
         self.action_copy: QAction = self.menu_edit.addAction(
             self._icon('edit-copy', 'mdi6.content-copy'),
-            self.tr('Co&py Selection'),
+            self.tr('&Copy Selection'),
             QKeySequence.StandardKey.Copy
         )
         self.menu_edit.addSeparator()
         self.action_select_all: QAction = self.menu_edit.addAction(
             self._icon('edit-select-all', 'mdi6.select-all'),
-            self.tr('&Select All'),
+            self.tr('Select &All'),
             QKeySequence.StandardKey.SelectAll
         )
         self.menu_edit.addSeparator()
@@ -98,21 +98,21 @@ class MenuBar(QMenuBar):
         self.menu_help: QMenu = self.addMenu(self.tr('&Help'))
         self.action_check_updates: QAction = self.menu_help.addAction(
             self._icon('application-update', 'mdi6.update'),
-            self.tr('Check for Updates...')
+            self.tr('Check for &Updates…')
         )
         self.menu_help.addSeparator()
         self.action_about_catalogs: QAction = self.menu_help.addAction(
             self._icon('document-properties', 'mdi6.information'),
-            self.tr('About Catalogs...')
+            self.tr('About &Catalogs…')
         )
         self.action_about: QAction = self.menu_help.addAction(
             self._icon('help-about', 'mdi6.help', standard_pixmap=QStyle.StandardPixmap.SP_FileDialogInfoView),
-            self.tr('&About...'),
+            self.tr('&About…'),
             QKeySequence.StandardKey.HelpContents
         )
         self.action_about_qt: QAction = self.menu_help.addAction(
             self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarMenuButton),
-            self.tr('About &Qt...')
+            self.tr('About &Qt…')
         )
 
         self.action_preferences.setMenuRole(QAction.MenuRole.PreferencesRole)
