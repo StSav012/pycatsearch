@@ -102,24 +102,27 @@ class Catalog:
 
         def __init__(self, path: str | PathLike[str]) -> None:
             self._path: Path = Path(path)
-            suffix: str = self._path.suffix.casefold()
             self._opener: Callable
-            if suffix in Catalog.Opener.OPENERS_BY_SUFFIX:
-                self._opener = Catalog.Opener.OPENERS_BY_SUFFIX[suffix]
-            else:
-                if self._path.exists():
-                    max_signature_length: int = max(map(len, Catalog.Opener.OPENERS_BY_SIGNATURE.keys()))
-                    f: BinaryIO
-                    with self._path.open('rb') as f:
-                        init_bytes: bytes = f.read(max_signature_length)
-                    key: bytes
-                    value: Callable
-                    for key, value in Catalog.Opener.OPENERS_BY_SIGNATURE.items():
-                        if init_bytes.startswith(key):
-                            self._opener = value
-                            return
+            suffix: str = ''
+            s: str
+            for s in reversed(self._path.suffixes):
+                suffix = s + suffix
+                if suffix in Catalog.Opener.OPENERS_BY_SUFFIX:
+                    self._opener = Catalog.Opener.OPENERS_BY_SUFFIX[suffix]
+                    return
+            if self._path.exists():
+                max_signature_length: int = max(map(len, Catalog.Opener.OPENERS_BY_SIGNATURE.keys()))
+                f: BinaryIO
+                with self._path.open('rb') as f:
+                    init_bytes: bytes = f.read(max_signature_length)
+                key: bytes
+                value: Callable
+                for key, value in Catalog.Opener.OPENERS_BY_SIGNATURE.items():
+                    if init_bytes.startswith(key):
+                        self._opener = value
+                        return
 
-                raise ValueError(f'Unknown file: {path}')
+            raise ValueError(f'Unknown file: {path}')
 
         @contextmanager
         def open(self, mode: str, encoding: str | None = None,
