@@ -48,10 +48,12 @@ class SettingsPage(QWizardPage):
             self.registerField('max_frequency', self.spin_max_frequency,
                                'value', self.spin_max_frequency.valueChanged)
         except TypeError:  # PySide*
+            from qtpy.QtCore import SIGNAL
+
             self.registerField('min_frequency', self.spin_min_frequency,
-                               'value', 'self.spin_min_frequency.valueChanged')
+                               'value', SIGNAL('self.spin_min_frequency.valueChanged'))
             self.registerField('max_frequency', self.spin_max_frequency,
-                               'value', 'self.spin_max_frequency.valueChanged')
+                               'value', SIGNAL('self.spin_max_frequency.valueChanged'))
 
     @property
     def frequency_limits(self) -> tuple[float, float]:
