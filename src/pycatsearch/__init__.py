@@ -5,6 +5,7 @@ import argparse
 import platform
 import sys
 from datetime import datetime, timedelta, timezone
+from typing import AnyStr
 
 from .catalog import Catalog
 
@@ -17,15 +18,15 @@ except ImportError:
     __version__ = ''
 
 
-def _version_tuple(version_string: str) -> tuple[int | str, ...]:
-    result: tuple[int | str, ...] = tuple()
-    part: str
-    for part in version_string.split('.'):
+def _version_tuple(version_string: AnyStr) -> tuple[int | AnyStr, ...]:
+    result: tuple[int | AnyStr, ...] = tuple()
+    part: AnyStr
+    for part in version_string.split('.' if isinstance(version_string, str) else b'.'):
         try:
             result += (int(part),)
         except ValueError:
             # follow `pkg_resources` version 0.6a9: remove dashes to sort letters after digits
-            result += (part.replace('-', ''),)
+            result += (part.replace('-', ''),) if isinstance(part, str) else (part.replace(b'-', b''),)
     return result
 
 
