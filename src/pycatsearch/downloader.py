@@ -41,7 +41,7 @@ class Downloader(Thread):
         self._sessions: dict[tuple[str, str], HTTPConnection | HTTPSConnection] = dict()
 
     def __del__(self) -> None:
-        self._run = False
+        self.stop()
         session: HTTPConnection | HTTPSConnection
         for session in self._sessions.values():
             session.close()
@@ -50,8 +50,11 @@ class Downloader(Thread):
     def catalog(self) -> list[dict[str, int | str | list[dict[str, float]]]]:
         return self._catalog.copy()
 
-    def join(self, timeout: float | None = ...) -> None:
+    def stop(self) -> None:
         self._run = False
+
+    def join(self, timeout: float | None = None) -> None:
+        self.stop()
         session: HTTPConnection | HTTPSConnection
         for session in self._sessions.values():
             session.close()
@@ -219,9 +222,20 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
     downloader: Downloader = Downloader(frequency_limits=frequency_limits, state_queue=state_queue,
                                         existing_catalog=existing_catalog)
     downloader.start()
+
+    cataloged_species: int
+    not_yet_processed_species: int
     while downloader.is_alive():
-        cataloged_species: int
-        not_yet_processed_species: int
+        try:
+            cataloged_species, not_yet_processed_species = state_queue.get(block=True, timeout=0.1)
+        except Empty:
+            continue
+        except KeyboardInterrupt:
+            downloader.stop()
+        else:
+            logger.info(f'got {cataloged_species} entries, {not_yet_processed_species} left')
+
+    while downloader.is_alive():
         try:
             cataloged_species, not_yet_processed_species = state_queue.get(block=True, timeout=0.1)
         except Empty:
@@ -230,6 +244,16 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
             downloader.join(0.1)
         else:
             logger.info(f'got {cataloged_species} entries, {not_yet_processed_species} left')
+
+    while not state_queue.empty():
+        try:
+            cataloged_species, not_yet_processed_species = state_queue.get()
+        except KeyboardInterrupt:
+            downloader.join(0.1)
+        else:
+            logger.info(f'got {cataloged_species} entries, {not_yet_processed_species} left')
+
+    downloader.join()
 
     return downloader.catalog
 
