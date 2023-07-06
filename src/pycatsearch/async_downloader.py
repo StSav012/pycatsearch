@@ -177,19 +177,17 @@ class Downloader(Thread):
                 species_count: Final[int] = len(species)
                 skipped_count: int = 0
                 catalog_entry: dict[str, int | str | list[dict[str, float]]]
-                future_entry_index: int
                 future_entry: asyncio.Future[dict[str, int | str | list[dict[str, float]]]]
-                for future_entry_index, future_entry in enumerate(asyncio.as_completed(self._tasks), start=1):
+                for future_entry in asyncio.as_completed(self._tasks):
                     catalog_entry = await future_entry
                     if catalog_entry.get(LINES, []):
                         catalog.append(catalog_entry)
+                        if self._state_queue is not None:
+                            self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
                     else:
                         skipped_count += 1
-                    if self._state_queue is not None:
-                        self._state_queue.put((len(catalog), species_count - future_entry_index - skipped_count))
-
-            if self._state_queue is not None:
-                self._state_queue.put((len(catalog), 0))
+                        if self._state_queue is not None and self._run:
+                            self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
 
             return catalog
 
