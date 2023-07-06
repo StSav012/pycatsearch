@@ -181,7 +181,7 @@ class Downloader(Thread):
                 future_entry: asyncio.Future[dict[str, int | str | list[dict[str, float]]]]
                 for future_entry_index, future_entry in enumerate(asyncio.as_completed(self._tasks), start=1):
                     catalog_entry = await future_entry
-                    if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]:
+                    if catalog_entry.get(LINES, []):
                         catalog.append(catalog_entry)
                     else:
                         skipped_count += 1

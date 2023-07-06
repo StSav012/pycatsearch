@@ -192,7 +192,7 @@ class Downloader(Thread):
         _e: dict[str, int | str]
         for entry_index, _e in enumerate(species):
             catalog_entry = get_substance_catalog(_e)
-            if catalog_entry and LINES in catalog_entry and catalog_entry[LINES]:
+            if catalog_entry.get(LINES, []):
                 catalog.append(catalog_entry)
             else:
                 skipped_count += 1
