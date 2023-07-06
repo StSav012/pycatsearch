@@ -20,8 +20,9 @@ try:
 except ImportError:
     import json
 
+from .catalog import Catalog
 from .catalog_entry import CatalogEntry
-from .utils import LINES, SPECIES_TAG, DEGREES_OF_FREEDOM, within, save_catalog_to_file
+from .utils import FREQUENCY, LINES, SPECIES_TAG, DEGREES_OF_FREEDOM, within, save_catalog_to_file
 
 __all__ = ['Downloader', 'get_catalog', 'save_catalog', 'download']
 
@@ -30,12 +31,14 @@ logger: logging.Logger = logging.getLogger('async_downloader')
 
 class Downloader(Thread):
     def __init__(self,
-                 frequency_limits: tuple[float, float] = (-inf, inf),
+                 frequency_limits: tuple[float, float] = (-inf, inf), *,
+                 existing_catalog: Catalog | None = None,
                  state_queue: Queue[tuple[int, int]] | None = None) -> None:
         super().__init__()
         self._state_queue: Queue[tuple[int, int]] | None = state_queue
         self._frequency_limits: tuple[float, float] = frequency_limits
         self._catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
+        self._existing_catalog: Catalog | None = existing_catalog
 
         self._run: bool = False
         self._tasks: list[asyncio.Task] = []
@@ -132,6 +135,21 @@ class Downloader(Thread):
                     if SPECIES_TAG not in species_entry:
                         # nothing to go on with
                         return dict()
+
+                    if (self._existing_catalog is not None
+                            and self._existing_catalog.min_frequency <= min(self._frequency_limits)
+                            and self._existing_catalog.max_frequency >= max(self._frequency_limits)):
+                        existing_catalog_entry: dict[str, int | str | list[dict[str, float]]]
+                        for existing_catalog_entry in self._existing_catalog.catalog:
+                            if all(existing_catalog_entry.get(key, type(value)()) == value
+                                   for key, value in species_entry.items()):
+                                logger.debug(f'using existing entry for species tag {species_entry[SPECIES_TAG]}')
+                                _catalog_entry = existing_catalog_entry.copy()
+                                _catalog_entry[LINES] = [_line
+                                                         for _line in existing_catalog_entry.get(LINES, [])
+                                                         if within(_line[FREQUENCY], self._frequency_limits)]
+                                return _catalog_entry
+
                     fn: str = entry_url(species_tag=cast(int, species_entry[SPECIES_TAG]))
                     if not fn:  # no need to download a file for the species tag
                         return dict()
@@ -178,18 +196,21 @@ class Downloader(Thread):
         with suppress(RuntimeError):  # it might be “cannot schedule new futures after shutdown”
             self._catalog = asyncio.run(async_get_catalog())
 
-
-def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
+def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
+                 existing_catalog: Catalog | None = None) \
         -> list[dict[str, int | str | list[dict[str, float]]]]:
     """
     Download the spectral lines catalog data
 
     :param tuple frequency_limits: the frequency range of the catalog entries to keep.
+    :param Catalog | None existing_catalog: an existing catalog to base the data on.
+        If specified, only the entries not presented in it will be downloaded.
     :return: a list of the spectral lines catalog entries.
     """
 
     state_queue: Queue[tuple[int, int]] = Queue()
-    downloader: Downloader = Downloader(frequency_limits=frequency_limits, state_queue=state_queue)
+    downloader: Downloader = Downloader(frequency_limits=frequency_limits, state_queue=state_queue,
+                                        existing_catalog=existing_catalog)
     downloader.start()
     while downloader.is_alive():
         cataloged_species: int
@@ -205,7 +226,8 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf)) \
 
 
 def save_catalog(filename: str,
-                 frequency_limits: tuple[float, float] = (0, inf)) -> bool:
+                 frequency_limits: tuple[float, float] = (0, inf), *,
+                 existing_catalog: Catalog | None = None) -> bool:
     """
     Download and save the spectral lines catalog data
 
@@ -213,16 +235,20 @@ def save_catalog(filename: str,
         If it ends with an unknown suffix, `'.json.gz'` is appended to it.
     :param tuple frequency_limits: the tuple of the maximal and the minimal frequencies of the lines being stored.
         All the lines outside the specified frequency range are omitted.
+    :param Catalog | None existing_catalog: an existing catalog to base the data on.
+        If specified, only the entries not presented in it will be downloaded.
     """
 
     return save_catalog_to_file(filename=filename,
-                                catalog=get_catalog(frequency_limits),
+                                catalog=get_catalog(frequency_limits, existing_catalog=existing_catalog),
                                 frequency_limits=frequency_limits)
 
 
 def download() -> None:
     import argparse
     from datetime import datetime
+
+    from .catalog import Catalog
 
     ap: argparse.ArgumentParser = argparse.ArgumentParser(
         allow_abbrev=True,
@@ -231,9 +257,11 @@ def download() -> None:
     ap.add_argument('catalog', type=str, help='the catalog location to save into (required)')
     ap.add_argument('-f''min', '--min-frequency', type=float, help='the lower frequency [MHz] to take', default=-inf)
     ap.add_argument('-f''max', '--max-frequency', type=float, help='the upper frequency [MHz] to take', default=+inf)
+    ap.add_argument('-b', '--base', type=Path, help='an existing catalog to base the data on', default=None)
     args: argparse.Namespace = ap.parse_intermixed_args()
 
     logging.basicConfig(level=logging.DEBUG)
     logger.info(f'started at {datetime.now()}')
-    save_catalog(args.catalog, (args.min_frequency, args.max_frequency))
+    save_catalog(args.catalog, (args.min_frequency, args.max_frequency),
+                 existing_catalog=Catalog(args.base) if args.base is not None else None)
     logger.info(f'finished at {datetime.now()}')
