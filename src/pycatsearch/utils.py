@@ -8,7 +8,6 @@ import os
 import sys
 from math import e as _e, inf, log10, nan, pow
 from numbers import Real
-from pathlib import Path
 from typing import Any, Callable, Final, Iterable, Protocol, Sequence, TypeVar, cast, overload
 
 __all__ = ['M_LOG10E',
@@ -566,7 +565,7 @@ def ensure_prefix(text: str, prefix: str) -> str:
         return prefix + text
 
 
-def save_catalog_to_file(filename: str | Path,
+def save_catalog_to_file(filename: str | os.PathLike[str],
                          catalog: list[dict[str, int | str | list[dict[str, float]]]],
                          frequency_limits: tuple[float, float]) -> bool:
     from .catalog import Catalog

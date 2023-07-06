@@ -364,7 +364,7 @@ class Catalog:
             print(f'{n:<{names_width}} {f:>{frequencies_width}} {i:>{intensities_width}}')
 
     @staticmethod
-    def save(filename: str,
+    def save(filename: str | PathLike[str],
              catalog: list[CatalogEntryType],
              frequency_limits: tuple[float, float] = (0.0, math.inf),
              build_time: datetime | None = None) -> None:
@@ -379,7 +379,8 @@ class Catalog:
         try:
             opener = Catalog.Opener(filename)
         except ValueError:
-            opener = Catalog.Opener(filename + Catalog.DEFAULT_SUFFIX)
+            filename = Path(filename)
+            opener = Catalog.Opener(filename.with_name(filename.name + Catalog.DEFAULT_SUFFIX))
 
         def ensure_bytes(data: AnyStr) -> bytes:
             if isinstance(data, str):
