@@ -258,6 +258,7 @@ def save_catalog(filename: str,
 def download() -> None:
     import argparse
     from datetime import datetime
+    from pathlib import Path
 
     from .catalog import Catalog
 
@@ -265,7 +266,7 @@ def download() -> None:
         allow_abbrev=True,
         description='Download JPL and CDMS spectroscopy catalogs for offline search.\n'
                     'Find more at https://github.com/StSav012/pycatsearch.')
-    ap.add_argument('catalog', type=str, help='the catalog location to save into (required)')
+    ap.add_argument('catalog', type=Path, help='the catalog location to save into (required)')
     ap.add_argument('-f''min', '--min-frequency', type=float, help='the lower frequency [MHz] to take', default=-inf)
     ap.add_argument('-f''max', '--max-frequency', type=float, help='the upper frequency [MHz] to take', default=+inf)
     ap.add_argument('-b', '--base', type=Path, help='an existing catalog to base the data on', default=None)
