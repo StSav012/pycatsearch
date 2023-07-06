@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import sys
 from math import inf
-from typing import Any, Callable, Final, final
+from typing import Any, final
 
-from qtpy.QtCore import (QAbstractTableModel, QByteArray, QItemSelection, QLocale, QMimeData, QModelIndex,
-                         QPersistentModelIndex, QPoint, Qt, Slot)
+from qtpy.QtCore import QByteArray, QItemSelection, QMimeData, QModelIndex, QPoint, Qt, Slot
 from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPixmap, QScreen
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
                             QMainWindow, QMessageBox, QPushButton, QSplitter, QStatusBar, QTableView, QVBoxLayout,
@@ -16,6 +15,7 @@ from qtpy.compat import getopenfilenames
 from .catalog_info import CatalogInfo
 from .download_dialog import DownloadDialog
 from .float_spinbox import FloatSpinBox
+from .found_lines_model import FoundLinesModel
 from .frequency_box import FrequencyBox
 from .html_style_delegate import HTMLDelegate
 from .menu_bar import MenuBar
@@ -24,9 +24,8 @@ from .settings import Settings
 from .substance_info import SubstanceInfo
 from .substances_box import SubstancesBox
 from .. import __version__
-from ..catalog import Catalog, CatalogEntryType
-from ..utils import (FREQUENCY, INTENSITY, LINES, LOWER_STATE_ENERGY, ReleaseInfo, SPECIES_TAG, best_name,
-                     ensure_prefix, latest_release, remove_html, update_with_pip, wrap_in_html)
+from ..catalog import Catalog
+from ..utils import ReleaseInfo, ensure_prefix, latest_release, remove_html, update_with_pip, wrap_in_html
 
 if sys.version_info < (3, 10):
     from ..utils import zip
@@ -49,194 +48,6 @@ def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.
     clipboard.setMimeData(mime_data, QClipboard.Mode.Clipboard)
 
 
-class LinesListModel(QAbstractTableModel):
-    ROW_BATCH_COUNT: Final[int] = 5
-
-    class DataType:
-        __slots__ = ['species_tag', 'name',
-                     'frequency_str', 'frequency',
-                     'intensity_str', 'intensity',
-                     'lower_state_energy_str', 'lower_state_energy']
-
-        def __init__(self,
-                     species_tag: int, name: str,
-                     frequency_str: str, frequency: float,
-                     intensity_str: str, intensity: float,
-                     lower_state_energy_str: str, lower_state_energy: float) -> None:
-            self.species_tag: int = species_tag
-            self.name: str = name
-            self.frequency_str: str = frequency_str
-            self.frequency: float = frequency
-            self.intensity_str: str = intensity_str
-            self.intensity: float = intensity
-            self.lower_state_energy_str: str = lower_state_energy_str
-            self.lower_state_energy: float = lower_state_energy
-
-        def __eq__(self, other: 'LinesListModel.DataType') -> int:
-            if not isinstance(other, LinesListModel.DataType):
-                return NotImplemented
-            return (self.species_tag == other.species_tag
-                    and self.frequency == other.frequency
-                    and self.intensity == other.intensity
-                    and self.lower_state_energy == other.lower_state_energy)
-
-        def __hash__(self) -> int:
-            return hash(self.species_tag) ^ hash(self.frequency) ^ hash(self.lower_state_energy)
-
-    def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        self._settings: Settings = settings
-        self._entries: list[CatalogEntryType] = []
-        self._data: list[LinesListModel.DataType] = []
-        self._rows_loaded: int = LinesListModel.ROW_BATCH_COUNT
-
-        unit_format: Final[str] = self.tr('{value} [{unit}]', 'unit format')
-        self._header: Final[list[str]] = [
-            self.tr('Substance'),
-            unit_format.format(value=self.tr('Frequency'), unit=self._settings.frequency_unit_str),
-            unit_format.format(value=self.tr('Intensity'), unit=self._settings.intensity_unit_str),
-            unit_format.format(value=self.tr('Lower state energy'), unit=self._settings.energy_unit_str),
-        ]
-
-    def update_units(self) -> None:
-        unit_format: Final[str] = self.tr('{value} [{unit}]', 'unit format')
-        self._header[1] = unit_format.format(value=self.tr('Frequency'), unit=self._settings.frequency_unit_str)
-        self._header[2] = unit_format.format(value=self.tr('Intensity'), unit=self._settings.intensity_unit_str)
-        self._header[3] = unit_format.format(value=self.tr('Lower state energy'), unit=self._settings.energy_unit_str)
-
-    def rowCount(self, parent: QModelIndex | QPersistentModelIndex = ...) -> int:
-        return min(len(self._data), self._rows_loaded)
-
-    def columnCount(self, parent: QModelIndex | QPersistentModelIndex = ...) -> int:
-        return len(self._header)
-
-    def data(self, index: QModelIndex | QPersistentModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> str | None:
-        if index.isValid():
-            if role == Qt.ItemDataRole.DisplayRole:
-                item: LinesListModel.DataType = self._data[index.row()]
-                column_index: int = index.column()
-                if column_index == 0:
-                    return item.name
-                if column_index == 1:
-                    return item.frequency_str
-                if column_index == 2:
-                    return item.intensity_str
-                if column_index == 3:
-                    return item.lower_state_energy_str
-        return None
-
-    def row(self, row_index: int) -> DataType:
-        return self._data[row_index]
-
-    def headerData(self, col: int, orientation: Qt.Orientation, role: int = ...) -> str | None:
-        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            return self._header[col]
-        return None
-
-    def setHeaderData(self, section: int, orientation: Qt.Orientation, value: str, role: int = ...) -> bool:
-        if (orientation == Qt.Orientation.Horizontal
-                and role == Qt.ItemDataRole.DisplayRole
-                and 0 <= section < len(self._header)):
-            self._header[section] = value
-            return True
-        return False
-
-    def clear(self) -> None:
-        self.set_entries([])
-
-    def set_entries(self, new_data: list[CatalogEntryType]) -> None:
-        from_mhz: Callable[[float], float] = self._settings.from_mhz
-        from_log10_sq_nm_mhz: Callable[[float], float] = self._settings.from_log10_sq_nm_mhz
-        from_rec_cm: Callable[[float], float] = self._settings.from_rec_cm
-        frequency_suffix: int = self._settings.frequency_unit
-        precision: int = [4, 7, 8, 8][frequency_suffix]
-        locale: QLocale = QLocale()
-        decimal_point: str = locale.decimalPoint()
-
-        def frequency_str(frequency: float) -> tuple[str, float]:
-            frequency = from_mhz(frequency)
-            return f'{frequency:.{precision}f}'.replace('.', decimal_point), frequency
-
-        def intensity_str(intensity: float) -> tuple[str, float]:
-            intensity = from_log10_sq_nm_mhz(intensity)
-            if intensity == 0.0:
-                return '0', intensity
-            elif abs(intensity) < 0.1:
-                return f'{intensity:.4e}'.replace('.', decimal_point), intensity
-            else:
-                return f'{intensity:.4f}'.replace('.', decimal_point), intensity
-
-        def lower_state_energy_str(lower_state_energy: float) -> tuple[str, float]:
-            lower_state_energy = from_rec_cm(lower_state_energy)
-            if lower_state_energy == 0.0:
-                return '0', lower_state_energy
-            elif abs(lower_state_energy) < 0.1:
-                return f'{lower_state_energy:.4e}'.replace('.', decimal_point), lower_state_energy
-            else:
-                return f'{lower_state_energy:.4f}'.replace('.', decimal_point), lower_state_energy
-
-        self.beginResetModel()
-        unique_entries: list[CatalogEntryType] = []
-        non_unique_indices: set[int] = set()
-        unique: bool
-        all_unique: bool = True  # unless the opposite is proven
-        for i in range(len(new_data)):
-            if i in non_unique_indices:
-                continue
-            unique = True
-            for j in range(i + 1, len(new_data)):
-                if j in non_unique_indices:
-                    continue
-                if new_data[i] == new_data[j]:
-                    non_unique_indices.add(j)
-                    unique = False
-                    all_unique = False
-                    break
-            if unique and not all_unique:
-                unique_entries.append(new_data[i])
-        if all_unique:
-            self._entries = new_data.copy()
-        else:
-            self._entries = unique_entries
-        entry: CatalogEntryType
-        rich_text_in_formulas: bool = self._settings.rich_text_in_formulas
-        self._data = list(set(
-            LinesListModel.DataType(
-                entry[SPECIES_TAG],
-                best_name(entry, rich_text_in_formulas),
-                *frequency_str(line[FREQUENCY]),
-                *intensity_str(line[INTENSITY]),
-                *lower_state_energy_str(line[LOWER_STATE_ENERGY]),
-            )
-            for entry in self._entries
-            for line in entry[LINES]
-        ))
-        self._rows_loaded = LinesListModel.ROW_BATCH_COUNT
-        self.endResetModel()
-
-    def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
-        self.beginResetModel()
-        key = {
-            0: (lambda l: (l.name, l.frequency, l.intensity, l.lower_state_energy)),
-            1: (lambda l: (l.frequency, l.intensity, l.name, l.lower_state_energy)),
-            2: (lambda l: (l.intensity, l.frequency, l.name, l.lower_state_energy)),
-            3: (lambda l: (l.lower_state_energy, l.intensity, l.frequency, l.name))
-        }[column]
-        self._data.sort(key=key, reverse=bool(order != Qt.SortOrder.AscendingOrder))
-        self.endResetModel()
-
-    def canFetchMore(self, index: QModelIndex | QPersistentModelIndex = QModelIndex()) -> bool:
-        return len(self._data) > self._rows_loaded
-
-    def fetchMore(self, index: QModelIndex | QPersistentModelIndex = QModelIndex()) -> None:
-        # https://sateeshkumarb.wordpress.com/2012/04/01/paginated-display-of-table-data-in-pyqt/
-        remainder: int = len(self._data) - self._rows_loaded
-        items_to_fetch: int = min(remainder, LinesListModel.ROW_BATCH_COUNT)
-        self.beginInsertRows(QModelIndex(), self._rows_loaded, self._rows_loaded + items_to_fetch - 1)
-        self._rows_loaded += items_to_fetch
-        self.endInsertRows()
-
-
 @final
 class UI(QMainWindow):
     def __init__(self, catalog: Catalog,
@@ -256,7 +67,7 @@ class UI(QMainWindow):
         self.box_frequency: FrequencyBox = FrequencyBox(self.settings, self._central_widget)
         self.button_search: QPushButton = QPushButton(self._central_widget)
 
-        self.results_model: LinesListModel = LinesListModel(self.settings, self)
+        self.results_model: FoundLinesModel = FoundLinesModel(self.settings, self)
         self.results_table: QTableView = QTableView(self._central_widget)
 
         self.menu_bar: MenuBar = MenuBar(self)
@@ -551,7 +362,7 @@ class UI(QMainWindow):
         values: list[str]
         index: QModelIndex
         for index in self.results_table.selectionModel().selectedRows():
-            row: LinesListModel.DataType = self.results_model.row(index.row())
+            row: FoundLinesModel.DataType = self.results_model.row(index.row())
             values = [
                 format_value(_v, _u)
                 for _u, _v, _a in zip(units,
