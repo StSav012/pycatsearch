@@ -20,7 +20,7 @@ try:
 except ImportError:
     import json
 
-from .catalog import Catalog
+from .catalog import Catalog, CatalogEntryType
 from .catalog_entry import CatalogEntry
 from .utils import FREQUENCY, LINES, SPECIES_TAG, DEGREES_OF_FREEDOM, within, save_catalog_to_file
 
@@ -37,7 +37,7 @@ class Downloader(Thread):
         super().__init__()
         self._state_queue: Queue[tuple[int, int]] | None = state_queue
         self._frequency_limits: tuple[float, float] = frequency_limits
-        self._catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
+        self._catalog: list[CatalogEntryType] = []
         self._existing_catalog: Catalog | None = existing_catalog
 
         self._run: bool = False
@@ -47,7 +47,7 @@ class Downloader(Thread):
         self.stop()
 
     @property
-    def catalog(self) -> list[dict[str, int | str | list[dict[str, float]]]]:
+    def catalog(self) -> list[CatalogEntryType]:
         return self._catalog.copy()
 
     def stop(self) -> None:
@@ -69,7 +69,7 @@ class Downloader(Thread):
     def run(self) -> None:
         self._run = True
 
-        async def async_get_catalog() -> list[dict[str, int | str | list[dict[str, float]]]]:
+        async def async_get_catalog() -> list[CatalogEntryType]:
 
             session: aiohttp.ClientSession
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(),  # disable timeout checks
@@ -124,7 +124,7 @@ class Downloader(Thread):
                         return []
 
                 async def get_substance_catalog(species_entry: dict[str, int | str]) \
-                        -> dict[str, int | str | list[dict[str, float]]]:
+                        -> CatalogEntryType:
                     def entry_url(species_tag: int) -> str:
                         entry_filename: str = f'c{species_tag:06}.cat'
 
@@ -142,7 +142,7 @@ class Downloader(Thread):
                     if (self._existing_catalog is not None
                             and self._existing_catalog.min_frequency <= min(self._frequency_limits)
                             and self._existing_catalog.max_frequency >= max(self._frequency_limits)):
-                        existing_catalog_entry: dict[str, int | str | list[dict[str, float]]]
+                        existing_catalog_entry: CatalogEntryType
                         for existing_catalog_entry in self._existing_catalog.catalog:
                             if all(existing_catalog_entry.get(key, type(value)()) == value
                                    for key, value in species_entry.items()):
@@ -176,11 +176,11 @@ class Downloader(Thread):
 
                 species: list[dict[str, int | str]] = await get_species()
                 self._tasks = [asyncio.create_task(get_substance_catalog(_e)) for _e in species]
-                catalog: list[dict[str, int | str | list[dict[str, float]]]] = []
+                catalog: list[CatalogEntryType] = []
                 species_count: Final[int] = len(species)
                 skipped_count: int = 0
-                catalog_entry: dict[str, int | str | list[dict[str, float]]]
-                future_entry: asyncio.Future[dict[str, int | str | list[dict[str, float]]]]
+                catalog_entry: CatalogEntryType
+                future_entry: asyncio.Future[CatalogEntryType]
                 for future_entry in asyncio.as_completed(self._tasks):
                     catalog_entry = await future_entry
                     if catalog_entry.get(LINES, []):
@@ -199,7 +199,7 @@ class Downloader(Thread):
 
 def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
                  existing_catalog: Catalog | None = None) \
-        -> list[dict[str, int | str | list[dict[str, float]]]]:
+        -> list[CatalogEntryType]:
     """
     Download the spectral lines catalog data
 
