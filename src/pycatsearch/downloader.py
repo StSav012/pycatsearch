@@ -207,8 +207,7 @@ class Downloader(Thread):
 
 
 def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
-                 existing_catalog: Catalog | None = None) \
-        -> list[CatalogEntryType]:
+                existing_catalog: Catalog | None = None) -> list[CatalogEntryType]:
     """
     Download the spectral lines catalog data
 

@@ -197,9 +197,9 @@ class Downloader(Thread):
         with suppress(RuntimeError):  # it might be “cannot schedule new futures after shutdown”
             self._catalog = asyncio.run(async_get_catalog())
 
+
 def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
-                 existing_catalog: Catalog | None = None) \
-        -> list[CatalogEntryType]:
+                existing_catalog: Catalog | None = None)  -> list[CatalogEntryType]:
     """
     Download the spectral lines catalog data
 
