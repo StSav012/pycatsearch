@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from math import inf
+from math import nan
+from os import PathLike
+from pathlib import Path
 
 from qtpy.QtWidgets import QDialog, QWidget
 
@@ -10,27 +12,38 @@ from .catalog_wizard.download_confirmation_page import DownloadConfirmationPage
 from .catalog_wizard.progress_page import ProgressPage
 from .catalog_wizard.settings_page import SettingsPage
 from .catalog_wizard.summary_page import SummaryPage
+from ..catalog import Catalog
 
-__all__ = ['DownloadDialog']
+__all__ = ['UpdateDialog']
 
 
-class DownloadDialog(SaveCatalogWizard):
+class UpdateDialog(SaveCatalogWizard):
     """ GUI for `async_downloader.Downloader` or `downloader.Downloader` """
 
-    def __init__(self, frequency_limits: tuple[float, float] = (-inf, inf),
+    def __init__(self, existing_catalog_location: str | PathLike[str],
                  parent: QWidget | None = None) -> None:
-        super().__init__(parent=parent)
+        super().__init__(parent=parent, default_save_location=Path(existing_catalog_location))
 
-        self.setWindowTitle(self.tr('Download Catalog'))
+        self._old_catalog: Catalog = Catalog(existing_catalog_location)
+
+        self.setWindowTitle(self.tr('Update Catalog'))
 
         self._settings_page: SettingsPage = SettingsPage(self)
         self.addPage(self._settings_page)
         self.addPage(DownloadConfirmationPage(self))
-        self._progress_page: ProgressPage = ProgressPage(self)
+        self._progress_page: ProgressPage = ProgressPage(self, existing_catalog=self._old_catalog)
         self.addPage(self._progress_page)
         self.addPage(SummaryPage(self))
 
-        self._settings_page.frequency_limits = frequency_limits
+        if self._old_catalog:
+            self._settings_page.frequency_limits = self.frequency_limits()
+        else:
+            self._progress_page.setCommitPage(True)
+            self.setStartId(self._progress_page.nextId())
+
+        # don't show `self._settings_page`
+        self._settings_page.setCommitPage(True)
+        self.setStartId(self._settings_page.nextId())
 
     def back(self) -> None:
         if self._progress_page.isActive():
@@ -48,7 +61,9 @@ class DownloadDialog(SaveCatalogWizard):
         super().restart()
 
     def frequency_limits(self) -> tuple[float, float]:
-        return self._settings_page.frequency_limits
+        if not self._old_catalog:
+            return nan, nan
+        return self._old_catalog.min_frequency, self._old_catalog.max_frequency
 
     def done(self, exit_code: QDialog.DialogCode) -> None:
         if self._progress_page.isActive():
