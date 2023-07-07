@@ -5,10 +5,9 @@ import bz2
 import gzip
 import lzma
 import math
-import os.path
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from os import PathLike
+from os import PathLike, fsync
 from pathlib import Path
 from typing import Any, AnyStr, BinaryIO, Callable, Dict, List, NamedTuple, Optional, TextIO, Union, cast
 
@@ -30,7 +29,7 @@ CatalogEntryType = Dict[str, Union[int, str, LinesType]]
 
 
 class CatalogSourceInfo(NamedTuple):
-    filename: str
+    filename: Path
     build_datetime: datetime | None = None
 
 
@@ -144,15 +143,16 @@ class Catalog:
                 finally:
                     if writing:
                         file.flush()
-                        os.fsync(file.fileno())
+                        fsync(file.fileno())
                         tmp_path.replace(self._path)
 
-    def __init__(self, *catalog_file_names: str) -> None:
+    def __init__(self, *catalog_file_names: str | PathLike[str]) -> None:
         self._data: CatalogData = CatalogData()
         self._sources: list[CatalogSourceInfo] = []
 
-        for filename in catalog_file_names:
-            if os.path.exists(filename) and os.path.isfile(filename):
+        filename: Path
+        for filename in map(Path, catalog_file_names):
+            if filename.exists() and filename.is_file():
                 f_in: BinaryIO
                 with Catalog.Opener(filename).open('rb') as f_in:
                     content: bytes = f_in.read()
@@ -178,7 +178,7 @@ class Catalog:
         return not bool(self)
 
     @property
-    def sources(self) -> list[str]:
+    def sources(self) -> list[Path]:
         source: CatalogSourceInfo
         return [source.filename for source in self._sources]
 

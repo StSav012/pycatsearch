@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import sys
 from math import inf
+from pathlib import Path
 from typing import Any, final
 
 from qtpy.QtCore import QByteArray, QItemSelection, QMimeData, QModelIndex, QPoint, Qt, Slot
@@ -246,7 +247,7 @@ class UI(QMainWindow):
         self.save_settings()
         event.accept()
 
-    def load_catalog(self, *catalog_file_names: str) -> bool:
+    def load_catalog(self, *catalog_file_names: Path) -> bool:
         self.setDisabled(True)
         last_cursor: QCursor = self.cursor()
         self.setCursor(Qt.CursorShape.WaitCursor)
@@ -316,7 +317,7 @@ class UI(QMainWindow):
         new_catalog_file_names: list[str]
         new_catalog_file_names, _ = self.get_open_file_names(formats=_formats,
                                                              caption=self.tr('Load Catalog'),
-                                                             directory=(*self.catalog.sources, '')[0])
+                                                             directory=str((*self.catalog.sources, '')[0]))
 
         if new_catalog_file_names:
             self.status_bar.showMessage(self.tr('Loading…'))
@@ -605,7 +606,7 @@ class UI(QMainWindow):
         self.settings.beginWriteArray('catalogFiles', len(self.catalog.sources))
         for i, s in enumerate(self.catalog.sources):
             self.settings.setArrayIndex(i)
-            self.settings.setValue('path', s)
+            self.settings.setValue('path', str(s))
         self.settings.endArray()
         self.settings.setValue('temperature', self.temperature)
         self.settings.setValue('intensity', self.minimal_intensity)

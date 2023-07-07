@@ -5,6 +5,8 @@ import argparse
 import platform
 import sys
 
+from pathlib import Path
+
 __author__ = 'StSav012'
 __original_name__ = 'py''cat''search'
 
@@ -19,7 +21,7 @@ def main() -> int:
         allow_abbrev=True,
         description='Yet another implementation of JPL and CDMS spectroscopy catalogs offline search.\n'
                     f'Find more at https://github.com/{__author__}/{__original_name__}.')
-    ap.add_argument('catalog', type=str, help='the catalog location to load',
+    ap.add_argument('catalog', type=Path, help='the catalog location to load',
                     nargs=argparse.ZERO_OR_MORE)
     ap_group = ap.add_argument_group(title='Search options',
                                      description='If any of the following arguments specified, a search conducted.')
