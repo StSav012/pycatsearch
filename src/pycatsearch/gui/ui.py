@@ -520,6 +520,7 @@ class UI(QMainWindow):
     def _on_action_about_catalogs_triggered(self) -> None:
         if self.catalog:
             ci: CatalogInfo = CatalogInfo(self.catalog, self)
+            ci.catalogUpdated.connect(self._on_action_reload_triggered)
             ci.exec()
         else:
             QMessageBox.information(self, self.tr('Catalog Info'), self.tr('No catalogs loaded'))
