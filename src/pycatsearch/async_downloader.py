@@ -194,7 +194,8 @@ class Downloader(Thread):
 
             return catalog
 
-        with suppress(RuntimeError):  # it might be “cannot schedule new futures after shutdown”
+        with suppress(RuntimeError,  # it might be “cannot schedule new futures after shutdown”
+                      asyncio.exceptions.CancelledError):
             self._catalog = asyncio.run(async_get_catalog())
 
 
