@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from qtpy.QtCore import QAbstractTableModel, QDateTime, QModelIndex, QObject, QPersistentModelIndex, QTimeZone, Qt
+from qtpy.QtCore import (QAbstractTableModel, QDateTime, QLocale, QModelIndex, QObject, QPersistentModelIndex,
+                         QTimeZone, Qt)
 from qtpy.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox, QFormLayout, QHeaderView, QTableView,
                             QVBoxLayout, QWidget)
 
@@ -44,7 +45,7 @@ class DataModel(QAbstractTableModel):
                     return None
                 qt_datetime: QDateTime = QDateTime(info.build_datetime)
                 qt_datetime.setTimeZone(QTimeZone(round(info.build_datetime.utcoffset().total_seconds())))
-                return qt_datetime.toString()
+                return QLocale().toString(qt_datetime)
         return None
 
     def headerData(self, col: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -> str | None:
