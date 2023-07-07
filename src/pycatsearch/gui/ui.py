@@ -6,7 +6,7 @@ from math import inf
 from typing import Any, final
 
 from qtpy.QtCore import QByteArray, QItemSelection, QMimeData, QModelIndex, QPoint, Qt, Slot
-from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPixmap, QScreen
+from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPalette, QPixmap, QScreen
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
                             QMainWindow, QMessageBox, QPushButton, QSplitter, QStatusBar, QTableView, QVBoxLayout,
                             QWidget)
@@ -77,18 +77,27 @@ class UI(QMainWindow):
         def setup_ui() -> None:
             from . import icon  # import locally to avoid a circular import
 
-            # https://ru.stackoverflow.com/a/1032610
-            window_icon: QPixmap = QPixmap()
-            window_icon.loadFromData(b'''\
+            def icon_from_data(data: bytes) -> QIcon:
+                # https://ru.stackoverflow.com/a/1032610
+                palette: QPalette = self.palette()
+                pixmap: QPixmap = QPixmap()
+                pixmap.loadFromData(data
+                                    .strip()
+                                    .replace(b'"background"', b'"' + palette.window().color().name().encode() + b'"')
+                                    .replace(b'"foreground"', b'"' + palette.text().color().name().encode() + b'"')
+                                    )
+                return QIcon(pixmap)
+
+            window_icon: bytes = b'''\
             <svg height="64" width="64" version="1.1">
             <path stroke-linejoin="round" d="m6.722 8.432c-9.05 9.648-6.022 27.23 6.048 33.04 6.269 3.614 13.88 \
             3.1 20-0.1664l20 20c2.013 2.013 5.256 2.013 7.27 0l1.259-1.259c2.013-2.013 2.013-5.256 \
             0-7.27l-19.83-19.83c1.094-1.948 1.868-4.095 2.211-6.403 3.06-13.5-9.72-27.22-23.4-25.12-4.74 \
             0.53-9.28 2.72-12.64 6.104-0.321 0.294-0.626 0.597-0.918 0.908zm8.015 6.192c4.978-5.372 14.79-3.878 17.96 \
             2.714 3.655 6.341-0.6611 15.28-7.902 16.36-7.14 1.62-14.4-5.14-13.29-12.38 0.2822-2.51 1.441-4.907 \
-            3.231-6.689z" stroke="#000" stroke-width="2.4" fill="#fff"/>
-            </svg>''')
-            self.setWindowIcon(QIcon(window_icon))
+            3.231-6.689z" stroke="background" stroke-width="2.4" fill="foreground"/>
+            </svg>'''
+            self.setWindowIcon(icon_from_data(window_icon))
 
             if __version__:
                 self.setWindowTitle(self.tr('PyCatSearch (version {0})').format(__version__))
