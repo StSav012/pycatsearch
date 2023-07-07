@@ -190,16 +190,15 @@ def run() -> int:
 
     languages: set[str] = set(QLocale().uiLanguages() + [QLocale().bcp47Name(), QLocale().name()])
     language: str
+    translations_path: str = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
     qt_translator: QTranslator = QTranslator()
     for language in languages:
-        if qt_translator.load('qt_' + language,
-                              QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
+        if qt_translator.load('qt_' + language, translations_path):
             QApplication.installTranslator(qt_translator)
             break
     qtbase_translator: QTranslator = QTranslator()
     for language in languages:
-        if qtbase_translator.load('qtbase_' + language,
-                                  QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
+        if qtbase_translator.load('qtbase_' + language, translations_path):
             QApplication.installTranslator(qtbase_translator)
             break
     my_translator: QTranslator = QTranslator()
