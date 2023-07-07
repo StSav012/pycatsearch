@@ -32,7 +32,7 @@ class FrequencyBox(QTabWidget):
     frequencyLimitsChanged: Signal = Signal(name='frequencyLimitsChanged')
 
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
-        from . import icon  # import locally to avoid a circular import
+        from . import qta_icon  # import locally to avoid a circular import
 
         super().__init__(parent)
 
@@ -57,7 +57,7 @@ class FrequencyBox(QTabWidget):
         self._layout_by_range.addRow(self.tr('From:'), self._spin_frequency_from)
         self._spin_frequency_to.setValue(118753.341)
         self._layout_by_range.addRow(self.tr('To:'), self._spin_frequency_to)
-        self.addTab(self._page_by_range, icon('mdi6.arrow-expand-horizontal'), self.tr('Range'))
+        self.addTab(self._page_by_range, qta_icon('mdi6.arrow-expand-horizontal'), self.tr('Range'))
 
         self._spin_frequency_center.setValue(118750.341)
         self._layout_by_center.addRow(self.tr('Center:'), self._spin_frequency_center)
@@ -65,7 +65,7 @@ class FrequencyBox(QTabWidget):
         self._spin_frequency_deviation.setSingleStep(0.1)
         self._spin_frequency_deviation.setValue(0.4)
         self._layout_by_center.addRow(self.tr('Deviation:'), self._spin_frequency_deviation)
-        self.addTab(self._page_by_center, icon('mdi6.format-horizontal-align-center'), self.tr('Center'))
+        self.addTab(self._page_by_center, qta_icon('mdi6.format-horizontal-align-center'), self.tr('Center'))
 
         self.load_settings()
 

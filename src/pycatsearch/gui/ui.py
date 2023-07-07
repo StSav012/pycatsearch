@@ -75,7 +75,7 @@ class UI(QMainWindow):
         self.status_bar: QStatusBar = QStatusBar(self)
 
         def setup_ui() -> None:
-            from . import icon  # import locally to avoid a circular import
+            from . import qta_icon  # import locally to avoid a circular import
 
             def icon_from_data(data: bytes) -> QIcon:
                 # https://ru.stackoverflow.com/a/1032610
@@ -174,7 +174,7 @@ class UI(QMainWindow):
 
             self.button_search.setShortcut('Ctrl+Return')
 
-            self.button_search.setIcon(icon('mdi6.magnify'))
+            self.button_search.setIcon(qta_icon('mdi6.magnify'))
 
             self.adjustSize()
 

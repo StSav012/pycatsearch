@@ -21,7 +21,7 @@ class SubstancesBox(QGroupBox):
     selectedSubstancesChanged: Signal = Signal(name='selectedSubstancesChanged')
 
     def __init__(self, catalog: Catalog, settings: Settings, parent: QWidget | None = None) -> None:
-        from . import icon  # import locally to avoid a circular import
+        from . import qta_icon  # import locally to avoid a circular import
 
         super().__init__(parent)
 
@@ -56,7 +56,7 @@ class SubstancesBox(QGroupBox):
         self._button_select_none.setText(self.tr('Select None'))
         self._layout_substance.addWidget(self._button_select_none)
 
-        self._button_select_none.setIcon(icon('mdi6.checkbox-blank-off-outline'))
+        self._button_select_none.setIcon(qta_icon('mdi6.checkbox-blank-off-outline'))
 
         self._text_substance.textChanged.connect(self._on_text_changed)
         self._check_keep_selection.toggled.connect(self._on_check_save_selection_toggled)

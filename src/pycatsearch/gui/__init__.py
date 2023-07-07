@@ -11,10 +11,10 @@ from qtpy.QtWidgets import QApplication
 from .ui import UI
 from ..catalog import Catalog
 
-__all__ = ['icon', 'run']
+__all__ = ['qta_icon', 'run']
 
 
-def icon(*qta_name: str, **qta_specs: Any) -> QIcon:
+def qta_icon(*qta_name: str, **qta_specs: Any) -> QIcon:
     if qta_name:
         with suppress(ImportError, Exception):
             from qtawesome import icon

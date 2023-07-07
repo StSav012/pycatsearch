@@ -107,7 +107,7 @@ class PreferencesBody(QScrollArea):
     """ The main area of the GUI preferences dialog """
 
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
-        from . import icon  # import locally to avoid a circular import
+        from . import qta_icon  # import locally to avoid a circular import
 
         super().__init__(parent)
 
@@ -140,9 +140,9 @@ class PreferencesBody(QScrollArea):
                 if len(key) == 1:
                     new_item = QListWidgetItem(key[0])
                 elif len(key) == 2:
-                    new_item = QListWidgetItem(icon(*key[1]), key[0])
+                    new_item = QListWidgetItem(qta_icon(*key[1]), key[0])
                 elif len(key) == 3:
-                    new_item = QListWidgetItem(icon(*key[1], **dict(key[2])), key[0])
+                    new_item = QListWidgetItem(qta_icon(*key[1], **dict(key[2])), key[0])
                 else:
                     logger.error(f'Invalid key: {key!r}')
                     continue
