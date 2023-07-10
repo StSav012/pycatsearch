@@ -183,7 +183,7 @@ class Downloader(Thread):
                 future_entry: asyncio.Future[CatalogEntryType]
                 for future_entry in asyncio.as_completed(self._tasks):
                     catalog_entry = await future_entry
-                    if catalog_entry.get(LINES, []):
+                    if SPECIES_TAG in catalog_entry:
                         catalog.append(catalog_entry)
                         if self._state_queue is not None:
                             self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
