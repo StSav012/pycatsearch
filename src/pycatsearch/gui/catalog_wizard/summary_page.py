@@ -17,7 +17,7 @@ class SummaryPage(QWizardPage):
         layout.addWidget(self._label)
 
     def initializePage(self) -> None:
-        from .__init__ import SaveCatalogWizard
+        from . import SaveCatalogWizard
 
         super(SummaryPage, self).initializePage()
         if cast(SaveCatalogWizard, self.wizard()).catalog:
