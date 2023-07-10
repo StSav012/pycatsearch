@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from qtpy.QtWidgets import QLabel, QListWidget, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QLabel, QListWidget, QVBoxLayout, QWidget, QAbstractScrollArea
 
 __all__ = ['TitledListWidget']
 
@@ -15,6 +15,7 @@ class TitledListWidget(QWidget):
         self._title_label: QLabel = QLabel(self)
         layout.addWidget(self._title_label)
         self._list_widget: QListWidget = QListWidget(self)
+        self._list_widget.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         layout.addWidget(self._list_widget)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setStretch(0, 0)

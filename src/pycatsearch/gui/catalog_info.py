@@ -7,8 +7,8 @@ from typing import Iterable, cast
 
 from qtpy.QtCore import QDateTime, QLocale, QModelIndex, QTimeZone, QUrl, Qt, Signal, Slot
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices
-from qtpy.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox, QFormLayout, QHeaderView, QMenu, QTableWidget,
-                            QTableWidgetItem, QVBoxLayout, QWidget)
+from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QDialog, QDialogButtonBox, QFormLayout, QMenu,
+                            QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from . import qta_icon
 from .selectable_label import SelectableLabel
@@ -38,9 +38,8 @@ class SourcesList(QTableWidget):
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setSortingEnabled(True)
         self.horizontalHeader().setHighlightSections(False)
-        self.horizontalHeader().setSectionResizeMode(SourcesList.Columns.FileLocation, QHeaderView.ResizeMode.Stretch)
-        for i in range(SourcesList.Columns.FileLocation + 1, self.horizontalHeader().count()):
-            self.horizontalHeader().setSectionResizeMode(i, QHeaderView.ResizeMode.ResizeToContents)
+        self.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setHighlightSections(False)
 
@@ -161,6 +160,8 @@ class CatalogInfo(QDialog):
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
+
+        self.adjustSize()
 
     @Slot()
     def _on_catalog_updated(self) -> None:
