@@ -16,43 +16,33 @@
         <translation>Все файлы</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="78"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="42"/>
         <source>JSON with GZip compression</source>
         <comment>file type</comment>
         <translation>JSON со сжатием GZip</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="79"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="43"/>
         <source>JSON with Bzip2 compression</source>
         <comment>file type</comment>
         <translation>JSON со сжатием Bzip2</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="80"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="44"/>
         <source>JSON with LZMA2 compression</source>
         <comment>file type</comment>
         <translation>JSON со сжатием LZMA2</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="81"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="45"/>
         <source>JSON</source>
         <comment>file type</comment>
         <translation>JSON</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="84"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="67"/>
         <source>Save As…</source>
         <translation>Сохранить как…</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="90"/>
-        <source>Please wait…</source>
-        <translation>Пожалуйста, подождите…</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="1"/>
-        <source>Download Catalog</source>
-        <translation>Скачать каталог</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="91"/>

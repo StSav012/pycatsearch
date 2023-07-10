@@ -42,7 +42,7 @@
     <message>
         <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="67"/>
         <source>Save As…</source>
-        <translation>Save As…</translation>
+        <translation>Speichern als…</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="91"/>

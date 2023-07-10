@@ -16,43 +16,33 @@
         <translation>Tous les fichiers</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="78"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="42"/>
         <source>JSON with GZip compression</source>
         <comment>file type</comment>
         <translation>JSON avec la compression GZip</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="79"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="43"/>
         <source>JSON with Bzip2 compression</source>
         <comment>file type</comment>
         <translation>JSON avec la compression Bzip2</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="80"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="44"/>
         <source>JSON with LZMA2 compression</source>
         <comment>file type</comment>
         <translation>JSON avec la compression LZMA2</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="81"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="45"/>
         <source>JSON</source>
         <comment>file type</comment>
         <translation>JSON</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="84"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="67"/>
         <source>Save As…</source>
         <translation>Sauvegarder comme…</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="90"/>
-        <source>Please wait…</source>
-        <translation>Patientez, s&apos;il vous plaît…</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="1"/>
-        <source>Download Catalog</source>
-        <translation>Télécharger le catalogue</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="91"/>
@@ -566,7 +556,7 @@
     <message>
         <location filename="../pycatsearch/gui/substances_box.py" line="72"/>
         <source>Lines</source>
-        <translation>Lignes</translation>
+        <translation>Raies</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/substances_box.py" line="73"/>
@@ -679,7 +669,7 @@
     <message>
         <location filename="../pycatsearch/gui/ui.py" line="147"/>
         <source>Limit shown spectral lines</source>
-        <translation>Limiter les lignes de spectre affichées</translation>
+        <translation>Limiter des raies spectrales affichées</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/ui.py" line="148"/>
@@ -812,7 +802,7 @@
     <message>
         <location filename="../pycatsearch/gui/ui.py" line="538"/>
         <source>CatSearch is a means of searching through spectroscopy lines catalogs. It&apos;s an offline application.</source>
-        <translation>CatSearch est un moyen de recherche à travers les catalogues de ligne de spectre. C&apos;est un logiciel hors ligne.</translation>
+        <translation>CatSearch est un moyen de recherche à travers les catalogues de raie spectrale. C&apos;est un logiciel hors ligne.</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/ui.py" line="540"/>
@@ -822,7 +812,7 @@
     <message>
         <location filename="../pycatsearch/gui/ui.py" line="541"/>
         <source>One can use their own catalogs as well as download data from &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; and &lt;a href=&quot;https://astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt; spectroscopy databases available on the Internet.</source>
-        <translation>Il est possible d&apos;utiliser vos propres catalogues ou télécharger les données à partir de &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; et &lt;a href=&quot;https://astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt; les bases de lignes de spectre disponibles sur Internet.</translation>
+        <translation>Il est possible d&apos;utiliser vos propres catalogues ou télécharger les données à partir de &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; et &lt;a href=&quot;https://astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt; les bases de raies spectrales disponibles sur Internet.</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/ui.py" line="545"/>
