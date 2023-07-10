@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import cast
 
+from qtpy.QtCore import QLocale
 from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget, QWizard, QWizardPage
 
 __all__ = ['SummaryPage']
@@ -26,8 +27,8 @@ class SummaryPage(QWizardPage):
                 self.tr('Click {button_text} to save the catalog'
                         ' for {min_frequency} to {max_frequency} MHz.')
                 .format(button_text=self.buttonText(QWizard.WizardButton.FinishButton).replace('&', ''),
-                        min_frequency=self.field('min_frequency'),
-                        max_frequency=self.field('max_frequency')))
+                        min_frequency=QLocale().toString(self.field('min_frequency')),
+                        max_frequency=QLocale().toString(self.field('max_frequency'))))
         else:
             self.setTitle(self.tr('Failure'))
             self._label.setText(self.tr('For the specified frequency range, nothing has been loaded.'))

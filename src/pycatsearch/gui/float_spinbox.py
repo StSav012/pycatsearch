@@ -4,6 +4,7 @@ from __future__ import annotations
 import enum
 from math import floor, log10
 
+from qtpy.QtCore import QLocale
 from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QDoubleSpinBox, QWidget
 
@@ -33,18 +34,26 @@ class FloatSpinBox(QDoubleSpinBox):
         self._mode = new_mode
 
     def valueFromText(self, text: str) -> float:
-        return float(text.strip().split()[0])
+        locale: QLocale = QLocale()
+        value: float
+        ok: bool
+        value, ok = locale.toDouble(text[len(self.prefix()):-len(self.suffix())])
+        if not ok:
+            raise ValueError(f'could not convert string to float: {text[len(self.prefix()):-len(self.suffix())]!r}')
+        return value
 
     def textFromValue(self, v: float) -> str:
+        locale: QLocale = QLocale()
+        decimal_point: str = locale.decimalPoint()
         if self._mode == FloatSpinBox.Mode.auto:
             if abs(v) < self.singleStep() and v != 0.0:
-                return f'{v:.{self._decimals}e}'
+                return f'{v:.{self._decimals}e}'.replace('.', decimal_point)
             else:
-                return f'{v:.{self._decimals}f}'
+                return f'{v:.{self._decimals}f}'.replace('.', decimal_point)
         elif self._mode == FloatSpinBox.Mode.fixed:
-            return f'{v:.{self._decimals}f}'
+            return f'{v:.{self._decimals}f}'.replace('.', decimal_point)
         elif self._mode == FloatSpinBox.Mode.scientific:
-            return f'{v:.{self._decimals}e}'
+            return f'{v:.{self._decimals}e}'.replace('.', decimal_point)
         else:
             raise RuntimeError(f'Unknown mode {self._mode}')
 
