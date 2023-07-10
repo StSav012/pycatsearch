@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import Collection
+from typing import Collection, TYPE_CHECKING
 
 from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
@@ -106,3 +106,27 @@ class SubstanceInfo(QDialog):
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
+
+        # add the texts to the translation table but don't run the code at runtime
+        if TYPE_CHECKING:
+            self.tr('Catalog')
+            self.tr('Lines')
+            self.tr('Frequency')
+            self.tr('Intensity')
+            self.tr('ID')
+            self.tr('Molecule')
+            self.tr('Structural formula')
+            self.tr('Stoichiometric formula')
+            self.tr('Molecule symbol')
+            self.tr('Species tag')
+            self.tr('Name')
+            self.tr('Trivial name')
+            self.tr('Isotopolog')
+            self.tr('State (TeX)')
+            self.tr('State (HTML)')
+            self.tr('InChI key')
+            self.tr('Contributor')
+            self.tr('Version')
+            self.tr('Date of entry')
+            self.tr('Degrees of freedom')
+            self.tr('Lower state energy')

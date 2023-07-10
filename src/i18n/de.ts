@@ -520,6 +520,111 @@
         <source>Number of spectral lines</source>
         <translation>Die Anzahl der Spektrallinien</translation>
     </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="112"/>
+        <source>Catalog</source>
+        <translation>Katalog</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="113"/>
+        <source>Lines</source>
+        <translation>Linien</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="114"/>
+        <source>Frequency</source>
+        <translation>Frequenz</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="115"/>
+        <source>Intensity</source>
+        <translation>Intensität</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="116"/>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="117"/>
+        <source>Molecule</source>
+        <translation>Molekül</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="118"/>
+        <source>Structural formula</source>
+        <translation>Strukturformel</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="119"/>
+        <source>Stoichiometric formula</source>
+        <translation>Stöchiometrische Formel</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="120"/>
+        <source>Molecule symbol</source>
+        <translation>Molekülsymbol</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="121"/>
+        <source>Species tag</source>
+        <translation>Arten-Tag</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="122"/>
+        <source>Name</source>
+        <translation>Name</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="123"/>
+        <source>Trivial name</source>
+        <translation>Trivialname</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="124"/>
+        <source>Isotopolog</source>
+        <translation>Isotopologe</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="125"/>
+        <source>State (TeX)</source>
+        <translation>Staat (TeX)</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="126"/>
+        <source>State (HTML)</source>
+        <translation>Staat (HTML)</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="127"/>
+        <source>InChI key</source>
+        <translation>InChI-Schlüssel</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="128"/>
+        <source>Contributor</source>
+        <translation>Mitwirkender</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="129"/>
+        <source>Version</source>
+        <translation>Version</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="130"/>
+        <source>Date of entry</source>
+        <translation>Einreisedatum</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="131"/>
+        <source>Degrees of freedom</source>
+        <translation>Freiheitsgrade</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="132"/>
+        <source>Lower state energy</source>
+        <translation>Niedrigere Staatsenergie</translation>
+    </message>
 </context>
 <context>
     <name>SubstancesBox</name>
@@ -552,111 +657,6 @@
         <location filename="../pycatsearch/gui/substances_box.py" line="56"/>
         <source>Select None</source>
         <translation>Keine auswählen</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="71"/>
-        <source>Catalog</source>
-        <translation>Katalog</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="72"/>
-        <source>Lines</source>
-        <translation>Linien</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="73"/>
-        <source>Frequency</source>
-        <translation>Frequenz</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="74"/>
-        <source>Intensity</source>
-        <translation>Intensität</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="75"/>
-        <source>ID</source>
-        <translation>ID</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="76"/>
-        <source>Molecule</source>
-        <translation>Molekül</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="77"/>
-        <source>Structural formula</source>
-        <translation>Strukturformel</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="78"/>
-        <source>Stoichiometric formula</source>
-        <translation>Stöchiometrische Formel</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="79"/>
-        <source>Molecule symbol</source>
-        <translation>Molekülsymbol</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="80"/>
-        <source>Species tag</source>
-        <translation>Arten-Tag</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="81"/>
-        <source>Name</source>
-        <translation>Name</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="82"/>
-        <source>Trivial name</source>
-        <translation>Trivialname</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="83"/>
-        <source>Isotopolog</source>
-        <translation>Isotopologe</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="84"/>
-        <source>State (TeX)</source>
-        <translation>Staat (TeX)</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="85"/>
-        <source>State (HTML)</source>
-        <translation>Staat (HTML)</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="86"/>
-        <source>InChI key</source>
-        <translation>InChI-Schlüssel</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="87"/>
-        <source>Contributor</source>
-        <translation>Mitwirkender</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="88"/>
-        <source>Version</source>
-        <translation>Version</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="89"/>
-        <source>Date of entry</source>
-        <translation>Einreisedatum</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="90"/>
-        <source>Degrees of freedom</source>
-        <translation>Freiheitsgrade</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/substances_box.py" line="91"/>
-        <source>Lower state energy</source>
-        <translation>Niedrigere Staatsenergie</translation>
     </message>
 </context>
 <context>
