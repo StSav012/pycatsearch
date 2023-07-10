@@ -100,6 +100,8 @@ class SubstanceInfo(QDialog):
                     else:
                         label = SelectableLabel(str(entry[key]), self)
                     layout.addRow(self.tr(HUMAN_READABLE[key]), label)
+                label = SelectableLabel(str(len(entry[LINES])), self)
+                layout.addRow(self.tr('Number of spectral lines'), label)
                 break
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         buttons.rejected.connect(self.reject)

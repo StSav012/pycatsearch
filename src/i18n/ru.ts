@@ -515,6 +515,11 @@
         <source>HUMAN_READABLE[key]</source>
         <translation>HUMAN_READABLE[key]</translation>
     </message>
+    <message>
+        <location filename="../pycatsearch/gui/substance_info.py" line="104"/>
+        <source>Number of spectral lines</source>
+        <translation>Число спектральных линий</translation>
+    </message>
 </context>
 <context>
     <name>SubstancesBox</name>
