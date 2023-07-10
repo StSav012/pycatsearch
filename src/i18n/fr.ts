@@ -25,13 +25,13 @@
         <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="79"/>
         <source>JSON with Bzip2 compression</source>
         <comment>file type</comment>
-        <translation>JSON avec compression Bzip2</translation>
+        <translation>JSON avec la compression Bzip2</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="80"/>
         <source>JSON with LZMA2 compression</source>
         <comment>file type</comment>
-        <translation>JSON avec compression LZMA2</translation>
+        <translation>JSON avec la compression LZMA2</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="81"/>
@@ -402,7 +402,7 @@
     <message>
         <location filename="../pycatsearch/gui/settings.py" line="95"/>
         <source>cm / molecule</source>
-        <translation>см / molécule</translation>
+        <translation>cm / molécule</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/settings.py" line="96"/>

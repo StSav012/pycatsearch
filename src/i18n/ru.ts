@@ -888,7 +888,7 @@
     <message>
         <location filename="../pycatsearch/gui/catalog_wizard/download_confirmation_page.py" line="24"/>
         <source>Click {button_text} to start the download data for {min_frequency} to {max_frequency}&#xa0;MHz.</source>
-        <translation>Нажмите {button_text}, чтобы начать скачивать данные для диапазона от {min_frequency} до {max_frequency}&#xa0;МГц.</translation>
+        <translation>Нажмите {button_text}, чтобы начать скачивание данных для диапазона от {min_frequency} до {max_frequency}&#xa0;МГц.</translation>
     </message>
 </context>
 <context>
