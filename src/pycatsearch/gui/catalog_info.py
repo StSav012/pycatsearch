@@ -148,9 +148,11 @@ class CatalogInfo(QDialog):
         frequency_limits_list: TitledListWidget = TitledListWidget(self)
         frequency_limits_list.setTitle(self.tr('Frequency limits:'))
         layout.addWidget(frequency_limits_list)
+        locale: QLocale = QLocale()
         frequency_limits_list.addItems([
-            self.tr('{min_frequency} to {max_frequency} MHz').format(min_frequency=min(frequency_limit),
-                                                                     max_frequency=max(frequency_limit))
+            self.tr('{min_frequency} to {max_frequency} MHz')
+            .format(min_frequency=locale.toString(min(frequency_limit)),
+                    max_frequency=locale.toString(max(frequency_limit)))
             for frequency_limit in catalog.frequency_limits])
 
         stat_layout: QFormLayout = QFormLayout()
