@@ -135,7 +135,10 @@ class Downloader(Thread):
                                 items_to_delete.add(i)
                             else:
                                 items_to_delete.add(j)
-                return [entries[i] for i in range(len(entries)) if i not in items_to_delete]
+                if items_to_delete:
+                    return [entries[i] for i in range(len(entries)) if i not in items_to_delete]
+                else:
+                    return entries
 
             data: dict[str, int | str | list[dict[str, None | int | str]]] \
                 = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1},
