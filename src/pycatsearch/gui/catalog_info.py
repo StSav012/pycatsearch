@@ -44,12 +44,13 @@ class SourcesList(QTableWidget):
         self.verticalHeader().setHighlightSections(False)
 
         self._context_menu: QMenu = QMenu(self)
-        self._context_menu.addAction(
-            qta_icon('mdi6.target'),
-            self.tr('Open File &Location'),
-            self._on_open_file_location_triggered
+        self._context_menu.setDefaultAction(
+            self._context_menu.addAction(
+                qta_icon('mdi6.target'),
+                self.tr('Open File &Location'),
+                self._on_open_file_location_triggered
+            )
         )
-        self._context_menu.setDefaultAction(self._context_menu.actions()[0])
         self._context_menu.addSeparator()
         self._context_menu.addAction(
             qta_icon('mdi6.update'),
