@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import Collection, TYPE_CHECKING
+from contextlib import suppress
+from typing import Any, Collection, TYPE_CHECKING
 
+from qtpy.QtGui import QContextMenuEvent, QIcon
+from qtpy.QtWidgets import QMenu, QStyle
 from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
@@ -49,6 +52,34 @@ class SubstanceInfoSelector(QDialog):
         self._buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         self._buttons.rejected.connect(self.reject)
         layout.addWidget(self._buttons)
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        context_menu: QMenu = QMenu(self)
+        context_menu.addAction(
+            self._icon('dialog-information', 'mdi6.flask-empty-outline', 'mdi6.information-variant',
+                       options=[{}, {'scale_factor': 0.5}]),
+            self.tr('Substance &Info'),
+            lambda: self._list_box.doubleClicked.emit(self._list_box.currentIndex())
+        )
+        context_menu.exec(event.globalPos())
+        return super().contextMenuEvent(event)
+
+    def _icon(self, theme_name: str, *qta_name: str,
+              standard_pixmap: QStyle.StandardPixmap | None = None,
+              **qta_specs: Any) -> QIcon:
+        if theme_name and QIcon.hasThemeIcon(theme_name):
+            return QIcon.fromTheme(theme_name)
+
+        if qta_name:
+            with suppress(ImportError, Exception):
+                import qtawesome as qta
+
+                return qta.icon(*qta_name, **qta_specs)  # might raise an `Exception` if the icon is not in the font
+
+        if standard_pixmap is not None:
+            return self.style().standardIcon(standard_pixmap)
+
+        return QIcon()
 
     @Slot(QListWidgetItem)
     def _on_list_item_changed(self, item: QListWidgetItem) -> None:
