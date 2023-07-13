@@ -25,7 +25,7 @@ class HTMLDelegate(QStyledItemDelegate):
         text_rect: QRect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, option)
         painter.save()
         painter.translate(text_rect.topLeft())
-        painter.setClipRect(text_rect.translated(-text_rect.topLeft()))
+        painter.setClipRect(option.rect.translated(-text_rect.topLeft()))
         painter.translate(0, 0.5 * (option.rect.height() - doc.size().height()))
         doc.documentLayout().draw(painter, ctx)
         painter.restore()
