@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import enum
 from typing import Callable, Final
 
 from qtpy.QtCore import QAbstractTableModel, QLocale, QModelIndex, QPersistentModelIndex, Qt
@@ -47,6 +48,12 @@ class FoundLinesModel(QAbstractTableModel):
         def __hash__(self) -> int:
             return hash(self.species_tag) ^ hash(self.frequency) ^ hash(self.lower_state_energy)
 
+    class Columns(enum.IntEnum):
+        SubstanceName = 0
+        Frequency = 1
+        Intensity = 2
+        LowerStateEnergy = 3
+
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._settings: Settings = settings
@@ -63,9 +70,12 @@ class FoundLinesModel(QAbstractTableModel):
 
     def update_units(self) -> None:
         unit_format: Final[str] = self.tr('{value} [{unit}]', 'unit format')
-        self._header[1] = unit_format.format(value=self.tr('Frequency'), unit=self._settings.frequency_unit_str)
-        self._header[2] = unit_format.format(value=self.tr('Intensity'), unit=self._settings.intensity_unit_str)
-        self._header[3] = unit_format.format(value=self.tr('Lower state energy'), unit=self._settings.energy_unit_str)
+        self._header[FoundLinesModel.Columns.Frequency] = unit_format.format(value=self.tr('Frequency'),
+                                                                             unit=self._settings.frequency_unit_str)
+        self._header[FoundLinesModel.Columns.Intensity] = unit_format.format(value=self.tr('Intensity'),
+                                                                             unit=self._settings.intensity_unit_str)
+        self._header[FoundLinesModel.Columns.LowerStateEnergy] = unit_format.format(value=self.tr('Lower state energy'),
+                                                                                    unit=self._settings.energy_unit_str)
 
     def rowCount(self, parent: QModelIndex | QPersistentModelIndex = ...) -> int:
         return min(len(self._data), self._rows_loaded)
@@ -78,13 +88,13 @@ class FoundLinesModel(QAbstractTableModel):
             if role == Qt.ItemDataRole.DisplayRole:
                 item: FoundLinesModel.DataType = self._data[index.row()]
                 column_index: int = index.column()
-                if column_index == 0:
+                if column_index == FoundLinesModel.Columns.SubstanceName:
                     return item.name
-                if column_index == 1:
+                if column_index == FoundLinesModel.Columns.Frequency:
                     return item.frequency_str
-                if column_index == 2:
+                if column_index == FoundLinesModel.Columns.Intensity:
                     return item.intensity_str
-                if column_index == 3:
+                if column_index == FoundLinesModel.Columns.LowerStateEnergy:
                     return item.lower_state_energy_str
         return None
 
@@ -157,11 +167,12 @@ class FoundLinesModel(QAbstractTableModel):
     def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
         self.beginResetModel()
         key = {
-            0: (lambda l: (l.name, l.frequency, l.intensity, l.lower_state_energy)),
-            1: (lambda l: (l.frequency, l.intensity, l.name, l.lower_state_energy)),
-            2: (lambda l: (l.intensity, l.frequency, l.name, l.lower_state_energy)),
-            3: (lambda l: (l.lower_state_energy, l.intensity, l.frequency, l.name))
-        }[column]
+            FoundLinesModel.Columns.SubstanceName: (lambda l: (l.name, l.frequency, l.intensity, l.lower_state_energy)),
+            FoundLinesModel.Columns.Frequency: (lambda l: (l.frequency, l.intensity, l.name, l.lower_state_energy)),
+            FoundLinesModel.Columns.Intensity: (lambda l: (l.intensity, l.frequency, l.name, l.lower_state_energy)),
+            FoundLinesModel.Columns.LowerStateEnergy:
+                (lambda l: (l.lower_state_energy, l.intensity, l.frequency, l.name))
+        }[FoundLinesModel.Columns(column)]
         self._data.sort(key=key, reverse=bool(order != Qt.SortOrder.AscendingOrder))
         self.endResetModel()
 
@@ -171,7 +182,9 @@ class FoundLinesModel(QAbstractTableModel):
     def fetchMore(self, index: QModelIndex | QPersistentModelIndex = QModelIndex()) -> None:
         # https://sateeshkumarb.wordpress.com/2012/04/01/paginated-display-of-table-data-in-pyqt/
         remainder: int = len(self._data) - self._rows_loaded
+        if remainder <= 0:
+            return
         items_to_fetch: int = min(remainder, FoundLinesModel.ROW_BATCH_COUNT)
-        self.beginInsertRows(QModelIndex(), self._rows_loaded, self._rows_loaded + items_to_fetch - 1)
+        self.beginInsertRows(index, self._rows_loaded, self._rows_loaded + items_to_fetch - 1)
         self._rows_loaded += items_to_fetch
         self.endInsertRows()
