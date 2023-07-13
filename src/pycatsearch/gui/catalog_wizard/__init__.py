@@ -34,7 +34,8 @@ class SaveCatalogWaitingScreen(WaitingScreen):
 
 
 class SaveCatalogWizard(QWizard):
-    def __init__(self, default_save_location: Path | None = None,
+    def __init__(self,
+                 default_save_location: Path | None = None,
                  parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
