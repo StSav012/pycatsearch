@@ -10,7 +10,7 @@ from typing import Any, AnyStr
 from qtpy import PYSIDE2, QT6
 from qtpy.QtCore import QLibraryInfo, QLocale, QTranslator, Qt, qVersion
 from qtpy.QtGui import QIcon
-from qtpy.QtWidgets import QApplication, QDialog
+from qtpy.QtWidgets import QApplication, QDialog, QMenu
 
 __all__ = ['qta_icon', 'run']
 
@@ -106,6 +106,7 @@ def _make_old_qt_compatible_again() -> None:
         if PYSIDE2:
             QApplication.exec = QApplication.exec_
             QDialog.exec = QDialog.exec_
+            QMenu.exec = lambda self, pos: self.exec_(pos)
 
         if not QT6:
             QLibraryInfo.path = lambda *args, **kwargs: QLibraryInfo.location(*args, **kwargs)
@@ -116,7 +117,7 @@ def _make_old_qt_compatible_again() -> None:
 
             from qtpy.QtCore import QObject
             from qtpy.QtGui import QKeySequence
-            from qtpy.QtWidgets import QAction, QMenu, QToolBar, QWidget
+            from qtpy.QtWidgets import QAction, QToolBar, QWidget
 
             def add_action(self: QWidget, *args, old_add_action) -> QAction:
                 action: QAction
