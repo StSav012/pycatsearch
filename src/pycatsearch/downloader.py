@@ -149,6 +149,7 @@ class Downloader(Thread):
 
             if SPECIES_TAG not in species_entry:
                 # nothing to go on with
+                logger.error(f'{SPECIES_TAG!r} not in the species entry: {species_entry!r}')
                 return dict()
 
             if (self._existing_catalog is not None
@@ -167,6 +168,7 @@ class Downloader(Thread):
 
             fn: str = entry_url(species_tag=cast(int, species_entry[SPECIES_TAG]))
             if not fn:  # no need to download a file for the species tag
+                logger.debug(f'skipping species tag {species_entry[SPECIES_TAG]}')
                 return dict()
             try:
                 logger.debug(f'getting {fn}')
