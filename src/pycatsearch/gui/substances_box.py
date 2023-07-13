@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import Callable
+from contextlib import suppress
+from typing import Any, Callable
 
 from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
+from qtpy.QtGui import QContextMenuEvent, QIcon
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox, QGroupBox, QLineEdit, QListWidget,
-                            QListWidgetItem, QPushButton, QVBoxLayout, QWidget)
+                            QListWidgetItem, QMenu, QPushButton, QStyle, QVBoxLayout, QWidget)
 
 from .html_style_delegate import HTMLDelegate
 from .settings import Settings
@@ -65,6 +67,38 @@ class SubstancesBox(QGroupBox):
         self._list_substance.itemChanged.connect(self._on_list_substance_item_changed)
 
         self.load_settings()
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        species_tags: set[int] = self._list_substance.currentItem().data(Qt.ItemDataRole.UserRole)
+        if not species_tags:
+            return super().contextMenuEvent(event)
+
+        context_menu: QMenu = QMenu(self)
+        context_menu.addAction(
+            self._icon('dialog-information', 'mdi6.flask-empty-outline', 'mdi6.information-variant',
+                       options=[{}, {'scale_factor': 0.5}]),
+            self.tr('Substance &Info') if len(species_tags) == 1 else self.tr('&Select Substance'),
+            lambda: self._list_substance.doubleClicked.emit(self._list_substance.currentIndex())
+        )
+        context_menu.exec(event.globalPos())
+        return super().contextMenuEvent(event)
+
+    def _icon(self, theme_name: str, *qta_name: str,
+              standard_pixmap: QStyle.StandardPixmap | None = None,
+              **qta_specs: Any) -> QIcon:
+        if theme_name and QIcon.hasThemeIcon(theme_name):
+            return QIcon.fromTheme(theme_name)
+
+        if qta_name:
+            with suppress(ImportError, Exception):
+                import qtawesome as qta
+
+                return qta.icon(*qta_name, **qta_specs)  # might raise an `Exception` if the icon is not in the font
+
+        if standard_pixmap is not None:
+            return self.style().standardIcon(standard_pixmap)
+
+        return QIcon()
 
     def _filter_substances_list(self, filter_text: str) -> dict[str, set[int]]:
         list_items: dict[str, set[int]] = dict()
@@ -148,7 +182,7 @@ class SubstancesBox(QGroupBox):
         if not self._check_keep_selection.isChecked():
             newly_selected_substances: set[int] = set().union(
                 *((self._list_substance.item(row).data(Qt.ItemDataRole.UserRole) & self._selected_substances)
-                for row in range(self._list_substance.count()))
+                  for row in range(self._list_substance.count()))
             )
             if newly_selected_substances != self._selected_substances:
                 self._selected_substances = newly_selected_substances
@@ -164,7 +198,7 @@ class SubstancesBox(QGroupBox):
         if not new_state:
             newly_selected_substances: set[int] = set().union(
                 *((self._list_substance.item(row).data(Qt.ItemDataRole.UserRole) & self._selected_substances)
-                for row in range(self._list_substance.count()))
+                  for row in range(self._list_substance.count()))
             )
             if newly_selected_substances != self._selected_substances:
                 self._selected_substances = newly_selected_substances
