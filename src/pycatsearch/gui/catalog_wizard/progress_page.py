@@ -53,6 +53,7 @@ class ProgressPage(QWizardPage):
                                       state_queue=self._state_queue,
                                       existing_catalog=self._existing_catalog)
         self._downloader.start()
+        self._progress_bar.setMaximum(0)
         self._timer.start(100)
 
     @Slot()
