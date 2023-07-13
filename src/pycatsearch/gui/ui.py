@@ -25,7 +25,7 @@ from .settings import Settings
 from .substance_info import SubstanceInfo
 from .substances_box import SubstancesBox
 from .. import __version__
-from ..catalog import Catalog
+from ..catalog import Catalog, CatalogType
 from ..utils import ReleaseInfo, ensure_prefix, latest_release, remove_html, update_with_pip, wrap_in_html
 
 if sys.version_info < (3, 10):
@@ -673,22 +673,13 @@ class UI(QMainWindow):
 
         self.results_table.setSortingEnabled(False)
 
-        entries: list[dict[str, int | str | list[dict[str, float]]]] = \
-            (sum(
-                (
-                    self.catalog.filter(min_frequency=self.box_frequency.min_frequency,
-                                        max_frequency=self.box_frequency.max_frequency,
-                                        min_intensity=self.minimal_intensity,
-                                        species_tag=species_tag,
-                                        temperature=self.temperature)
-                    for species_tag in self.box_substance.selected_substances
-                ),
-                []
-            ) if self.box_substance.isChecked()
-             else self.catalog.filter(min_frequency=self.box_frequency.min_frequency,
-                                      max_frequency=self.box_frequency.max_frequency,
-                                      min_intensity=self.minimal_intensity,
-                                      temperature=self.temperature))
+        entries: CatalogType = self.catalog.filter_by_species_tags(
+            species_tags=self.box_substance.selected_substances if self.box_substance.isChecked() else None,
+            min_frequency=self.box_frequency.min_frequency,
+            max_frequency=self.box_frequency.max_frequency,
+            min_intensity=self.minimal_intensity,
+            temperature=self.temperature,
+        )
         self.results_model.set_entries(entries)
 
         self.results_table.setSortingEnabled(True)

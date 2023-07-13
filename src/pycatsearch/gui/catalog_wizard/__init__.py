@@ -39,7 +39,7 @@ class SaveCatalogWizard(QWizard):
                  parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self.catalog: list[CatalogEntryType] = []
+        self.catalog: CatalogType = dict()
         self.default_save_location: Path | None = default_save_location
 
         self.setModal(True)

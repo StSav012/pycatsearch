@@ -62,7 +62,7 @@ c.print(min_frequency=140141, max_frequency=140142)
   stoichiometric_formula: str = '',
   isotopolog: str = '',
   state: str = '',
-  degrees_of_freedom: Optional[int] = None) -> List[Dict[str, Union[int, str, List[Dict[str, float]]]]]`
+  degrees_of_freedom: int | None = None) -> dict[int, dict[str, int | str | list[dict[str, float]]]]`
   returns only the catalog entries that meet the criteria specified. The arguments are the following:
     - `float min_frequency`: the lower frequency \[MHz\] to take.
     - `float max_frequency`: the upper frequency \[MHz\] to take.
@@ -85,6 +85,25 @@ c.print(min_frequency=140141, max_frequency=140142)
     - `str isotopolog`: a string to match the ``isotopolog`` field.
     - `str state`: a string to match the ``state`` or the ``state_html`` field.
     - `int degrees_of_freedom`: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
+- `filter_by_species_tags(self, *,
+  species_tags: Iterable[int] | None = None,
+  min_frequency: float = 0.0,
+  max_frequency: float = math.inf,
+  min_intensity: float = -math.inf,
+  max_intensity: float = math.inf,
+  temperature: float = -math.inf,
+  ) -> dict[int, dict[str, int | str | list[dict[str, float]]]]`
+  returns only the catalog entries that meet the criteria specified.
+  It's a faster version of the `filter` function, for it makes fewer comparisons.
+  The arguments are the following:
+    - `Iterable[int] | None species_tags`: numbers to match the ``speciestag`` field,
+      use all items listed in the catalog if not set or set to `None`.
+    - `float min_frequency`: the lower frequency \[MHz\] to take.
+    - `float max_frequency`: the upper frequency \[MHz\] to take.
+    - `float min_intensity`: the minimal intensity \[log10(nm²×MHz)\] to take.
+    - `float max_intensity`: the maximal intensity \[log10(nm²×MHz)\] to take, use to avoid meta-stable substances.
+    - `float temperature`: the temperature to calculate the line intensity at,
+      use the catalog intensity if not set.
 - `print(**kwargs)` prints a table of the filtered catalog entries.
   It accepts all the arguments valid for the `filter` function.
 
@@ -109,12 +128,12 @@ downloader.save_catalog('catalog.json.gz', (115000, 178000))
 
 ###### Functions:
 
-- `get_catalog(frequency_limits: Tuple[float, float] = (0.0, math.inf)) ->
-  List[Dict[str, Union[int, str, List[Dict[str, float]]]]]` downloads the spectral lines catalog data.
+- `get_catalog(frequency_limits: tuple[float, float] = (0.0, math.inf)) ->
+  dict[int, dict[str, int | str | list[dict[str, float]]]]` downloads the spectral lines catalog data.
   It returns a list of the spectral lines catalog entries.
   The parameter `frequency_limits` is the frequency range of the catalog entries to keep.
   By default, there are no limits.
-- `save_catalog(filename: str, frequency_limits: Tuple[float, float] = (0.0, math.inf)) -> bool`
+- `save_catalog(filename: str, frequency_limits: tuple[float, float] = (0.0, math.inf)) -> bool`
   downloads and saves the spectral lines catalog data.
   Inside, `get_catalog` function is called.
   The function returns `True` if something got downloaded, `False` otherwise.
@@ -153,9 +172,9 @@ async_downloader.save_catalog('catalog.json.gz', (115000, 178000))
 
 ###### Functions:
 
-- `get_catalog(frequency_limits: Tuple[float, float] = (0.0, math.inf)) ->
-  List[Dict[str, Union[int, str, List[Dict[str, float]]]]]`
-- `save_catalog(filename: str, frequency_limits: Tuple[float, float] = (0.0, math.inf)) -> bool`
+- `get_catalog(frequency_limits: tuple[float, float] = (0.0, math.inf)) ->
+  dict[int, dict[str, int | str | list[dict[str, float]]]]`
+- `save_catalog(filename: str, frequency_limits: tuple[float, float] = (0.0, math.inf)) -> bool`
 
 The functions behave _almost_ exactly like their namesakes from `downloader`.
 `get_catalog` prints out the progress described in two numbers:
@@ -172,7 +191,7 @@ If the thread fails, `get_catalog` returns an empty list, almost never raising a
 
 The class constructor accepts the frequency limits, just like `get_catalog` function.
 
-One also may provide the constructor with a `multiprocessing.Queue[Tuple[int, int]]`
+One also may provide the constructor with a `multiprocessing.Queue[tuple[int, int]]`
 to see the downloading progress.
 The first number of the tuple is the number of the species,
 for which the data has already been downloaded
@@ -198,7 +217,8 @@ The GUI requires Python bindings for Qt (`PyQt5`, `PySide6`, `PyQt6`, or `PySide
 
 ## File Format
 
-The JSON file contains an array of substances called `catalog`.
+The JSON file contains a dictionary of substances called `catalog`.
+The keys of the dictionary are the species tags.
 Each substance is described like the following:
 
 ```json

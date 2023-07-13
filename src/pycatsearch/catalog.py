@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from os import PathLike, fsync
 from pathlib import Path
-from typing import Any, AnyStr, BinaryIO, Callable, Dict, List, NamedTuple, Optional, TextIO, Union, cast
+from typing import Any, AnyStr, BinaryIO, Callable, Dict, Iterable, List, NamedTuple, TextIO, Union, cast
 
 try:
     import orjson as json
@@ -21,11 +21,42 @@ from .utils import (M_LOG10E, T0, c, h, k, CATALOG, BUILD_TIME, LINES, FREQUENCY
                     STATE_HTML, INCHI_KEY, DEGREES_OF_FREEDOM, LOWER_STATE_ENERGY,
                     merge_sorted, search_sorted)
 
-__all__ = ['Catalog', 'CatalogSourceInfo', 'LineType', 'LinesType', 'CatalogEntryType']
+__all__ = ['Catalog', 'CatalogSourceInfo', 'LineType', 'LinesType', 'CatalogEntryType', 'CatalogType']
 
 LineType = Dict[str, float]
 LinesType = List[LineType]
 CatalogEntryType = Dict[str, Union[int, str, LinesType]]
+CatalogType = Dict[int, CatalogEntryType]
+CatalogJSONType = Dict[str, CatalogEntryType]
+OldCatalogJSONType = List[CatalogEntryType]
+
+
+def filter_by_frequency_and_intensity(catalog_entry: CatalogEntryType, *,
+                                      min_frequency: float = 0.0,
+                                      max_frequency: float = math.inf,
+                                      min_intensity: float = -math.inf,
+                                      max_intensity: float = math.inf,
+                                      temperature: float = -math.inf) -> CatalogEntryType:
+    def intensity(_line: LineType) -> float:
+        if catalog_entry[DEGREES_OF_FREEDOM] >= 0 and temperature > 0. and temperature != T0:
+            return (_line[INTENSITY] +
+                    ((0.5 * catalog_entry[DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
+                     - ((1 / temperature - 1 / T0) * _line[LOWER_STATE_ENERGY] * 100. * h * c / k)) / M_LOG10E)
+        else:
+            return _line[INTENSITY]
+
+    new_catalog_entry: CatalogEntryType = catalog_entry.copy()
+    if LINES in new_catalog_entry and new_catalog_entry[LINES]:
+        min_frequency_index: int = search_sorted(min_frequency, new_catalog_entry[LINES],
+                                                 key=lambda line: line[FREQUENCY]) + 1
+        max_frequency_index: int = search_sorted(max_frequency, new_catalog_entry[LINES],
+                                                 key=lambda line: line[FREQUENCY], maybe_equal=True)
+        new_catalog_entry[LINES] = \
+            [line for line in new_catalog_entry[LINES][min_frequency_index:(max_frequency_index + 1)]
+             if min_intensity <= intensity(line) <= max_intensity]
+    else:
+        new_catalog_entry[LINES] = []
+    return new_catalog_entry
 
 
 class CatalogSourceInfo(NamedTuple):
@@ -35,26 +66,29 @@ class CatalogSourceInfo(NamedTuple):
 
 class CatalogData:
     def __init__(self) -> None:
-        self.catalog: list[CatalogEntryType] = []
+        self.catalog: CatalogType = dict()
         self.frequency_limits: tuple[tuple[float, float], ...] = ()
 
     def append(self,
-               catalog: list[CatalogEntryType],
+               new_catalog: CatalogJSONType | OldCatalogJSONType,
                frequency_limits: tuple[float, float]) -> None:
+        catalog: CatalogType
+        if isinstance(new_catalog, list):
+            catalog = dict((entry[SPECIES_TAG], entry) for entry in new_catalog)
+        elif isinstance(new_catalog, dict):
+            catalog = dict((int(species_tag_str), new_catalog[species_tag_str]) for species_tag_str in new_catalog)
+        else:
+            raise TypeError('Unsupported data type')
+
         def squash_same_species_tag_entries() -> None:
-            i: int = 0
-            while i < len(self.catalog) - 1:
-                while i < len(self.catalog) - 1 and self.catalog[i][SPECIES_TAG] == self.catalog[i + 1][SPECIES_TAG]:
-                    self.catalog[i][LINES] = cast(LinesType,
-                                                  merge_sorted(self.catalog[i][LINES],
-                                                               self.catalog[i + 1][LINES],
-                                                               key=lambda line: (line[FREQUENCY],
-                                                                                 line[INTENSITY],
-                                                                                 line[LOWER_STATE_ENERGY])
-                                                               )
-                                                  )
-                    del self.catalog[i + 1]
-                i += 1
+            self.catalog[species_tag][LINES] = cast(LinesType,
+                                                    merge_sorted(self.catalog[species_tag][LINES],
+                                                                 catalog[species_tag][LINES],
+                                                                 key=lambda line: (line[FREQUENCY],
+                                                                                   line[INTENSITY],
+                                                                                   line[LOWER_STATE_ENERGY])
+                                                                 )
+                                                    )
 
         def merge_frequency_tuples(*args: tuple[float, float] | list[float]) -> tuple[tuple[float, float], ...]:
             if not args:
@@ -75,8 +109,15 @@ class CatalogData:
                 ranges += ((current_min, current_max),)
             return ranges
 
-        self.catalog.extend(sorted(catalog, key=lambda entry: entry[SPECIES_TAG]))
-        squash_same_species_tag_entries()
+        if not self.catalog:
+            self.catalog = catalog.copy()
+        else:
+            species_tag: int
+            for species_tag in catalog:
+                if species_tag not in self.catalog:
+                    self.catalog[species_tag] = catalog[species_tag]
+                else:
+                    squash_same_species_tag_entries()
         self.frequency_limits = merge_frequency_tuples(*self.frequency_limits, frequency_limits)
 
 
@@ -157,11 +198,13 @@ class Catalog:
                 with Catalog.Opener(filename).open('rb') as f_in:
                     content: bytes = f_in.read()
                     try:
-                        json_data: dict[str, list[float | None] | list[CatalogEntryType]] = json.loads(content)
-                    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+                        json_data: dict[str, list[float | None]
+                                             | CatalogJSONType
+                                             | OldCatalogJSONType] = json.loads(content)
+                    except (json.JSONDecodeError, UnicodeDecodeError):
                         pass
                     else:
-                        self._data.append(catalog=json_data[CATALOG],
+                        self._data.append(new_catalog=json_data[CATALOG],
                                           frequency_limits=(json_data[FREQUENCY][0],
                                                             (math.inf if json_data[FREQUENCY][1] is None
                                                              else json_data[FREQUENCY][1])))
@@ -187,7 +230,7 @@ class Catalog:
         return self._sources.copy()
 
     @property
-    def catalog(self) -> list[CatalogEntryType]:
+    def catalog(self) -> CatalogType:
         return self._data.catalog
 
     @property
@@ -224,8 +267,8 @@ class Catalog:
                stoichiometric_formula: str = '',
                isotopolog: str = '',
                state: str = '',
-               degrees_of_freedom: Optional[int] = None,
-               ) -> list[CatalogEntryType]:
+               degrees_of_freedom: int | None = None,
+               ) -> CatalogType:
         """
         Extract only the entries that match all the specified conditions
 
@@ -250,38 +293,21 @@ class Catalog:
         :param str isotopolog: a string to match the ``isotopolog`` field.
         :param str state: a string to match the ``state`` or the ``state_html`` field.
         :param int degrees_of_freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
-        :return: a list of substances with non-empty lists of absorption lines that match all the conditions.
+        :return: a dict of substances with non-empty lists of absorption lines that match all the conditions.
         """
 
         if self.is_empty:
-            return []
-
-        def filter_by_frequency_and_intensity(catalog_entry: CatalogEntryType) -> CatalogEntryType:
-            def intensity(_line: LineType) -> float:
-                if catalog_entry[DEGREES_OF_FREEDOM] >= 0 and temperature > 0. and temperature != T0:
-                    return (_line[INTENSITY] +
-                            ((0.5 * catalog_entry[DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
-                             - ((1 / temperature - 1 / T0) * _line[LOWER_STATE_ENERGY] * 100. * h * c / k)) / M_LOG10E)
-                else:
-                    return _line[INTENSITY]
-
-            new_catalog_entry: CatalogEntryType = catalog_entry.copy()
-            if LINES in new_catalog_entry and new_catalog_entry[LINES]:
-                min_frequency_index: int = search_sorted(min_frequency, new_catalog_entry[LINES],
-                                                         key=lambda line: line[FREQUENCY]) + 1
-                max_frequency_index: int = search_sorted(max_frequency, new_catalog_entry[LINES],
-                                                         key=lambda line: line[FREQUENCY], maybe_equal=True)
-                new_catalog_entry[LINES] = \
-                    [line for line in new_catalog_entry[LINES][min_frequency_index:(max_frequency_index + 1)]
-                     if min_intensity <= intensity(line) <= max_intensity]
-            else:
-                new_catalog_entry[LINES] = []
-            return new_catalog_entry
+            return dict()
 
         if (min_frequency > max_frequency
                 or min_frequency > self.max_frequency
                 or max_frequency < self.min_frequency):
-            return []
+            return dict()
+
+        st: int
+        selected_entries: CatalogType = dict()
+        entry: CatalogEntryType
+        filtered_entry: CatalogEntryType
         if (species_tag or inchi_key or trivial_name or structural_formula or name or stoichiometric_formula
                 or isotopolog or state or degrees_of_freedom or any_name or any_formula or any_name_or_formula
                 or anything):
@@ -290,10 +316,9 @@ class Catalog:
             any_name: str = any_name.casefold()
             any_name_or_formula_lowercase: str = any_name_or_formula.casefold()
             anything_lowercase: str = anything.casefold()
-            selected_entries: list[CatalogEntryType] = []
-            for entry in self.catalog:
-                if ((not species_tag or entry.get(SPECIES_TAG, 0) == species_tag)
-                        and (not inchi_key or entry.get(INCHI_KEY, '') == inchi_key)
+            for st in (self._data.catalog if not species_tag else [species_tag]):
+                entry = self._data.catalog[st]
+                if ((not inchi_key or entry.get(INCHI_KEY, '') == inchi_key)
                         and (not trivial_name or entry.get(TRIVIAL_NAME, '').casefold() == trivial_name)
                         and (not structural_formula or entry.get(STRUCTURAL_FORMULA, '') == structural_formula)
                         and (not name or entry.get(NAME, '').casefold() == name)
@@ -322,15 +347,68 @@ class Catalog:
                              or anything_lowercase in (entry.get(TRIVIAL_NAME, '').casefold(),
                                                        entry.get(NAME, '').casefold(),))
                 ):
-                    filtered_entry: CatalogEntryType = filter_by_frequency_and_intensity(entry)
+                    filtered_entry = filter_by_frequency_and_intensity(entry,
+                                                                       temperature=temperature,
+                                                                       min_frequency=min_frequency,
+                                                                       max_frequency=max_frequency,
+                                                                       min_intensity=min_intensity,
+                                                                       max_intensity=max_intensity)
                     if filtered_entry[LINES]:
-                        selected_entries.append(filtered_entry)
+                        selected_entries[st] = filtered_entry
         else:
-            filtered_entries: list[CatalogEntryType] = [
-                filter_by_frequency_and_intensity(entry)
-                for entry in self._data.catalog
-            ]
-            selected_entries = [entry for entry in filtered_entries if entry[LINES]]
+            for st in self._data.catalog:
+                entry = self.catalog[st]
+                filtered_entry = filter_by_frequency_and_intensity(entry,
+                                                                   temperature=temperature,
+                                                                   min_frequency=min_frequency,
+                                                                   max_frequency=max_frequency,
+                                                                   min_intensity=min_intensity,
+                                                                   max_intensity=max_intensity)
+                if filtered_entry[LINES]:
+                    selected_entries[st] = filtered_entry
+        return selected_entries
+
+    def filter_by_species_tags(self, *,
+                               species_tags: Iterable[int] | None = None,
+                               min_frequency: float = 0.0,
+                               max_frequency: float = math.inf,
+                               min_intensity: float = -math.inf,
+                               max_intensity: float = math.inf,
+                               temperature: float = -math.inf,
+                               ) -> CatalogType:
+        """
+        Extract only the entries that match the specified conditions
+
+        :param Iterable[int] species_tags: numbers to match the ``speciestag`` field.
+        :param float min_frequency: the lower frequency [MHz] to take.
+        :param float max_frequency: the upper frequency [MHz] to take.
+        :param float min_intensity: the minimal intensity [log10(nm²×MHz)] to take.
+        :param float max_intensity: the maximal intensity [log10(nm²×MHz)] to take, use to avoid meta-stable substances.
+        :param float temperature: the temperature to calculate the line intensity at,
+                                  use the catalog intensity if not set.
+        :return: a dict of substances with non-empty lists of absorption lines that match all the conditions.
+        """
+
+        if self.is_empty:
+            return dict()
+
+        if (min_frequency > max_frequency
+                or min_frequency > self.max_frequency
+                or max_frequency < self.min_frequency):
+            return dict()
+
+        species_tag: int
+        selected_entries: CatalogType = dict()
+        filtered_entry: CatalogEntryType
+        for species_tag in species_tags if species_tags is not None else self._data.catalog:
+            filtered_entry = filter_by_frequency_and_intensity(self._data.catalog[species_tag],
+                                                               temperature=temperature,
+                                                               min_frequency=min_frequency,
+                                                               max_frequency=max_frequency,
+                                                               min_intensity=min_intensity,
+                                                               max_intensity=max_intensity)
+            if filtered_entry[LINES]:
+                selected_entries[species_tag] = filtered_entry
         return selected_entries
 
     def print(self, **kwargs: None | int | float | str) -> None:
@@ -340,7 +418,7 @@ class Catalog:
         :param kwargs: all arguments that are valid for :func:`filter <catalog.Catalog.filter>`
         :return: nothing
         """
-        entries: list[CatalogEntryType] = self.filter(**kwargs)
+        entries: CatalogType = self.filter(**kwargs)
         if not entries:
             print('nothing found')
             return
@@ -348,7 +426,8 @@ class Catalog:
         names: list[str] = []
         frequencies: list[float] = []
         intensities: list[float] = []
-        for entry in entries:
+        for species_tag in entries:
+            entry: CatalogEntryType = entries[species_tag]
             for line in cast(LinesType, entry[LINES]):
                 names.append(entry[NAME])
                 frequencies.append(line[FREQUENCY])
@@ -365,13 +444,13 @@ class Catalog:
 
     @staticmethod
     def save(filename: str | PathLike[str],
-             catalog: list[CatalogEntryType],
+             catalog: CatalogType | CatalogJSONType,
              frequency_limits: tuple[float, float] = (0.0, math.inf),
              build_time: datetime | None = None) -> None:
         if build_time is None:
             build_time = datetime.now(tz=timezone.utc)
-        data_to_save: dict[str, list[CatalogEntryType] | tuple[float, float] | str] = {
-            CATALOG: catalog,
+        data_to_save: dict[str, CatalogJSONType | tuple[float, float] | str] = {
+            CATALOG: dict((str(species_tag), catalog[species_tag]) for species_tag in catalog),
             FREQUENCY: list(frequency_limits),
             BUILD_TIME: build_time.isoformat(),
         }

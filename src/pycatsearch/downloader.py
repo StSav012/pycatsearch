@@ -17,9 +17,9 @@ try:
 except ImportError:
     import json
 
-from .catalog import Catalog, CatalogEntryType
+from .catalog import Catalog, CatalogEntryType, CatalogType
 from .catalog_entry import CatalogEntry
-from .utils import FREQUENCY, LINES, SPECIES_TAG, DEGREES_OF_FREEDOM, within, save_catalog_to_file
+from .utils import FREQUENCY, LINES, SPECIES_TAG, DEGREES_OF_FREEDOM, VERSION, within, save_catalog_to_file
 
 __all__ = ['Downloader', 'get_catalog', 'save_catalog', 'download']
 
@@ -34,7 +34,7 @@ class Downloader(Thread):
         super().__init__()
         self._state_queue: Queue[tuple[int, int]] | None = state_queue
         self._frequency_limits: tuple[float, float] = frequency_limits
-        self._catalog: list[CatalogEntryType] = []
+        self._catalog: CatalogType = dict()
         self._existing_catalog: Catalog | None = existing_catalog
 
         self._run: bool = False
@@ -47,7 +47,7 @@ class Downloader(Thread):
             session.close()
 
     @property
-    def catalog(self) -> list[CatalogEntryType]:
+    def catalog(self) -> CatalogType:
         return self._catalog.copy()
 
     def stop(self) -> None:
@@ -126,23 +126,32 @@ class Downloader(Thread):
                         entry[key] = cast(str, entry[key]).strip()
                 return entry
 
+            def ensure_unique_species_tags(entries: list[dict[str, int | str]]) -> list[dict[str, int | str]]:
+                items_to_delete: set[int] = set()
+                for i in range(len(entries) - 1):
+                    for j in range(i + 1, len(entries)):
+                        if entries[i][SPECIES_TAG] == entries[j][SPECIES_TAG]:
+                            if entries[i][VERSION] < entries[j][VERSION]:
+                                items_to_delete.add(i)
+                            else:
+                                items_to_delete.add(j)
+                return [entries[i] for i in range(len(entries)) if i not in items_to_delete]
+
             data: dict[str, int | str | list[dict[str, None | int | str]]] \
                 = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1},
                                   headers={'Content-Type': 'application/x-www-form-urlencoded'}))
-            if 'species' in data:
-                return [purge_null_data(trim_strings(s)) for s in data['species']]
-            else:
-                return []
+            return ensure_unique_species_tags([purge_null_data(trim_strings(s))
+                                               for s in data.get('species', [])])
 
         def get_substance_catalog(species_entry: dict[str, int | str]) -> CatalogEntryType:
             if not self._run:
                 return dict()  # quickly exit the function
 
-            def entry_url(species_tag: int) -> str:
-                entry_filename: str = f'c{species_tag:06}.cat'
+            def entry_url(_species_tag: int) -> str:
+                entry_filename: str = f'c{_species_tag:06}.cat'
                 if entry_filename in ('c044009.cat', 'c044012.cat'):  # merged with c044004.cat — Brian J. Drouin
                     return ''
-                if species_tag % 1000 > 500:
+                if _species_tag % 1000 > 500:
                     return 'https://cdms.astro.uni-koeln.de/classic/entries/' + entry_filename
                 else:
                     return 'https://spec.jpl.nasa.gov/ftp/pub/catalog/' + entry_filename
@@ -155,18 +164,19 @@ class Downloader(Thread):
             if (self._existing_catalog is not None
                     and self._existing_catalog.min_frequency <= min(self._frequency_limits)
                     and self._existing_catalog.max_frequency >= max(self._frequency_limits)):
+                species_tag: int
                 existing_catalog_entry: CatalogEntryType
-                for existing_catalog_entry in self._existing_catalog.catalog:
+                for species_tag, existing_catalog_entry in self._existing_catalog.catalog.items():
                     if all(existing_catalog_entry.get(key, type(value)()) == value
                            for key, value in species_entry.items()):
-                        logger.debug(f'using existing entry for species tag {species_entry[SPECIES_TAG]}')
+                        logger.debug(f'using existing entry for species tag {species_tag}')
                         _catalog_entry = existing_catalog_entry.copy()
                         _catalog_entry[LINES] = [_line
                                                  for _line in existing_catalog_entry.get(LINES, [])
                                                  if within(_line[FREQUENCY], self._frequency_limits)]
                         return _catalog_entry
 
-            fn: str = entry_url(species_tag=cast(int, species_entry[SPECIES_TAG]))
+            fn: str = entry_url(cast(int, species_entry[SPECIES_TAG]))
             if not fn:  # no need to download a file for the species tag
                 logger.debug(f'skipping species tag {species_entry[SPECIES_TAG]}')
                 return dict()
@@ -189,7 +199,7 @@ class Downloader(Thread):
             }
 
         species: list[dict[str, int | str]] = get_species()
-        catalog: list[CatalogEntryType] = []
+        catalog: CatalogType = dict()
         species_count: Final[int] = len(species)
         skipped_count: int = 0
         if self._state_queue is not None:
@@ -199,7 +209,7 @@ class Downloader(Thread):
         for _e in species:
             catalog_entry = get_substance_catalog(_e)
             if SPECIES_TAG in catalog_entry:
-                catalog.append(catalog_entry)
+                catalog[catalog_entry[SPECIES_TAG]] = catalog_entry
                 if self._state_queue is not None:
                     self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
             else:
@@ -211,7 +221,7 @@ class Downloader(Thread):
 
 
 def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
-                existing_catalog: Catalog | None = None) -> list[CatalogEntryType]:
+                existing_catalog: Catalog | None = None) -> CatalogType:
     """
     Download the spectral lines catalog data
 

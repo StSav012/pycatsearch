@@ -7,8 +7,8 @@ from qtpy.QtCore import QAbstractTableModel, QLocale, QModelIndex, QPersistentMo
 from qtpy.QtWidgets import QWidget
 
 from .settings import Settings
-from ..catalog import CatalogEntryType
-from ..utils import (FREQUENCY, INTENSITY, LINES, LOWER_STATE_ENERGY, SPECIES_TAG, best_name)
+from ..catalog import CatalogType
+from ..utils import FREQUENCY, INTENSITY, LINES, LOWER_STATE_ENERGY, best_name
 
 __all__ = ['FoundLinesModel']
 
@@ -50,7 +50,6 @@ class FoundLinesModel(QAbstractTableModel):
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._settings: Settings = settings
-        self._entries: list[CatalogEntryType] = []
         self._data: list[FoundLinesModel.DataType] = []
         self._rows_loaded: int = FoundLinesModel.ROW_BATCH_COUNT
 
@@ -106,9 +105,9 @@ class FoundLinesModel(QAbstractTableModel):
         return False
 
     def clear(self) -> None:
-        self.set_entries([])
+        self.set_entries(dict())
 
-    def set_entries(self, new_data: list[CatalogEntryType]) -> None:
+    def set_entries(self, entries: CatalogType) -> None:
         from_mhz: Callable[[float], float] = self._settings.from_mhz
         from_log10_sq_nm_mhz: Callable[[float], float] = self._settings.from_log10_sq_nm_mhz
         from_rec_cm: Callable[[float], float] = self._settings.from_rec_cm
@@ -140,40 +139,17 @@ class FoundLinesModel(QAbstractTableModel):
                 return f'{lower_state_energy:.4f}'.replace('.', decimal_point), lower_state_energy
 
         self.beginResetModel()
-        unique_entries: list[CatalogEntryType] = []
-        non_unique_indices: set[int] = set()
-        unique: bool
-        all_unique: bool = True  # unless the opposite is proven
-        for i in range(len(new_data)):
-            if i in non_unique_indices:
-                continue
-            unique = True
-            for j in range(i + 1, len(new_data)):
-                if j in non_unique_indices:
-                    continue
-                if new_data[i] == new_data[j]:
-                    non_unique_indices.add(j)
-                    unique = False
-                    all_unique = False
-                    break
-            if unique and not all_unique:
-                unique_entries.append(new_data[i])
-        if all_unique:
-            self._entries = new_data.copy()
-        else:
-            self._entries = unique_entries
-        entry: CatalogEntryType
         rich_text_in_formulas: bool = self._settings.rich_text_in_formulas
         self._data = list(set(
             FoundLinesModel.DataType(
-                entry[SPECIES_TAG],
-                best_name(entry, rich_text_in_formulas),
+                species_tag,
+                best_name(entries[species_tag], rich_text_in_formulas),
                 *frequency_str(line[FREQUENCY]),
                 *intensity_str(line[INTENSITY]),
                 *lower_state_energy_str(line[LOWER_STATE_ENERGY]),
             )
-            for entry in self._entries
-            for line in entry[LINES]
+            for species_tag in entries
+            for line in entries[species_tag][LINES]
         ))
         self._rows_loaded = FoundLinesModel.ROW_BATCH_COUNT
         self.endResetModel()

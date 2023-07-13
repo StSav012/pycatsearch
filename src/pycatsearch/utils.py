@@ -566,7 +566,7 @@ def ensure_prefix(text: str, prefix: str) -> str:
 
 
 def save_catalog_to_file(filename: str | os.PathLike[str],
-                         catalog: list[dict[str, int | str | list[dict[str, float]]]],
+                         catalog: dict[int, dict[str, int | str | list[dict[str, float]]]],
                          frequency_limits: tuple[float, float]) -> bool:
     from .catalog import Catalog
 
