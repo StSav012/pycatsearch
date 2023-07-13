@@ -190,6 +190,8 @@ class Downloader(Thread):
         catalog: list[CatalogEntryType] = []
         species_count: Final[int] = len(species)
         skipped_count: int = 0
+        if self._state_queue is not None:
+            self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
         catalog_entry: CatalogEntryType
         _e: dict[str, int | str]
         for _e in species:

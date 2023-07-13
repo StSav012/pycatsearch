@@ -175,10 +175,12 @@ class Downloader(Thread):
                     }
 
                 species: list[dict[str, int | str]] = await get_species()
-                self._tasks = [asyncio.create_task(get_substance_catalog(_e)) for _e in species]
                 catalog: list[CatalogEntryType] = []
                 species_count: Final[int] = len(species)
                 skipped_count: int = 0
+                if self._state_queue is not None:
+                    self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
+                self._tasks = [asyncio.create_task(get_substance_catalog(_e)) for _e in species]
                 catalog_entry: CatalogEntryType
                 future_entry: asyncio.Future[CatalogEntryType]
                 for future_entry in asyncio.as_completed(self._tasks):
