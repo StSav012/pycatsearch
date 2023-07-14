@@ -7,7 +7,7 @@ aiohttp
 # for faster JSON loading
 orjson
 
-# for unified isons
+# for unified icons
 qtawesome
 
 # to build a package and install it
