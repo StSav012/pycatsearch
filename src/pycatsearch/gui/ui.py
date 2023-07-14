@@ -11,7 +11,6 @@ from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPalette, QPixma
 from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
                             QMainWindow, QMessageBox, QPushButton, QSplitter, QStatusBar, QTableView, QVBoxLayout,
                             QWidget)
-from qtpy.compat import getopenfilenames
 
 from .catalog_info import CatalogInfo
 from .download_dialog import DownloadDialog
@@ -26,7 +25,7 @@ from .substance_info import SubstanceInfo
 from .substances_box import SubstancesBox
 from .. import __version__
 from ..catalog import Catalog, CatalogType
-from ..utils import ReleaseInfo, ensure_prefix, latest_release, remove_html, update_with_pip, wrap_in_html
+from ..utils import ReleaseInfo, latest_release, remove_html, update_with_pip, wrap_in_html
 
 if sys.version_info < (3, 10):
     from ..utils import zip
@@ -50,7 +49,7 @@ def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.
 
 
 @final
-class UI(QMainWindow):
+class UI(QMainWindow, FileDialogSource):
     def __init__(self, catalog: Catalog,
                  parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -280,44 +279,11 @@ class UI(QMainWindow):
         self.menu_bar.action_copy.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
         self.menu_bar.action_substance_info.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
 
-    def get_open_file_names(self, formats: dict[tuple[str, ...], str],
-                            caption: str = '', directory: str = '') -> tuple[list[str], str]:
-
-        def join_file_dialog_formats(_formats: dict[tuple[str, ...], str]) -> str:
-            f: tuple[str, ...]
-            all_supported_extensions: list[str] = []
-            for f in _formats.keys():
-                all_supported_extensions.extend(ensure_prefix(_f, '*') for _f in f)
-            format_lines: list[str] = [''.join((
-                self.tr('All supported', 'file type'),
-                '(',
-                ' '.join(ensure_prefix(_f, '*') for _f in all_supported_extensions),
-                ')'))]
-            n: str
-            for f, n in _formats.items():
-                format_lines.append(''.join((n, '(', ' '.join(ensure_prefix(_f, '*') for _f in f), ')')))
-            format_lines.append(self.tr('All files', 'file type') + '(* *.*)')
-            return ';;'.join(format_lines)
-
-        filename: list[str]
-        _filter: str
-        filename, _filter = getopenfilenames(self,
-                                             caption=caption,
-                                             filters=join_file_dialog_formats(formats),
-                                             basedir=directory)
-        return filename, _filter
-
     @Slot()
     def _on_action_load_triggered(self) -> None:
         self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
-        _formats: dict[tuple[str, ...], str] = {
-            ('.json.gz', '.json.bz2', '.json.xz', '.json.lzma'): self.tr('Compressed JSON', 'file type'),
-            ('.json',): self.tr('JSON', 'file type'),
-        }
         new_catalog_file_names: list[str]
-        new_catalog_file_names, _ = self.get_open_file_names(formats=_formats,
-                                                             caption=self.tr('Load Catalog'),
-                                                             directory=str((*self.catalog.sources, '')[0]))
+        new_catalog_file_names, _ = self.get_open_file_names(directory=str((*self.catalog.sources, '')[0]))
 
         if new_catalog_file_names:
             self.status_bar.showMessage(self.tr('Loading…'))
