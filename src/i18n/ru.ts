@@ -1,6 +1,203 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="ru_RU" sourcelanguage="_US">
+<TS version="2.1" language="ru_RU" sourcelanguage="C">
+<context>
+    <name>UI</name>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="105"/>
+        <source>PyCatSearch (version {0})</source>
+        <translation>PyCatSearch (версия {0})</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="107"/>
+        <source>PyCatSearch</source>
+        <translation>PyCatSearch</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="148"/>
+        <source>Limit shown spectral lines</source>
+        <translation>Ограничить показанные спектральные линии</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="149"/>
+        <source>Minimal Intensity:</source>
+        <translation>Мин. интенсивность:</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="156"/>
+        <source>Temperature to calculate intensity</source>
+        <translation>Температура, при которой считать интенсивность</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="157"/>
+        <source>&#xa0;K</source>
+        <translation>&#xa0;К</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="158"/>
+        <source>Temperature:</source>
+        <translation>Температура:</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="161"/>
+        <source>Show</source>
+        <translation>Показать</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="238"/>
+        <location filename="../pycatsearch/gui/ui.py" line="502"/>
+        <location filename="../pycatsearch/gui/ui.py" line="505"/>
+        <location filename="../pycatsearch/gui/ui.py" line="515"/>
+        <source>Release Info</source>
+        <translation>Информация о выпуске</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="239"/>
+        <location filename="../pycatsearch/gui/ui.py" line="506"/>
+        <source>Version {release.version} published {release.pub_date} is available. Would you like to get the update? The app will try to restart.</source>
+        <translation>Доступна версия {release.version}, опубликованная {release.pub_date}. Загрузить обновление? Программа попробует перезапуститься.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="288"/>
+        <source>Select a catalog file to load.</source>
+        <translation>Выберите файл каталога для загрузки.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="293"/>
+        <location filename="../pycatsearch/gui/ui.py" line="305"/>
+        <source>Loading…</source>
+        <translation>Загрузка…</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="295"/>
+        <location filename="../pycatsearch/gui/ui.py" line="307"/>
+        <source>Catalogs loaded.</source>
+        <translation>Каталоги загружены.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="297"/>
+        <location filename="../pycatsearch/gui/ui.py" line="309"/>
+        <source>Failed to load a catalog.</source>
+        <translation>Не удалось загрузить каталог.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="334"/>
+        <source>Unable to save the catalog</source>
+        <translation>Не удаётся сохранить каталог</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="335"/>
+        <source>Error {exception} occurred while saving {filename}. Try another location.</source>
+        <translation>При сохранении {filename} произошла ошибка {exception}. Попробуйте другое местоположение.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="360"/>
+        <source>{value} {unit}</source>
+        <comment>format value in html</comment>
+        <translation>{value} {unit}</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="362"/>
+        <source>{value}</source>
+        <comment>format value in html</comment>
+        <translation>{value}</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="502"/>
+        <source>Update check failed.</source>
+        <translation>Ошибка при проверке наличия обновлений.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="515"/>
+        <source>You are using the latest version.</source>
+        <translation>Вы используете новейшую версию.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="524"/>
+        <source>Catalog Info</source>
+        <translation>Информация о каталоге</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="524"/>
+        <source>No catalogs loaded</source>
+        <translation>Нет загруженных каталогов</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="533"/>
+        <source>About CatSearch</source>
+        <translation>О CatSearch</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="536"/>
+        <source>CatSearch is a means of searching through spectroscopy lines catalogs. It&apos;s an offline application.</source>
+        <translation>CatSearch&#xa0;— это средство поиска по каталогам спектральных линий. Это приложение не требует доступа в Интернет для работы.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="538"/>
+        <source>It relies on the data stored in JSON files.</source>
+        <translation>Оно полагается на данные, хранящиеся в файлах JSON.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="539"/>
+        <source>One can use their own catalogs as well as download data from &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; and &lt;a href=&quot;https://astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt; spectroscopy databases available on the Internet.</source>
+        <translation>Можно использовать свои каталоги или загрузить данные из баз спектральных линий &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; и &lt;a href=&quot;https://astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt;, доступных в Интернете.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="543"/>
+        <source>Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported.</source>
+        <translation>Поддерживаются файлы JSON и файлы JSON, сжатые GZip, BZip2 или LZMA.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="544"/>
+        <source>See {readme_link} for more info.</source>
+        <translation>Больше информации&#xa0;— в {readme_link}.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="546"/>
+        <source>readme</source>
+        <translation>описании</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="547"/>
+        <source>CatSearch is licensed under the {license_link}.</source>
+        <translation>CatSearch поставляется под лицензией {license_link}.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="549"/>
+        <source>GNU LGPL version 3</source>
+        <translation>GNU LGPL версии 3</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="550"/>
+        <source>The source code is available on {repo_link}.</source>
+        <translation>Исходный код доступен на {repo_link}.</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="690"/>
+        <source>Searching…</source>
+        <translation>Поиск…</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/ui.py" line="698"/>
+        <source>Ready.</source>
+        <translation>Готово.</translation>
+    </message>
+</context>
+<context>
+    <name>SaveCatalogWizard</name>
+    <message>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="48"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="72"/>
+        <source>Unable to save the catalog</source>
+        <translation>Не удаётся сохранить каталог</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="49"/>
+        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="73"/>
+        <source>Error {exception} occurred while saving {filename}. Try another location.</source>
+        <translation>При сохранении {filename} произошла ошибка {exception}. Попробуйте другое местоположение.</translation>
+    </message>
+</context>
 <context>
     <name>SourcesList</name>
     <message>
@@ -53,6 +250,62 @@
         <location filename="../pycatsearch/gui/download_dialog.py" line="24"/>
         <source>Download Catalog</source>
         <translation>Скачать каталог</translation>
+    </message>
+</context>
+<context>
+    <name>FileDialogSource</name>
+    <message>
+        <location filename="../pycatsearch/gui/file_dialog_source.py" line="24"/>
+        <source>All supported</source>
+        <comment>file type</comment>
+        <translation>Все поддерживаемые</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/file_dialog_source.py" line="31"/>
+        <source>All files</source>
+        <comment>file type</comment>
+        <translation>Все файлы</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/file_dialog_source.py" line="37"/>
+        <source>Compressed JSON</source>
+        <comment>file type</comment>
+        <translation>JSON со сжатием</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/file_dialog_source.py" line="38"/>
+        <location filename="../pycatsearch/gui/file_dialog_source.py" line="54"/>
+        <source>JSON</source>
+        <comment>file type</comment>
+        <translation>JSON</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/file_dialog_source.py" line="44"/>
+        <source>Load Catalog</source>
+        <translation>Загрузить каталог</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/file_dialog_source.py" line="51"/>
+        <source>JSON with GZip compression</source>
+        <comment>file type</comment>
+        <translation>JSON со сжатием GZip</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/file_dialog_source.py" line="52"/>
+        <source>JSON with Bzip2 compression</source>
+        <comment>file type</comment>
+        <translation>JSON со сжатием Bzip2</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/file_dialog_source.py" line="53"/>
+        <source>JSON with LZMA2 compression</source>
+        <comment>file type</comment>
+        <translation>JSON со сжатием LZMA2</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/file_dialog_source.py" line="60"/>
+        <source>Save As…</source>
+        <translation>Сохранить как…</translation>
     </message>
 </context>
 <context>
@@ -148,109 +401,114 @@
     </message>
     <message>
         <location filename="../pycatsearch/gui/menu_bar.py" line="30"/>
+        <source>&amp;Save Catalog As…</source>
+        <translation>&amp;Сохранить каталог как…</translation>
+    </message>
+    <message>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="36"/>
         <source>&amp;Download Catalog…</source>
         <translation>&amp;Скачать каталог…</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="35"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="41"/>
         <source>&amp;Preferences…</source>
         <translation>&amp;Настройки…</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="41"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="47"/>
         <source>&amp;Quit</source>
         <translation>В&amp;ыход</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="45"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="51"/>
         <source>&amp;Edit</source>
         <translation>&amp;Правка</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="48"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="54"/>
         <source>Clea&amp;r Results</source>
         <translation>О&amp;чистить результаты</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="51"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="57"/>
         <source>Copy &amp;Only</source>
         <translation>Копировать &amp;только</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="53"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="59"/>
         <source>Active &amp;Cell</source>
         <translation>Текущую &amp;ячейку</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="58"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="64"/>
         <source>&amp;Substance Name</source>
         <translation>&amp;Название вещества</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="62"/>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="94"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="68"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="100"/>
         <source>&amp;Frequency</source>
         <translation>&amp;Частоту</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="66"/>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="95"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="72"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="101"/>
         <source>&amp;Intensity</source>
         <translation>&amp;Интенсивность</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="70"/>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="96"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="76"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="102"/>
         <source>&amp;Lower State Energy</source>
         <translation>&amp;Энергию нижнего уровня</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="75"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="81"/>
         <source>&amp;Copy Selection</source>
         <translation>&amp;Копировать выделенное</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="81"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="87"/>
         <source>Select &amp;All</source>
         <translation>&amp;Выделить всё</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="88"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="94"/>
         <source>Substance &amp;Info</source>
         <translation>&amp;Информация о веществе</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="92"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="98"/>
         <source>&amp;Columns</source>
         <translation>&amp;Отображать</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="93"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="99"/>
         <source>&amp;Substance</source>
         <translation>&amp;Вещество</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="98"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="104"/>
         <source>&amp;Help</source>
         <translation>&amp;Справка</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="101"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="107"/>
         <source>Check for &amp;Updates…</source>
         <translation>Проверить наличие об&amp;новлений…</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="106"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="112"/>
         <source>About &amp;Catalogs…</source>
         <translation>О &amp;каталогах…</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="110"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="116"/>
         <source>&amp;About…</source>
         <translation>&amp;О программе…</translation>
     </message>
     <message>
-        <location filename="../pycatsearch/gui/menu_bar.py" line="115"/>
+        <location filename="../pycatsearch/gui/menu_bar.py" line="121"/>
         <source>About &amp;Qt…</source>
         <translation>О &amp;Qt…</translation>
     </message>
@@ -261,6 +519,14 @@
         <location filename="../pycatsearch/gui/preferences.py" line="173"/>
         <source>Preferences</source>
         <translation>Настройки</translation>
+    </message>
+</context>
+<context>
+    <name>SaveCatalogWaitingScreen</name>
+    <message>
+        <location filename="../pycatsearch/gui/save_catalog_waiting_screen.py" line="27"/>
+        <source>Please wait…</source>
+        <translation>Пожалуйста, подождите…</translation>
     </message>
 </context>
 <context>
@@ -627,207 +893,6 @@
     </message>
 </context>
 <context>
-    <name>UI</name>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="104"/>
-        <source>PyCatSearch (version {0})</source>
-        <translation>PyCatSearch (версия {0})</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="106"/>
-        <source>PyCatSearch</source>
-        <translation>PyCatSearch</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="147"/>
-        <source>Limit shown spectral lines</source>
-        <translation>Ограничить показанные спектральные линии</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="148"/>
-        <source>Minimal Intensity:</source>
-        <translation>Мин. интенсивность:</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="155"/>
-        <source>Temperature to calculate intensity</source>
-        <translation>Температура, при которой считать интенсивность</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="156"/>
-        <source>&#xa0;K</source>
-        <translation>&#xa0;К</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="157"/>
-        <source>Temperature:</source>
-        <translation>Температура:</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="160"/>
-        <source>Show</source>
-        <translation>Показать</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="236"/>
-        <location filename="../pycatsearch/gui/ui.py" line="504"/>
-        <location filename="../pycatsearch/gui/ui.py" line="507"/>
-        <location filename="../pycatsearch/gui/ui.py" line="517"/>
-        <source>Release Info</source>
-        <translation>Информация о выпуске</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="237"/>
-        <location filename="../pycatsearch/gui/ui.py" line="508"/>
-        <source>Version {release.version} published {release.pub_date} is available. Would you like to get the update? The app will try to restart.</source>
-        <translation>Доступна версия {release.version}, опубликованная {release.pub_date}. Загрузить обновление? Программа попробует перезапуститься.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="292"/>
-        <source>All supported</source>
-        <comment>file type</comment>
-        <translation>Все поддерживаемые</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="299"/>
-        <source>All files</source>
-        <comment>file type</comment>
-        <translation>Все файлы</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="312"/>
-        <source>Select a catalog file to load.</source>
-        <translation>Выберите файл каталога для загрузки.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="314"/>
-        <source>Compressed JSON</source>
-        <comment>file type</comment>
-        <translation>JSON со сжатием</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="315"/>
-        <source>JSON</source>
-        <comment>file type</comment>
-        <translation>JSON</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="319"/>
-        <source>Load Catalog</source>
-        <translation>Загрузить каталог</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="323"/>
-        <location filename="../pycatsearch/gui/ui.py" line="335"/>
-        <source>Loading…</source>
-        <translation>Загрузка…</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="325"/>
-        <location filename="../pycatsearch/gui/ui.py" line="337"/>
-        <source>Catalogs loaded.</source>
-        <translation>Каталоги загружены.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="327"/>
-        <location filename="../pycatsearch/gui/ui.py" line="339"/>
-        <source>Failed to load a catalog.</source>
-        <translation>Не удалось загрузить каталог.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="362"/>
-        <source>{value} {unit}</source>
-        <comment>format value in html</comment>
-        <translation>{value} {unit}</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="364"/>
-        <source>{value}</source>
-        <comment>format value in html</comment>
-        <translation>{value}</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="504"/>
-        <source>Update check failed.</source>
-        <translation>Ошибка при проверке наличия обновлений.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="517"/>
-        <source>You are using the latest version.</source>
-        <translation>Вы используете новейшую версию.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="526"/>
-        <source>Catalog Info</source>
-        <translation>Информация о каталоге</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="526"/>
-        <source>No catalogs loaded</source>
-        <translation>Нет загруженных каталогов</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="535"/>
-        <source>About CatSearch</source>
-        <translation>О CatSearch</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="538"/>
-        <source>CatSearch is a means of searching through spectroscopy lines catalogs. It&apos;s an offline application.</source>
-        <translation>CatSearch&#xa0;— это средство поиска по каталогам спектральных линий. Это приложение не требует доступа в Интернет для работы.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="540"/>
-        <source>It relies on the data stored in JSON files.</source>
-        <translation>Оно полагается на данные, хранящиеся в файлах JSON.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="541"/>
-        <source>One can use their own catalogs as well as download data from &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; and &lt;a href=&quot;https://astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt; spectroscopy databases available on the Internet.</source>
-        <translation>Можно использовать свои каталоги или загрузить данные из баз спектральных линий &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; и &lt;a href=&quot;https://astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt;, доступных в Интернете.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="545"/>
-        <source>Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported.</source>
-        <translation>Поддерживаются файлы JSON и файлы JSON, сжатые GZip, BZip2 или LZMA.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="546"/>
-        <source>See {readme_link} for more info.</source>
-        <translation>Больше информации&#xa0;— в {readme_link}.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="548"/>
-        <source>readme</source>
-        <translation>описании</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="549"/>
-        <source>CatSearch is licensed under the {license_link}.</source>
-        <translation>CatSearch поставляется под лицензией {license_link}.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="551"/>
-        <source>GNU LGPL version 3</source>
-        <translation>GNU LGPL версии 3</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="552"/>
-        <source>The source code is available on {repo_link}.</source>
-        <translation>Исходный код доступен на {repo_link}.</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="692"/>
-        <source>Searching…</source>
-        <translation>Поиск…</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/ui.py" line="700"/>
-        <source>Ready.</source>
-        <translation>Готово.</translation>
-    </message>
-</context>
-<context>
     <name>UpdateDialog</name>
     <message>
         <location filename="../pycatsearch/gui/update_dialog.py" line="29"/>
@@ -851,70 +916,6 @@
         <location filename="../pycatsearch/gui/catalog_wizard/download_confirmation_page.py" line="25"/>
         <source>Click {button_text} to start the download data for {min_frequency} to {max_frequency}&#xa0;MHz.</source>
         <translation>Нажмите {button_text}, чтобы начать скачивание данных для диапазона от {min_frequency} до {max_frequency}&#xa0;МГц.</translation>
-    </message>
-</context>
-<context>
-    <name>SaveCatalogWaitingScreen</name>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="30"/>
-        <source>Please wait…</source>
-        <translation>Пожалуйста, подождите…</translation>
-    </message>
-</context>
-<context>
-    <name>SaveCatalogWizard</name>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="52"/>
-        <source>JSON with GZip compression</source>
-        <comment>file type</comment>
-        <translation>JSON со сжатием GZip</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="53"/>
-        <source>JSON with Bzip2 compression</source>
-        <comment>file type</comment>
-        <translation>JSON со сжатием Bzip2</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="54"/>
-        <source>JSON with LZMA2 compression</source>
-        <comment>file type</comment>
-        <translation>JSON со сжатием LZMA2</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="55"/>
-        <source>JSON</source>
-        <comment>file type</comment>
-        <translation>JSON</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="64"/>
-        <source>All supported</source>
-        <comment>file type</comment>
-        <translation>Все поддерживаемые</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="71"/>
-        <source>All files</source>
-        <comment>file type</comment>
-        <translation>Все файлы</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="77"/>
-        <source>Save As…</source>
-        <translation>Сохранить как…</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="101"/>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="125"/>
-        <source>Unable to save the catalog</source>
-        <translation>Не удаётся сохранить каталог</translation>
-    </message>
-    <message>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="102"/>
-        <location filename="../pycatsearch/gui/catalog_wizard/__init__.py" line="126"/>
-        <source>Error {exception} occurred while saving {filename}. Try another location.</source>
-        <translation>При сохранении {filename} произошла ошибка {exception}. Попробуйте другое местоположение.</translation>
     </message>
 </context>
 <context>
