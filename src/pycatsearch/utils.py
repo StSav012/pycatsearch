@@ -572,7 +572,7 @@ def save_catalog_to_file(filename: str | os.PathLike[str],
 
     if not catalog:
         return False
-    Catalog.save(filename=filename, catalog=catalog, frequency_limits=frequency_limits)
+    Catalog.from_data(catalog_data=catalog, frequency_limits=frequency_limits).save(filename=filename)
     return True
 
 

@@ -442,16 +442,20 @@ class Catalog:
         for j, (n, f, i) in enumerate(zip(names, frequencies, intensities)):
             print(f'{n:<{names_width}} {f:>{frequencies_width}} {i:>{intensities_width}}')
 
-    @staticmethod
-    def save(filename: str | PathLike[str],
-             catalog: CatalogType | CatalogJSONType,
-             frequency_limits: tuple[float, float] = (0.0, math.inf),
-             build_time: datetime | None = None) -> None:
-        if build_time is None:
-            build_time = datetime.now(tz=timezone.utc)
+    @classmethod
+    def from_data(cls,
+         catalog_data: CatalogType | CatalogJSONType,
+         frequency_limits: tuple[float, float] = (0.0, math.inf)) -> 'Catalog':
+        catalog: Catalog = Catalog()
+        catalog._data.catalog = catalog_data
+        catalog._data.frequency_limits = frequency_limits
+        return catalog
+
+    def save(self, filename: str | PathLike[str],
+             build_time: datetime = datetime.now(tz=timezone.utc)) -> None:
         data_to_save: dict[str, CatalogJSONType | tuple[float, float] | str] = {
-            CATALOG: dict((str(species_tag), catalog[species_tag]) for species_tag in catalog),
-            FREQUENCY: list(frequency_limits),
+            CATALOG: dict((str(species_tag), self._data.catalog[species_tag]) for species_tag in self._data.catalog),
+            FREQUENCY: list(self._data.frequency_limits),
             BUILD_TIME: build_time.isoformat(),
         }
         opener: Catalog.Opener
