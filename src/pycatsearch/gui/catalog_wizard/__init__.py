@@ -2,35 +2,15 @@
 from __future__ import annotations
 
 import abc
-from os import PathLike
 from pathlib import Path
 
-from qtpy import QT5
 from qtpy.QtWidgets import QDialog, QMessageBox, QWidget, QWizard
 from qtpy.compat import getsavefilename
 
-from ..waiting_screen import WaitingScreen
+from ..save_catalog_waiting_screen import SaveCatalogWaitingScreen
 from ...catalog import CatalogType
-from ...utils import ensure_prefix, save_catalog_to_file
 
 __all__ = ['SaveCatalogWizard']
-
-
-class SaveCatalogWaitingScreen(WaitingScreen):
-    def __init__(self,
-                 parent: QWidget,
-                 *,
-                 filename: str | PathLike[str],
-                 catalog: CatalogType,
-                 frequency_limits: tuple[float, float],
-                 margins: float | None = None) -> None:
-        if QT5:
-            super(QWidget, self).__init__(parent)
-        super().__init__(parent,
-                         label=self.tr('Please wait…'),
-                         target=save_catalog_to_file,
-                         kwargs=dict(filename=filename, catalog=catalog, frequency_limits=frequency_limits),
-                         margins=margins)
 
 
 class SaveCatalogWizard(QWizard):
