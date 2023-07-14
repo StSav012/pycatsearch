@@ -24,6 +24,12 @@ class MenuBar(QMenuBar):
             self.tr('&Reload Catalogs'),
             QKeySequence.StandardKey.Refresh
         )
+        self.action_save_as: QAction = self.menu_file.addAction(
+            self._icon('document-save-as', 'mdi6.content-save-edit',
+                       standard_pixmap=QStyle.StandardPixmap.SP_DialogSaveButton),
+            self.tr('&Save Catalog As…'),
+            QKeySequence.StandardKey.SaveAs
+        )
         self.menu_file.addSeparator()
         self.action_download_catalog: QAction = self.menu_file.addAction(
             self._icon('network-receive', 'mdi6.download'),
@@ -119,6 +125,8 @@ class MenuBar(QMenuBar):
         self.action_quit.setMenuRole(QAction.MenuRole.QuitRole)
         self.action_about.setMenuRole(QAction.MenuRole.AboutRole)
         self.action_about_qt.setMenuRole(QAction.MenuRole.AboutQtRole)
+
+        self.action_save_as.setDisabled(True)
 
         self.action_show_substance.setCheckable(True)
         self.action_show_frequency.setCheckable(True)

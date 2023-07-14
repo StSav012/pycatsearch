@@ -14,12 +14,14 @@ from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, Q
 
 from .catalog_info import CatalogInfo
 from .download_dialog import DownloadDialog
+from .file_dialog_source import FileDialogSource
 from .float_spinbox import FloatSpinBox
 from .found_lines_model import FoundLinesModel
 from .frequency_box import FrequencyBox
 from .html_style_delegate import HTMLDelegate
 from .menu_bar import MenuBar
 from .preferences import Preferences
+from .save_catalog_waiting_screen import SaveCatalogWaitingScreen
 from .settings import Settings
 from .substance_info import SubstanceInfo
 from .substances_box import SubstancesBox
@@ -200,16 +202,17 @@ class UI(QMainWindow, FileDialogSource):
         self.box_frequency.frequencyLimitsChanged.connect(self._on_search_requested)
         self.box_substance.selectedSubstancesChanged.connect(self._on_search_requested)
         self.menu_bar.action_load.triggered.connect(self._on_action_load_triggered)
+        self.menu_bar.action_reload.triggered.connect(self._on_action_reload_triggered)
+        self.menu_bar.action_save_as.triggered.connect(self._on_action_save_as_triggered)
+        self.menu_bar.action_download_catalog.triggered.connect(self._on_action_download_catalog_triggered)
+        self.menu_bar.action_preferences.triggered.connect(self._on_action_preferences_triggered)
         self.menu_bar.action_quit.triggered.connect(self._on_action_quit_triggered)
         self.menu_bar.action_check_updates.triggered.connect(self._on_action_check_updates_triggered)
         self.menu_bar.action_about_catalogs.triggered.connect(self._on_action_about_catalogs_triggered)
         self.menu_bar.action_about.triggered.connect(self._on_action_about_triggered)
         self.menu_bar.action_about_qt.triggered.connect(self._on_action_about_qt_triggered)
-        self.menu_bar.action_download_catalog.triggered.connect(self._on_action_download_catalog_triggered)
-        self.menu_bar.action_preferences.triggered.connect(self._on_action_preferences_triggered)
         self.menu_bar.action_copy.triggered.connect(self._on_action_copy_triggered)
         self.menu_bar.action_select_all.triggered.connect(self._on_action_select_all_triggered)
-        self.menu_bar.action_reload.triggered.connect(self._on_action_reload_triggered)
         self.menu_bar.action_copy_current.triggered.connect(self._on_action_copy_current_triggered)
         self.menu_bar.action_copy_name.triggered.connect(self._on_action_copy_name_triggered)
         self.menu_bar.action_copy_frequency.triggered.connect(self._on_action_copy_frequency_triggered)
@@ -256,6 +259,7 @@ class UI(QMainWindow, FileDialogSource):
         self.setCursor(last_cursor)
         self.setEnabled(True)
         self.button_search.setDisabled(self.catalog.is_empty)
+        self.menu_bar.action_save_as.setDisabled(self.catalog.is_empty)
         if not self.catalog.is_empty:
             self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
         return not self.catalog.is_empty
@@ -305,6 +309,34 @@ class UI(QMainWindow, FileDialogSource):
                 self.status_bar.showMessage(self.tr('Failed to load a catalog.'))
         else:
             self.status_bar.clearMessage()
+
+    @Slot()
+    def _on_action_save_as_triggered(self) -> None:
+        catalog: CatalogType = self.catalog.catalog
+        frequency_limits: tuple[float, float] = (self.catalog.min_frequency, self.catalog.max_frequency)
+        save_file_name: str
+        while True:
+            save_file_name, _ = self.get_save_file_name(directory=str([*self.catalog.sources, ''][0]))
+            if not save_file_name:
+                return
+
+            try:
+                ws = SaveCatalogWaitingScreen(
+                    self,
+                    filename=save_file_name,
+                    catalog=catalog,
+                    frequency_limits=frequency_limits
+                )
+                ws.exec()
+            except OSError as ex:
+                QMessageBox.warning(
+                    self,
+                    self.tr('Unable to save the catalog'),
+                    self.tr('Error {exception} occurred while saving {filename}. Try another location.')
+                    .format(exception=ex, filename=save_file_name)
+                )
+            else:
+                return
 
     def stringify_selection_html(self) -> str:
         """
