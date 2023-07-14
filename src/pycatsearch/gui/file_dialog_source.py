@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+from qtpy import PYSIDE6
 from qtpy.QtWidgets import QWidget
 from qtpy.compat import getopenfilenames, getsavefilename
 
@@ -10,6 +11,10 @@ __all__ = ['FileDialogSource']
 
 
 class FileDialogSource(QWidget):
+    def __init__(self, parent: QWidget | None = None) -> None:
+        if not PYSIDE6:
+            super().__init__(parent)
+
     def _join_file_dialog_formats(self, formats: dict[tuple[str, ...], str]) -> str:
         f: tuple[str, ...]
         all_supported_extensions: list[str] = []
