@@ -864,7 +864,7 @@
     <message>
         <location filename="../pycatsearch/gui/substances_box.py" line="54"/>
         <source>Keep substances list selection through filter changes</source>
-        <translation>Sauvegarder la liste de substances selectionnées après les changements du filtre</translation>
+        <translation>Sauvegarder la liste de substances sélectionnées après les changements du filtre</translation>
     </message>
     <message>
         <location filename="../pycatsearch/gui/substances_box.py" line="55"/>
