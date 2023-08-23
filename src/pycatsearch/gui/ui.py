@@ -90,6 +90,7 @@ class UI(QMainWindow, FileDialogSource):
                                     )
                 return QIcon(pixmap)
 
+            # language=SVG
             window_icon: bytes = b'''\
             <svg height="64" width="64" version="1.1">
             <path stroke-linejoin="round" d="m6.722 8.432c-9.05 9.648-6.022 27.23 6.048 33.04 6.269 3.614 13.88 \
