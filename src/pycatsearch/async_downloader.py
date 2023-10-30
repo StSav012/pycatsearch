@@ -94,6 +94,8 @@ class Downloader(Thread):
                             logger.warning(f"{str(ex.args[1])} to {url}")
                         except aiohttp.client_exceptions.ClientOSError as ex:
                             logger.warning(f"{url}: {str(ex)}")
+                        except aiohttp.client_exceptions.ClientPayloadError as ex:
+                            logger.warning(f"{url}: {str(ex)}")
                         except aiohttp.client_exceptions.ClientError as ex:
                             logger.error(f"{url}: {str(ex)}", exc_info=ex)
                         with suppress(asyncio.exceptions.CancelledError):
