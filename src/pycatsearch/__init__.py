@@ -29,10 +29,16 @@ def main() -> int:
     ap_group.add_argument("-f" "min", "--min-frequency", type=float, help="the lower frequency [MHz] to take")
     ap_group.add_argument("-f" "max", "--max-frequency", type=float, help="the upper frequency [MHz] to take")
     ap_group.add_argument(
-        "-i" "min", "--min-intensity", type=float, help="the minimal intensity [log10(nm²×MHz)] to take"
+        "-i" "min",
+        "--min-intensity",
+        type=float,
+        help="the minimal intensity [log10(nm²×MHz)] to take",
     )
     ap_group.add_argument(
-        "-i" "max", "--max-intensity", type=float, help="the maximal intensity [log10(nm²×MHz)] to take"
+        "-i" "max",
+        "--max-intensity",
+        type=float,
+        help="the maximal intensity [log10(nm²×MHz)] to take",
     )
     ap_group.add_argument(
         "-T",
@@ -116,7 +122,28 @@ def main() -> int:
         c.print(**search_args)
         return 0
 
-    return main_gui()
+    ret_code: int = main_gui()
+    if ret_code != 0:
+        if (ex := getattr(main_gui, "exception", None)) is not None:
+            error_message: str
+            if isinstance(ex, SyntaxError):
+                error_message = "Python %s is not supported.\nGet a newer Python!" % platform.python_version()
+            elif isinstance(ex, ImportError):
+                if ex.name is not None:
+                    error_message = (
+                        "Module %s is either missing from the system or cannot be loaded for another reason.\n"
+                        "Try to install or reinstall it." % repr(ex.name)
+                    )
+                else:
+                    error_message = str(ex)
+            else:
+                import traceback
+
+                error_message = "".join(traceback.format_exception(type(ex), value=ex, tb=None, limit=0))
+            print(error_message, file=sys.stderr)
+        else:
+            ap.print_usage()
+    return ret_code
 
 
 def main_gui() -> int:
@@ -129,29 +156,30 @@ def main_gui() -> int:
     try:
         from . import gui
     except Exception as ex:
-        import traceback
-
-        traceback.print_exc()
-
         error_message: str
         if isinstance(ex, SyntaxError):
-            error_message = "Python " + platform.python_version() + " is not supported.\n" + "Get a newer Python!"
+            error_message = "Python %s is not supported.\nGet a newer Python!" % platform.python_version()
         elif isinstance(ex, ImportError):
-            error_message = (
-                "Module %s is either missing from the system or cannot be loaded for another reason.\n"
-                "Try to install or reinstall it." % repr(ex.name)
-            )
+            if ex.name is not None:
+                error_message = (
+                    "Module %s is either missing from the system or cannot be loaded for another reason.\n"
+                    "Try to install or reinstall it." % repr(ex.name)
+                )
+            else:
+                error_message = str(ex)
         else:
-            error_message = str(ex)
+            import traceback
+
+            error_message = "".join(traceback.format_exception(type(ex), value=ex, tb=None))
+
+        print(error_message, file=sys.stderr)
 
         try:
             import tkinter
             import tkinter.messagebox
-        except ModuleNotFoundError:
-            input(error_message)
+        except (ModuleNotFoundError, ImportError):
+            pass
         else:
-            print(error_message, file=sys.stderr)
-
             root: tkinter.Tk = tkinter.Tk()
             root.withdraw()
             if isinstance(ex, SyntaxError):
@@ -163,7 +191,11 @@ def main_gui() -> int:
             root.destroy()
         return 1
     else:
-        return gui.run()
+        try:
+            return gui.run()
+        except Exception as ex:
+            setattr(main_gui, "exception", ex)
+            return 1
 
 
 def download() -> None:
