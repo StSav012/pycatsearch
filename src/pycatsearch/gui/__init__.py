@@ -4,13 +4,14 @@ from __future__ import annotations
 import sys
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
+from functools import partialmethod
 from pathlib import Path
 from typing import Any, AnyStr
 
 from qtpy import PYSIDE2, QT6
 from qtpy.QtCore import QLibraryInfo, QLocale, QTranslator, Qt, qVersion
 from qtpy.QtGui import QIcon
-from qtpy.QtWidgets import QApplication, QDialog, QMenu
+from qtpy.QtWidgets import QAbstractSpinBox, QApplication, QDialog, QMenu
 
 __all__ = ["qta_icon", "run"]
 
@@ -124,8 +125,6 @@ def _make_old_qt_compatible_again() -> None:
             QLibraryInfo.LibraryPath = QLibraryInfo.LibraryLocation
 
         if _version_tuple(qVersion()) < _version_tuple("6.3"):
-            from functools import partialmethod
-
             from qtpy.QtCore import QObject
             from qtpy.QtGui import QKeySequence
             from qtpy.QtWidgets import QAction, QToolBar, QWidget
@@ -179,6 +178,17 @@ def _make_old_qt_compatible_again() -> None:
 
             QMenu.addAction = partialmethod(add_action, old_add_action=QMenu.addAction)
             QToolBar.addAction = partialmethod(add_action, old_add_action=QToolBar.addAction)
+    if _version_tuple(__version__) < _version_tuple("2.4.1"):
+        _warn_about_outdated_package(
+            package_name="QtPy",
+            package_version="2.4.1",
+            release_time=datetime.fromisoformat(to_iso_format("2023-10-23T23:57:23Z")),
+        )
+        if PYSIDE2:
+            QAbstractSpinBox.setAlignment = partialmethod(
+                lambda self, flag, _old: _old(self, Qt.Alignment(flag)),
+                _old=QAbstractSpinBox.setAlignment,
+            )
 
 
 def qta_icon(*qta_name: str, **qta_specs: Any) -> QIcon:
