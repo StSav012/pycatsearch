@@ -6,17 +6,19 @@ from pathlib import Path
 
 from qtpy.QtWidgets import QDialog, QMessageBox, QWidget, QWizard
 
-from ..save_catalog_waiting_screen import SaveCatalogWaitingScreen
 from ..file_dialog_source import FileDialogSource
+from ..save_catalog_waiting_screen import SaveCatalogWaitingScreen
 from ...catalog import CatalogType
 
-__all__ = ['SaveCatalogWizard']
+__all__ = ["SaveCatalogWizard"]
 
 
 class SaveCatalogWizard(QWizard, FileDialogSource):
-    def __init__(self,
-                 default_save_location: Path | None = None,
-                 parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        default_save_location: Path | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent)
 
         self.catalog: CatalogType = dict()
@@ -39,15 +41,17 @@ class SaveCatalogWizard(QWizard, FileDialogSource):
                         self,
                         filename=self.default_save_location,
                         catalog=self.catalog,
-                        frequency_limits=self.frequency_limits()
+                        frequency_limits=self.frequency_limits(),
                     )
                     ws.exec()
                 except OSError as ex:
                     QMessageBox.warning(
                         self,
-                        self.tr('Unable to save the catalog'),
-                        self.tr('Error {exception} occurred while saving {filename}. Try another location.')
-                        .format(exception=ex, filename=self.default_save_location)
+                        self.tr("Unable to save the catalog"),
+                        self.tr("Error {exception} occurred while saving {filename}. Try another location.").format(
+                            exception=ex,
+                            filename=self.default_save_location,
+                        ),
                     )
                 else:
                     return super(SaveCatalogWizard, self).done(exit_code)
@@ -63,15 +67,16 @@ class SaveCatalogWizard(QWizard, FileDialogSource):
                         self,
                         filename=save_file_name,
                         catalog=self.catalog,
-                        frequency_limits=self.frequency_limits()
+                        frequency_limits=self.frequency_limits(),
                     )
                     ws.exec()
                 except OSError as ex:
                     QMessageBox.warning(
                         self,
-                        self.tr('Unable to save the catalog'),
-                        self.tr('Error {exception} occurred while saving {filename}. Try another location.')
-                        .format(exception=ex, filename=save_file_name)
+                        self.tr("Unable to save the catalog"),
+                        self.tr(
+                            "Error {exception} occurred while saving {filename}. Try another location.",
+                        ).format(exception=ex, filename=save_file_name),
                     )
                 else:
                     return super(SaveCatalogWizard, self).done(exit_code)

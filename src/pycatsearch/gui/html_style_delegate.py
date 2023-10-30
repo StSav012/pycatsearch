@@ -5,12 +5,16 @@ from qtpy.QtCore import QModelIndex, QPersistentModelIndex, QRect, QSize
 from qtpy.QtGui import QAbstractTextDocumentLayout, QPainter, QTextDocument
 from qtpy.QtWidgets import QApplication, QStyle, QStyleOptionViewItem, QStyledItemDelegate
 
-__all__ = ['HTMLDelegate']
+__all__ = ["HTMLDelegate"]
 
 
 class HTMLDelegate(QStyledItemDelegate):
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem,
-              index: QModelIndex | QPersistentModelIndex) -> None:
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionViewItem,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> None:
         self.initStyleOption(option, index)
         style: QStyle
         if option.widget:
@@ -19,7 +23,7 @@ class HTMLDelegate(QStyledItemDelegate):
             style = QApplication.style()
         doc: QTextDocument = QTextDocument()
         doc.setHtml(option.text)
-        option.text = ''
+        option.text = ""
         style.drawControl(QStyle.ControlElement.CE_ItemViewItem, option, painter)
         ctx: QAbstractTextDocumentLayout.PaintContext = QAbstractTextDocumentLayout.PaintContext()
         text_rect: QRect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, option)

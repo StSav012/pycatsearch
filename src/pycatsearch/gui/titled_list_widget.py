@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from qtpy.QtWidgets import QLabel, QListWidget, QVBoxLayout, QWidget, QAbstractScrollArea
+from qtpy.QtWidgets import QAbstractScrollArea, QLabel, QListWidget, QVBoxLayout, QWidget
 
-__all__ = ['TitledListWidget']
+__all__ = ["TitledListWidget"]
 
 
 class TitledListWidget(QWidget):

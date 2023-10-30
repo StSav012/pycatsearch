@@ -6,7 +6,7 @@ from typing import cast
 from qtpy.QtCore import QLocale
 from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget, QWizard, QWizardPage
 
-__all__ = ['SummaryPage']
+__all__ = ["SummaryPage"]
 
 
 class SummaryPage(QWizardPage):
@@ -21,14 +21,17 @@ class SummaryPage(QWizardPage):
 
         super(SummaryPage, self).initializePage()
         if cast(SaveCatalogWizard, self.wizard()).catalog:
-            self.setTitle(self.tr('Success'))
-            self.setButtonText(QWizard.WizardButton.FinishButton, self.tr('&Save'))
+            self.setTitle(self.tr("Success"))
+            self.setButtonText(QWizard.WizardButton.FinishButton, self.tr("&Save"))
             self._label.setText(
-                self.tr('Click {button_text} to save the catalog'
-                        ' for {min_frequency} to {max_frequency} MHz.')
-                .format(button_text=self.buttonText(QWizard.WizardButton.FinishButton).replace('&', ''),
-                        min_frequency=QLocale().toString(self.field('min_frequency')),
-                        max_frequency=QLocale().toString(self.field('max_frequency'))))
+                self.tr(
+                    "Click {button_text} to save the catalog" " for {min_frequency} to {max_frequency} MHz."
+                ).format(
+                    button_text=self.buttonText(QWizard.WizardButton.FinishButton).replace("&", ""),
+                    min_frequency=QLocale().toString(self.field("min_frequency")),
+                    max_frequency=QLocale().toString(self.field("max_frequency")),
+                )
+            )
         else:
-            self.setTitle(self.tr('Failure'))
-            self._label.setText(self.tr('For the specified frequency range, nothing has been loaded.'))
+            self.setTitle(self.tr("Failure"))
+            self._label.setText(self.tr("For the specified frequency range, nothing has been loaded."))

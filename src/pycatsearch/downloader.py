@@ -21,16 +21,19 @@ from .catalog import Catalog, CatalogEntryType, CatalogType
 from .catalog_entry import CatalogEntry
 from .utils import FREQUENCY, LINES, SPECIES_TAG, DEGREES_OF_FREEDOM, VERSION, within, save_catalog_to_file
 
-__all__ = ['Downloader', 'get_catalog', 'save_catalog', 'download']
+__all__ = ["Downloader", "get_catalog", "save_catalog", "download"]
 
-logger: logging.Logger = logging.getLogger('downloader')
+logger: logging.Logger = logging.getLogger("downloader")
 
 
 class Downloader(Thread):
-    def __init__(self,
-                 frequency_limits: tuple[float, float] = (-inf, inf), *,
-                 existing_catalog: Catalog | None = None,
-                 state_queue: Queue[tuple[int, int]] | None = None) -> None:
+    def __init__(
+        self,
+        frequency_limits: tuple[float, float] = (-inf, inf),
+        *,
+        existing_catalog: Catalog | None = None,
+        state_queue: Queue[tuple[int, int]] | None = None,
+    ) -> None:
         super().__init__()
         self._state_queue: Queue[tuple[int, int]] | None = state_queue
         self._frequency_limits: tuple[float, float] = frequency_limits
@@ -65,12 +68,12 @@ class Downloader(Thread):
 
         def session_for_url(scheme: str, location: str) -> HTTPConnection | HTTPSConnection:
             if (scheme, location) not in self._sessions:
-                if scheme == 'http':
+                if scheme == "http":
                     self._sessions[(scheme, location)] = HTTPConnection(location)
-                elif scheme == 'https':
+                elif scheme == "https":
                     self._sessions[(scheme, location)] = HTTPSConnection(location)
                 else:
-                    raise ValueError(f'Unknown scheme: {scheme}')
+                    raise ValueError(f"Unknown scheme: {scheme}")
             return self._sessions[(scheme, location)]
 
         def get(url: str, headers: Mapping[str, str] | None = None) -> str:
@@ -79,18 +82,18 @@ class Downloader(Thread):
             response: HTTPResponse
             while True:
                 try:
-                    session.request(method='GET', url=parse_result.path, headers=(headers or dict()))
+                    session.request(method="GET", url=parse_result.path, headers=(headers or dict()))
                     response = session.getresponse()
                 except ConnectionResetError:
                     time.sleep(random.random())
                 else:
                     break
             if response.closed:
-                return ''
+                return ""
             try:
                 return response.read().decode()
             except AttributeError:  # `response.fp` became `None` before socket began closing
-                return ''
+                return ""
 
         def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> str:
             parse_result: ParseResult = urlparse(url)
@@ -98,26 +101,26 @@ class Downloader(Thread):
             response: HTTPResponse
             while True:
                 try:
-                    session.request(method='POST', url=parse_result.path, body=urlencode(data),
-                                    headers=(headers or dict()))
+                    session.request(
+                        method="POST", url=parse_result.path, body=urlencode(data), headers=(headers or dict())
+                    )
                     response = session.getresponse()
                 except ConnectionResetError:
                     time.sleep(random.random())
                 else:
                     break
             if response.closed:
-                return ''
+                return ""
             try:
                 return response.read().decode()
             except AttributeError:  # `response.fp` became `None` before socket began closing
-                return ''
+                return ""
 
         def get_species() -> list[dict[str, int | str]]:
             def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
-                key: str
-                value: None | int | str
                 return dict(
-                    (key, value) for key, value in entry.items() if value is not None and value not in ('', 'None'))
+                    (key, value) for key, value in entry.items() if value is not None and value not in ("", "None")
+                )
 
             def trim_strings(entry: dict[str, None | int | str]) -> dict[str, None | int | str]:
                 key: str
@@ -140,65 +143,75 @@ class Downloader(Thread):
                 else:
                     return entries
 
-            data: dict[str, int | str | list[dict[str, None | int | str]]] \
-                = json.loads(post('https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/', {'database': -1},
-                                  headers={'Content-Type': 'application/x-www-form-urlencoded'}))
-            return ensure_unique_species_tags([purge_null_data(trim_strings(s))
-                                               for s in data.get('species', [])])
+            data: dict[str, int | str | list[dict[str, None | int | str]]] = json.loads(
+                post(
+                    "https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/",
+                    {"database": -1},
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                )
+            )
+            return ensure_unique_species_tags([purge_null_data(trim_strings(s)) for s in data.get("species", [])])
 
         def get_substance_catalog(species_entry: dict[str, int | str]) -> CatalogEntryType:
             if not self._run:
                 return dict()  # quickly exit the function
 
             def entry_url(_species_tag: int) -> str:
-                entry_filename: str = f'c{_species_tag:06}.cat'
-                if entry_filename in ('c044009.cat', 'c044012.cat'):  # merged with c044004.cat — Brian J. Drouin
-                    return ''
+                entry_filename: str = f"c{_species_tag:06}.cat"
+                if entry_filename in ("c044009.cat", "c044012.cat"):  # merged with c044004.cat — Brian J. Drouin
+                    return ""
                 if _species_tag % 1000 > 500:
-                    return 'https://cdms.astro.uni-koeln.de/classic/entries/' + entry_filename
+                    return "https://cdms.astro.uni-koeln.de/classic/entries/" + entry_filename
                 else:
-                    return 'https://spec.jpl.nasa.gov/ftp/pub/catalog/' + entry_filename
+                    return "https://spec.jpl.nasa.gov/ftp/pub/catalog/" + entry_filename
 
             if SPECIES_TAG not in species_entry:
                 # nothing to go on with
-                logger.error(f'{SPECIES_TAG!r} not in the species entry: {species_entry!r}')
+                logger.error(f"{SPECIES_TAG!r} not in the species entry: {species_entry!r}")
                 return dict()
 
-            if (self._existing_catalog is not None
-                    and self._existing_catalog.min_frequency <= min(self._frequency_limits)
-                    and self._existing_catalog.max_frequency >= max(self._frequency_limits)):
+            if (
+                self._existing_catalog is not None
+                and self._existing_catalog.min_frequency <= min(self._frequency_limits)
+                and self._existing_catalog.max_frequency >= max(self._frequency_limits)
+            ):
                 species_tag: int
                 existing_catalog_entry: CatalogEntryType
                 for species_tag, existing_catalog_entry in self._existing_catalog.catalog.items():
-                    if all(existing_catalog_entry.get(key, type(value)()) == value
-                           for key, value in species_entry.items()):
-                        logger.debug(f'using existing entry for species tag {species_tag}')
+                    if all(
+                        existing_catalog_entry.get(key, type(value)()) == value for key, value in species_entry.items()
+                    ):
+                        logger.debug(f"using existing entry for species tag {species_tag}")
                         _catalog_entry = existing_catalog_entry.copy()
-                        _catalog_entry[LINES] = [_line
-                                                 for _line in existing_catalog_entry.get(LINES, [])
-                                                 if within(_line[FREQUENCY], self._frequency_limits)]
+                        _catalog_entry[LINES] = [
+                            _line
+                            for _line in existing_catalog_entry.get(LINES, [])
+                            if within(_line[FREQUENCY], self._frequency_limits)
+                        ]
                         return _catalog_entry
 
             fn: str = entry_url(cast(int, species_entry[SPECIES_TAG]))
             if not fn:  # no need to download a file for the species tag
-                logger.debug(f'skipping species tag {species_entry[SPECIES_TAG]}')
+                logger.debug(f"skipping species tag {species_entry[SPECIES_TAG]}")
                 return dict()
             try:
-                logger.debug(f'getting {fn}')
+                logger.debug(f"getting {fn}")
                 lines = get(fn).splitlines()
             except HTTPError as ex:
                 logger.error(fn, exc_info=ex)
                 return dict()
             catalog_entries = [CatalogEntry(line) for line in lines]
             if not catalog_entries:
-                logger.warning('no entries in the catalog')
+                logger.warning("no entries in the catalog")
                 return dict()
             return {
                 **species_entry,
                 DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
-                LINES: [_catalog_entry.to_dict()
-                        for _catalog_entry in catalog_entries
-                        if within(_catalog_entry.frequency, self._frequency_limits)]
+                LINES: [
+                    _catalog_entry.to_dict()
+                    for _catalog_entry in catalog_entries
+                    if within(_catalog_entry.frequency, self._frequency_limits)
+                ],
             }
 
         species: list[dict[str, int | str]] = get_species()
@@ -223,8 +236,9 @@ class Downloader(Thread):
         self._catalog = catalog
 
 
-def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
-                existing_catalog: Catalog | None = None) -> CatalogType:
+def get_catalog(
+    frequency_limits: tuple[float, float] = (-inf, inf), *, existing_catalog: Catalog | None = None
+) -> CatalogType:
     """
     Download the spectral lines catalog data
 
@@ -235,8 +249,9 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
     """
 
     state_queue: Queue[tuple[int, int]] = Queue()
-    downloader: Downloader = Downloader(frequency_limits=frequency_limits, state_queue=state_queue,
-                                        existing_catalog=existing_catalog)
+    downloader: Downloader = Downloader(
+        frequency_limits=frequency_limits, state_queue=state_queue, existing_catalog=existing_catalog
+    )
     downloader.start()
 
     cataloged_species: int
@@ -249,7 +264,7 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
         except KeyboardInterrupt:
             downloader.stop()
         else:
-            logger.info(f'got {cataloged_species} entries, {not_yet_processed_species} left')
+            logger.info(f"got {cataloged_species} entries, {not_yet_processed_species} left")
 
     while downloader.is_alive():
         try:
@@ -259,7 +274,7 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
         except KeyboardInterrupt:
             downloader.join(0.1)
         else:
-            logger.info(f'got {cataloged_species} entries, {not_yet_processed_species} left')
+            logger.info(f"got {cataloged_species} entries, {not_yet_processed_species} left")
 
     while not state_queue.empty():
         try:
@@ -267,16 +282,16 @@ def get_catalog(frequency_limits: tuple[float, float] = (-inf, inf), *,
         except KeyboardInterrupt:
             downloader.join(0.1)
         else:
-            logger.info(f'got {cataloged_species} entries, {not_yet_processed_species} left')
+            logger.info(f"got {cataloged_species} entries, {not_yet_processed_species} left")
 
     downloader.join()
 
     return downloader.catalog
 
 
-def save_catalog(filename: str,
-                 frequency_limits: tuple[float, float] = (0, inf), *,
-                 existing_catalog: Catalog | None = None) -> bool:
+def save_catalog(
+    filename: str, frequency_limits: tuple[float, float] = (0, inf), *, existing_catalog: Catalog | None = None
+) -> bool:
     """
     Download and save the spectral lines catalog data
 
@@ -288,9 +303,11 @@ def save_catalog(filename: str,
         If specified, only the entries not presented in it will be downloaded.
     """
 
-    return save_catalog_to_file(filename=filename,
-                                catalog=get_catalog(frequency_limits, existing_catalog=existing_catalog),
-                                frequency_limits=frequency_limits)
+    return save_catalog_to_file(
+        filename=filename,
+        catalog=get_catalog(frequency_limits, existing_catalog=existing_catalog),
+        frequency_limits=frequency_limits,
+    )
 
 
 def download() -> None:
@@ -302,16 +319,20 @@ def download() -> None:
 
     ap: argparse.ArgumentParser = argparse.ArgumentParser(
         allow_abbrev=True,
-        description='Download JPL and CDMS spectroscopy catalogs for offline search.\n'
-                    'Find more at https://github.com/StSav012/pycatsearch.')
-    ap.add_argument('catalog', type=Path, help='the catalog location to save into (required)')
-    ap.add_argument('-f''min', '--min-frequency', type=float, help='the lower frequency [MHz] to take', default=-inf)
-    ap.add_argument('-f''max', '--max-frequency', type=float, help='the upper frequency [MHz] to take', default=+inf)
-    ap.add_argument('-b', '--base', type=Path, help='an existing catalog to base the data on', default=None)
+        description="Download JPL and CDMS spectroscopy catalogs for offline search.\n"
+        "Find more at https://github.com/StSav012/pycatsearch.",
+    )
+    ap.add_argument("catalog", type=Path, help="the catalog location to save into (required)")
+    ap.add_argument("-f" "min", "--min-frequency", type=float, help="the lower frequency [MHz] to take", default=-inf)
+    ap.add_argument("-f" "max", "--max-frequency", type=float, help="the upper frequency [MHz] to take", default=+inf)
+    ap.add_argument("-b", "--base", type=Path, help="an existing catalog to base the data on", default=None)
     args: argparse.Namespace = ap.parse_intermixed_args()
 
     logging.basicConfig(level=logging.DEBUG)
-    logger.info(f'started at {datetime.now()}')
-    save_catalog(args.catalog, (args.min_frequency, args.max_frequency),
-                 existing_catalog=Catalog(args.base) if args.base is not None else None)
-    logger.info(f'finished at {datetime.now()}')
+    logger.info(f"started at {datetime.now()}")
+    save_catalog(
+        args.catalog,
+        (args.min_frequency, args.max_frequency),
+        existing_catalog=Catalog(args.base) if args.base is not None else None,
+    )
+    logger.info(f"finished at {datetime.now()}")

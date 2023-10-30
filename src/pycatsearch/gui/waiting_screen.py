@@ -7,7 +7,7 @@ from typing import Any, Callable, Mapping, Sequence
 from qtpy.QtCore import QCoreApplication, QSize, Qt
 from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget
 
-__all__ = ['WaitingScreen']
+__all__ = ["WaitingScreen"]
 
 
 def _spinner(parent: QWidget | None = None) -> QWidget | None:
@@ -19,7 +19,7 @@ def _spinner(parent: QWidget | None = None) -> QWidget | None:
         spinner: qta.IconWidget = qta.IconWidget(parent=parent)
         spinner.setIconSize(QSize(*([spinner.fontMetrics().height() * 2] * 2)))
         # might raise an `Exception` if the icon is not in the font
-        spinner.setIcon(qta.icon('mdi6.loading', animation=qta.Spin(spinner, interval=16, step=4)))
+        spinner.setIcon(qta.icon("mdi6.loading", animation=qta.Spin(spinner, interval=16, step=4)))
         spinner.setAlignment(Qt.AlignmentFlag.AlignCenter)
         return spinner
 
@@ -27,9 +27,15 @@ def _spinner(parent: QWidget | None = None) -> QWidget | None:
 
 
 class WaitingScreen(QWidget):
-    def __init__(self, parent: QWidget, label: str | QWidget,
-                 target: Callable[[...], Any], args: Sequence[Any] = (), kwargs: Mapping[str, Any] | None = None,
-                 margins: float | None = None) -> None:
+    def __init__(
+        self,
+        parent: QWidget,
+        label: str | QWidget,
+        target: Callable[[...], Any],
+        args: Sequence[Any] = (),
+        kwargs: Mapping[str, Any] | None = None,
+        margins: float | None = None,
+    ) -> None:
         super().__init__(parent, Qt.WindowType.SplashScreen)
 
         self.setWindowModality(Qt.WindowModality.WindowModal)
@@ -56,10 +62,7 @@ class WaitingScreen(QWidget):
         return self._thread is not None and self._thread.is_alive()
 
     def exec(self) -> None:
-        self._thread = Thread(
-            target=self._target,
-            args=self._args,
-            kwargs=self._kwargs)
+        self._thread = Thread(target=self._target, args=self._args, kwargs=self._kwargs)
         self.show()
         self._thread.start()
         while self.active:
@@ -74,13 +77,13 @@ class WaitingScreen(QWidget):
         self._thread = None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
     from qtpy.QtWidgets import QApplication
 
     app: QApplication = QApplication(sys.argv)
-    w: WaitingScreen = WaitingScreen(None, 'label', None)  # type: ignore
+    w: WaitingScreen = WaitingScreen(None, "label", None)  # type: ignore
     w.hideEvent = lambda event: app.quit()
     w.show()
     app.exec()

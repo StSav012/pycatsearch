@@ -6,21 +6,41 @@ from typing import Any, Callable
 
 from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
 from qtpy.QtGui import QContextMenuEvent, QIcon
-from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox, QGroupBox, QLineEdit, QListWidget,
-                            QListWidgetItem, QMenu, QPushButton, QStyle, QVBoxLayout, QWidget)
+from qtpy.QtWidgets import (
+    QAbstractItemView,
+    QAbstractScrollArea,
+    QCheckBox,
+    QGroupBox,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
+    QPushButton,
+    QStyle,
+    QVBoxLayout,
+    QWidget,
+)
 
 from .html_style_delegate import HTMLDelegate
 from .settings import Settings
 from .substance_info import SubstanceInfo, SubstanceInfoSelector
 from ..catalog import Catalog, CatalogEntryType
-from ..utils import (INCHI_KEY, ISOTOPOLOG, NAME, STOICHIOMETRIC_FORMULA, STRUCTURAL_FORMULA, TRIVIAL_NAME,
-                     best_name, remove_html)
+from ..utils import (
+    INCHI_KEY,
+    ISOTOPOLOG,
+    NAME,
+    STOICHIOMETRIC_FORMULA,
+    STRUCTURAL_FORMULA,
+    TRIVIAL_NAME,
+    best_name,
+    remove_html,
+)
 
-__all__ = ['SubstancesBox']
+__all__ = ["SubstancesBox"]
 
 
 class SubstancesBox(QGroupBox):
-    selectedSubstancesChanged: Signal = Signal(name='selectedSubstancesChanged')
+    selectedSubstancesChanged: Signal = Signal(name="selectedSubstancesChanged")
 
     def __init__(self, catalog: Catalog, settings: Settings, parent: QWidget | None = None) -> None:
         from . import qta_icon  # import locally to avoid a circular import
@@ -38,9 +58,9 @@ class SubstancesBox(QGroupBox):
         self._button_select_none: QPushButton = QPushButton(self)
 
         self.setCheckable(True)
-        self.setTitle(self.tr('Search Only For…'))
+        self.setTitle(self.tr("Search Only For…"))
         self._text_substance.setClearButtonEnabled(True)
-        self._text_substance.setPlaceholderText(self.tr('Filter'))
+        self._text_substance.setPlaceholderText(self.tr("Filter"))
         self._layout_substance.addWidget(self._text_substance)
         self._list_substance.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self._list_substance.setDropIndicatorShown(False)
@@ -51,14 +71,14 @@ class SubstancesBox(QGroupBox):
         self._list_substance.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self._list_substance.setItemDelegateForColumn(0, HTMLDelegate())
         self._layout_substance.addWidget(self._list_substance)
-        self._check_keep_selection.setStatusTip(self.tr('Keep substances list selection through filter changes'))
-        self._check_keep_selection.setText(self.tr('Persistent Selection'))
+        self._check_keep_selection.setStatusTip(self.tr("Keep substances list selection through filter changes"))
+        self._check_keep_selection.setText(self.tr("Persistent Selection"))
         self._layout_substance.addWidget(self._check_keep_selection)
-        self._button_select_none.setStatusTip(self.tr('Clear substances list selection'))
-        self._button_select_none.setText(self.tr('Select None'))
+        self._button_select_none.setStatusTip(self.tr("Clear substances list selection"))
+        self._button_select_none.setText(self.tr("Select None"))
         self._layout_substance.addWidget(self._button_select_none)
 
-        self._button_select_none.setIcon(qta_icon('mdi6.checkbox-blank-off-outline'))
+        self._button_select_none.setIcon(qta_icon("mdi6.checkbox-blank-off-outline"))
 
         self._text_substance.textChanged.connect(self._on_text_changed)
         self._check_keep_selection.toggled.connect(self._on_check_save_selection_toggled)
@@ -75,17 +95,21 @@ class SubstancesBox(QGroupBox):
 
         context_menu: QMenu = QMenu(self)
         context_menu.addAction(
-            self._icon('dialog-information', 'mdi6.flask-empty-outline', 'mdi6.information-variant',
-                       options=[{}, {'scale_factor': 0.5}]),
-            self.tr('Substance &Info') if len(species_tags) == 1 else self.tr('&Select Substance'),
-            lambda: self._list_substance.doubleClicked.emit(self._list_substance.currentIndex())
+            self._icon(
+                "dialog-information",
+                "mdi6.flask-empty-outline",
+                "mdi6.information-variant",
+                options=[{}, {"scale_factor": 0.5}],
+            ),
+            self.tr("Substance &Info") if len(species_tags) == 1 else self.tr("&Select Substance"),
+            lambda: self._list_substance.doubleClicked.emit(self._list_substance.currentIndex()),
         )
         context_menu.exec(event.globalPos())
         return super().contextMenuEvent(event)
 
-    def _icon(self, theme_name: str, *qta_name: str,
-              standard_pixmap: QStyle.StandardPixmap | None = None,
-              **qta_specs: Any) -> QIcon:
+    def _icon(
+        self, theme_name: str, *qta_name: str, standard_pixmap: QStyle.StandardPixmap | None = None, **qta_specs: Any
+    ) -> QIcon:
         if theme_name and QIcon.hasThemeIcon(theme_name):
             return QIcon.fromTheme(theme_name)
 
@@ -110,14 +134,16 @@ class SubstancesBox(QGroupBox):
             filter_text_lowercase: str = filter_text.casefold()
             cmp_function: Callable[[str, str], bool]
             for cmp_function in (str.startswith, str.__contains__):
-                for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
-                                 STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
+                for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                     for species_tag, entry in self._catalog.catalog.items():
                         plain_text_name = remove_html(str(entry[name_key]))
-                        if (name_key in entry
-                                and (cmp_function(plain_text_name, filter_text)
-                                     or (name_key in (NAME, TRIVIAL_NAME)
-                                         and cmp_function(plain_text_name.casefold(), filter_text_lowercase)))):
+                        if name_key in entry and (
+                            cmp_function(plain_text_name, filter_text)
+                            or (
+                                name_key in (NAME, TRIVIAL_NAME)
+                                and cmp_function(plain_text_name.casefold(), filter_text_lowercase)
+                            )
+                        ):
                             if plain_text_name not in list_items:
                                 list_items[plain_text_name] = set()
                             list_items[plain_text_name].add(species_tag)
@@ -133,18 +159,20 @@ class SubstancesBox(QGroupBox):
                             list_items[plain_text_name] = set()
                         list_items[plain_text_name].add(species_tag)
             # InChI Key match, see https://en.wikipedia.org/wiki/International_Chemical_Identifier#InChIKey
-            if (len(filter_text) == 27
-                    and filter_text[14] == '-' and filter_text[25] == '-'
-                    and filter_text.count('-') == 2):
+            if (
+                len(filter_text) == 27
+                and filter_text[14] == "-"
+                and filter_text[25] == "-"
+                and filter_text.count("-") == 2
+            ):
                 for species_tag, entry in self._catalog.catalog.items():
-                    plain_text_name = str(entry.get(INCHI_KEY, ''))
+                    plain_text_name = str(entry.get(INCHI_KEY, ""))
                     if plain_text_name == filter_text:
                         if plain_text_name not in list_items:
                             list_items[plain_text_name] = set()
                         list_items[plain_text_name].add(species_tag)
         else:
-            for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA,
-                             STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
+            for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                 for species_tag, entry in self._catalog.catalog.items():
                     plain_text_name = remove_html(str(entry[name_key]))
                     if plain_text_name not in list_items:
@@ -181,8 +209,10 @@ class SubstancesBox(QGroupBox):
 
         if not self._check_keep_selection.isChecked():
             newly_selected_substances: set[int] = set().union(
-                *((self._list_substance.item(row).data(Qt.ItemDataRole.UserRole) & self._selected_substances)
-                  for row in range(self._list_substance.count()))
+                *(
+                    (self._list_substance.item(row).data(Qt.ItemDataRole.UserRole) & self._selected_substances)
+                    for row in range(self._list_substance.count())
+                )
             )
             if newly_selected_substances != self._selected_substances:
                 self._selected_substances = newly_selected_substances
@@ -197,8 +227,10 @@ class SubstancesBox(QGroupBox):
     def _on_check_save_selection_toggled(self, new_state: bool) -> None:
         if not new_state:
             newly_selected_substances: set[int] = set().union(
-                *((self._list_substance.item(row).data(Qt.ItemDataRole.UserRole) & self._selected_substances)
-                  for row in range(self._list_substance.count()))
+                *(
+                    (self._list_substance.item(row).data(Qt.ItemDataRole.UserRole) & self._selected_substances)
+                    for row in range(self._list_substance.count())
+                )
             )
             if newly_selected_substances != self._selected_substances:
                 self._selected_substances = newly_selected_substances
@@ -242,18 +274,22 @@ class SubstancesBox(QGroupBox):
         if len(species_tags) > 1:
             allow_html: bool = self._settings.rich_text_in_formulas
             sis: SubstanceInfoSelector = SubstanceInfoSelector(
-                self.catalog, species_tags,
+                self.catalog,
+                species_tags,
                 selected_species_tags=self._selected_substances,
                 inchi_key_search_url_template=self._settings.inchi_key_search_url_template,
                 allow_html=allow_html,
-                parent=self)
+                parent=self,
+            )
             sis.tagSelectionChanged.connect(on_tag_selection_changed)
             sis.exec()
         elif species_tags:  # if not empty
             syn: SubstanceInfo = SubstanceInfo(
-                self.catalog, species_tags.pop(),
+                self.catalog,
+                species_tags.pop(),
                 inchi_key_search_url_template=self._settings.inchi_key_search_url_template,
-                parent=self)
+                parent=self,
+            )
             syn.exec()
 
     @Slot(QListWidgetItem)
@@ -281,20 +317,20 @@ class SubstancesBox(QGroupBox):
         self._list_substance.blockSignals(False)
 
     def load_settings(self) -> None:
-        self._settings.beginGroup('search')
-        self._settings.beginGroup('selection')
-        self._text_substance.setText(self._settings.value('filter', self._text_substance.text(), str))
-        self._check_keep_selection.setChecked(self._settings.value('isPersistent', False, bool))
-        self.setChecked(self._settings.value('enabled', self.isChecked(), bool))
+        self._settings.beginGroup("search")
+        self._settings.beginGroup("selection")
+        self._text_substance.setText(self._settings.value("filter", self._text_substance.text(), str))
+        self._check_keep_selection.setChecked(self._settings.value("isPersistent", False, bool))
+        self.setChecked(self._settings.value("enabled", self.isChecked(), bool))
         self._settings.endGroup()
         self._settings.endGroup()
 
     def save_settings(self) -> None:
-        self._settings.beginGroup('search')
-        self._settings.beginGroup('selection')
-        self._settings.setValue('filter', self._text_substance.text())
-        self._settings.setValue('isPersistent', self._check_keep_selection.isChecked())
-        self._settings.setValue('enabled', self.isChecked())
+        self._settings.beginGroup("search")
+        self._settings.beginGroup("selection")
+        self._settings.setValue("filter", self._text_substance.text())
+        self._settings.setValue("isPersistent", self._check_keep_selection.isChecked())
+        self._settings.setValue("enabled", self.isChecked())
         self._settings.endGroup()
         self._settings.endGroup()
 

@@ -8,9 +8,22 @@ from typing import Any, final
 
 from qtpy.QtCore import QByteArray, QItemSelection, QMimeData, QModelIndex, QPoint, Qt, Slot
 from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPalette, QPixmap, QScreen
-from qtpy.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication, QDoubleSpinBox, QFormLayout, QHeaderView,
-                            QMainWindow, QMessageBox, QPushButton, QSplitter, QStatusBar, QTableView, QVBoxLayout,
-                            QWidget)
+from qtpy.QtWidgets import (
+    QAbstractItemView,
+    QAbstractSpinBox,
+    QApplication,
+    QDoubleSpinBox,
+    QFormLayout,
+    QHeaderView,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStatusBar,
+    QTableView,
+    QVBoxLayout,
+    QWidget,
+)
 
 from .catalog_info import CatalogInfo
 from .download_dialog import DownloadDialog
@@ -32,7 +45,7 @@ from ..utils import ReleaseInfo, latest_release, remove_html, update_with_pip, w
 if sys.version_info < (3, 10):
     from ..utils import zip
 
-__all__ = ['UI']
+__all__ = ["UI"]
 
 
 def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.PlainText) -> None:
@@ -52,11 +65,10 @@ def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.
 
 @final
 class UI(QMainWindow, FileDialogSource):
-    def __init__(self, catalog: Catalog,
-                 parent: QWidget | None = None) -> None:
+    def __init__(self, catalog: Catalog, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.catalog: Catalog = catalog
-        self.settings: Settings = Settings('SavSoft', 'CatSearch', self)
+        self.settings: Settings = Settings("SavSoft", "CatSearch", self)
 
         self._central_widget: QSplitter = QSplitter(Qt.Orientation.Vertical, self)
         self._top_matter: QSplitter = QSplitter(Qt.Orientation.Horizontal, self._central_widget)
@@ -83,15 +95,15 @@ class UI(QMainWindow, FileDialogSource):
                 # https://ru.stackoverflow.com/a/1032610
                 palette: QPalette = self.palette()
                 pixmap: QPixmap = QPixmap()
-                pixmap.loadFromData(data
-                                    .strip()
-                                    .replace(b'"background"', b'"' + palette.window().color().name().encode() + b'"')
-                                    .replace(b'"foreground"', b'"' + palette.text().color().name().encode() + b'"')
-                                    )
+                pixmap.loadFromData(
+                    data.strip()
+                    .replace(b'"background"', b'"' + palette.window().color().name().encode() + b'"')
+                    .replace(b'"foreground"', b'"' + palette.text().color().name().encode() + b'"')
+                )
                 return QIcon(pixmap)
 
             # language=SVG
-            window_icon: bytes = b'''\
+            window_icon: bytes = b"""\
             <svg height="64" width="64" version="1.1">
             <path stroke-linejoin="round" d="m6.722 8.432c-9.05 9.648-6.022 27.23 6.048 33.04 6.269 3.614 13.88 \
             3.1 20-0.1664l20 20c2.013 2.013 5.256 2.013 7.27 0l1.259-1.259c2.013-2.013 2.013-5.256 \
@@ -99,13 +111,13 @@ class UI(QMainWindow, FileDialogSource):
             0.53-9.28 2.72-12.64 6.104-0.321 0.294-0.626 0.597-0.918 0.908zm8.015 6.192c4.978-5.372 14.79-3.878 17.96 \
             2.714 3.655 6.341-0.6611 15.28-7.902 16.36-7.14 1.62-14.4-5.14-13.29-12.38 0.2822-2.51 1.441-4.907 \
             3.231-6.689z" stroke="background" stroke-width="2.4" fill="foreground"/>
-            </svg>'''
+            </svg>"""
             self.setWindowIcon(icon_from_data(window_icon))
 
             if __version__:
-                self.setWindowTitle(self.tr('PyCatSearch (version {0})').format(__version__))
+                self.setWindowTitle(self.tr("PyCatSearch (version {0})").format(__version__))
             else:
-                self.setWindowTitle(self.tr('PyCatSearch'))
+                self.setWindowTitle(self.tr("PyCatSearch"))
             self.setCentralWidget(self._central_widget)
 
             layout_right: QVBoxLayout = QVBoxLayout()
@@ -138,28 +150,28 @@ class UI(QMainWindow, FileDialogSource):
             # frequency limits
             layout_right.addWidget(self.box_frequency, 1)
 
-            self.spin_intensity.setAlignment(Qt.AlignmentFlag.AlignRight
-                                             | Qt.AlignmentFlag.AlignTrailing
-                                             | Qt.AlignmentFlag.AlignVCenter)
+            self.spin_intensity.setAlignment(
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTrailing | Qt.AlignmentFlag.AlignVCenter
+            )
             self.spin_intensity.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
             self.spin_intensity.setDecimals(2)
             self.spin_intensity.setRange(-inf, inf)
             self.spin_intensity.setSingleStep(0.1)
             self.spin_intensity.setValue(-6.54)
-            self.spin_intensity.setStatusTip(self.tr('Limit shown spectral lines'))
-            layout_options.addRow(self.tr('Minimal Intensity:'), self.spin_intensity)
-            self.spin_temperature.setAlignment(Qt.AlignmentFlag.AlignRight
-                                               | Qt.AlignmentFlag.AlignTrailing
-                                               | Qt.AlignmentFlag.AlignVCenter)
+            self.spin_intensity.setStatusTip(self.tr("Limit shown spectral lines"))
+            layout_options.addRow(self.tr("Minimal Intensity:"), self.spin_intensity)
+            self.spin_temperature.setAlignment(
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTrailing | Qt.AlignmentFlag.AlignVCenter
+            )
             self.spin_temperature.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
             self.spin_temperature.setMaximum(999.99)
             self.spin_temperature.setValue(300.0)
-            self.spin_temperature.setStatusTip(self.tr('Temperature to calculate intensity'))
-            self.spin_temperature.setSuffix(self.tr(' K'))
-            layout_options.addRow(self.tr('Temperature:'), self.spin_temperature)
+            self.spin_temperature.setStatusTip(self.tr("Temperature to calculate intensity"))
+            self.spin_temperature.setSuffix(self.tr(" K"))
+            layout_options.addRow(self.tr("Temperature:"), self.spin_temperature)
             layout_right.addLayout(layout_options, 0)
 
-            self.button_search.setText(self.tr('Show'))
+            self.button_search.setText(self.tr("Show"))
             layout_right.addWidget(self.button_search, 0)
 
             self._right_matter.setLayout(layout_right)
@@ -175,9 +187,9 @@ class UI(QMainWindow, FileDialogSource):
             self.setMenuBar(self.menu_bar)
             self.setStatusBar(self.status_bar)
 
-            self.button_search.setShortcut('Ctrl+Return')
+            self.button_search.setShortcut("Ctrl+Return")
 
-            self.button_search.setIcon(qta_icon('mdi6.magnify'))
+            self.button_search.setIcon(qta_icon("mdi6.magnify"))
 
             self.adjustSize()
 
@@ -219,7 +231,8 @@ class UI(QMainWindow, FileDialogSource):
         self.menu_bar.action_copy_frequency.triggered.connect(self._on_action_copy_frequency_triggered)
         self.menu_bar.action_copy_intensity.triggered.connect(self._on_action_copy_intensity_triggered)
         self.menu_bar.action_copy_lower_state_energy.triggered.connect(
-            self._on_action_copy_lower_state_energy_triggered)
+            self._on_action_copy_lower_state_energy_triggered
+        )
         self.menu_bar.action_show_substance.toggled.connect(self._on_action_show_substance_toggled)
         self.menu_bar.action_show_frequency.toggled.connect(self._on_action_show_frequency_toggled)
         self.menu_bar.action_show_intensity.toggled.connect(self._on_action_show_intensity_toggled)
@@ -232,15 +245,21 @@ class UI(QMainWindow, FileDialogSource):
 
         if self.settings.check_updates:
             _latest_release: ReleaseInfo = latest_release()
-            if (_latest_release
-                    and _latest_release.version != self.settings.ignored_version
-                    and _latest_release.version > __version__):
+            if (
+                _latest_release
+                and _latest_release.version != self.settings.ignored_version
+                and _latest_release.version > __version__
+            ):
                 res: QMessageBox.StandardButton = QMessageBox.question(
-                    self, self.tr('Release Info'),
-                    self.tr('Version {release.version} published {release.pub_date} is available. '
-                            'Would you like to get the update? '
-                            'The app will try to restart.').format(release=_latest_release),
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Ignore)
+                    self,
+                    self.tr("Release Info"),
+                    self.tr(
+                        "Version {release.version} published {release.pub_date} is available. "
+                        "Would you like to get the update? "
+                        "The app will try to restart."
+                    ).format(release=_latest_release),
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Ignore,
+                )
                 if res == QMessageBox.StandardButton.Yes:
                     update_with_pip()
                 elif res == QMessageBox.StandardButton.Ignore:
@@ -286,16 +305,16 @@ class UI(QMainWindow, FileDialogSource):
 
     @Slot()
     def _on_action_load_triggered(self) -> None:
-        self.status_bar.showMessage(self.tr('Select a catalog file to load.'))
+        self.status_bar.showMessage(self.tr("Select a catalog file to load."))
         new_catalog_file_names: list[str]
-        new_catalog_file_names, _ = self.get_open_file_names(directory=str((*self.catalog.sources, '')[0]))
+        new_catalog_file_names, _ = self.get_open_file_names(directory=str((*self.catalog.sources, "")[0]))
 
         if new_catalog_file_names:
-            self.status_bar.showMessage(self.tr('Loading…'))
+            self.status_bar.showMessage(self.tr("Loading…"))
             if self.load_catalog(*new_catalog_file_names):
-                self.status_bar.showMessage(self.tr('Catalogs loaded.'))
+                self.status_bar.showMessage(self.tr("Catalogs loaded."))
             else:
-                self.status_bar.showMessage(self.tr('Failed to load a catalog.'))
+                self.status_bar.showMessage(self.tr("Failed to load a catalog."))
 
         else:
             self.status_bar.clearMessage()
@@ -303,11 +322,11 @@ class UI(QMainWindow, FileDialogSource):
     @Slot()
     def _on_action_reload_triggered(self) -> None:
         if self.catalog.sources:
-            self.status_bar.showMessage(self.tr('Loading…'))
+            self.status_bar.showMessage(self.tr("Loading…"))
             if self.load_catalog(*self.catalog.sources):
-                self.status_bar.showMessage(self.tr('Catalogs loaded.'))
+                self.status_bar.showMessage(self.tr("Catalogs loaded."))
             else:
-                self.status_bar.showMessage(self.tr('Failed to load a catalog.'))
+                self.status_bar.showMessage(self.tr("Failed to load a catalog."))
         else:
             self.status_bar.clearMessage()
 
@@ -317,7 +336,7 @@ class UI(QMainWindow, FileDialogSource):
         frequency_limits: tuple[float, float] = (self.catalog.min_frequency, self.catalog.max_frequency)
         save_file_name: str
         while True:
-            save_file_name, _ = self.get_save_file_name(directory=str([*self.catalog.sources, ''][0]))
+            save_file_name, _ = self.get_save_file_name(directory=str([*self.catalog.sources, ""][0]))
             if not save_file_name:
                 return
 
@@ -326,15 +345,17 @@ class UI(QMainWindow, FileDialogSource):
                     self,
                     filename=save_file_name,
                     catalog=catalog,
-                    frequency_limits=frequency_limits
+                    frequency_limits=frequency_limits,
                 )
                 ws.exec()
             except OSError as ex:
                 QMessageBox.warning(
                     self,
-                    self.tr('Unable to save the catalog'),
-                    self.tr('Error {exception} occurred while saving {filename}. Try another location.')
-                    .format(exception=ex, filename=save_file_name)
+                    self.tr("Unable to save the catalog"),
+                    self.tr("Error {exception} occurred while saving {filename}. Try another location.").format(
+                        exception=ex,
+                        filename=save_file_name,
+                    ),
                 )
             else:
                 return
@@ -345,10 +366,10 @@ class UI(QMainWindow, FileDialogSource):
         :return: the rich text representation of the selected table lines
         """
         if not self.results_table.selectionModel().selectedRows():
-            return ''
+            return ""
 
         units: list[str] = [
-            '',
+            "",
             self.settings.frequency_unit_str,
             self.settings.intensity_unit_str,
             self.settings.energy_unit_str,
@@ -358,41 +379,44 @@ class UI(QMainWindow, FileDialogSource):
         actions_checked: list[bool] = [_a.isChecked() for _a in self.menu_bar.menu_columns.actions()]
 
         def format_value(value: Any, unit: str) -> str:
-            return (self.tr('{value} {unit}', 'format value in html').format(value=value, unit=unit)
-                    if with_units and unit
-                    else self.tr('{value}', 'format value in html').format(value=value))
+            return (
+                self.tr("{value} {unit}", "format value in html").format(value=value, unit=unit)
+                if with_units and unit
+                else self.tr("{value}", "format value in html").format(value=value)
+            )
 
-        columns_order: list[int] = [self.results_table.horizontalHeader().logicalIndex(_c)
-                                    for _c, _a in zip(range(self.results_table.horizontalHeader().count()),
-                                                      actions_checked,
-                                                      strict=True)
-                                    if _a]
-        text: list[str] = ['<table>']
+        columns_order: list[int] = [
+            self.results_table.horizontalHeader().logicalIndex(_c)
+            for _c, _a in zip(range(self.results_table.horizontalHeader().count()), actions_checked, strict=True)
+            if _a
+        ]
+        text: list[str] = ["<table>"]
         values: list[str]
         index: QModelIndex
         for index in self.results_table.selectionModel().selectedRows():
             row: FoundLinesModel.DataType = self.results_model.row(index.row())
             values = [
                 format_value(_v, _u)
-                for _u, _v, _a in zip(units,
-                                      (row.name, row.frequency, row.intensity, row.lower_state_energy),
-                                      actions_checked,
-                                      strict=True)
+                for _u, _v, _a in zip(
+                    units,
+                    (row.name, row.frequency, row.intensity, row.lower_state_energy),
+                    actions_checked,
+                    strict=True,
+                )
                 if _a
             ]
             text.append(
-                '<tr><td>' +
-                f'</td>{csv_separator}<td>'.join(values[_c] for _c in columns_order) +
-                '</td></tr>'
+                "<tr><td>" + f"</td>{csv_separator}<td>".join(values[_c] for _c in columns_order) + "</td></tr>"
             )
-        text.append('</table>')
+        text.append("</table>")
         return self.settings.line_end.join(text)
 
     @Slot()
     def _on_action_download_catalog_triggered(self) -> None:
         downloader: DownloadDialog = DownloadDialog(
             frequency_limits=(self.catalog.min_frequency, self.catalog.max_frequency),
-            parent=self)
+            parent=self,
+        )
         downloader.exec()
 
     @Slot()
@@ -419,12 +443,13 @@ class UI(QMainWindow, FileDialogSource):
             return
 
         def html_list(lines: list[str]) -> str:
-            return '<ul><li>' + f'</li>{self.settings.line_end}<li>'.join(lines) + '</li></ul>'
+            return "<ul><li>" + f"</li>{self.settings.line_end}<li>".join(lines) + "</li></ul>"
 
         text_to_copy: list[str] = []
         index: QModelIndex
-        for index in (self.results_table.selectionModel().selectedRows(col)
-                      or [self.results_table.selectionModel().currentIndex()]):
+        for index in self.results_table.selectionModel().selectedRows(col) or [
+            self.results_table.selectionModel().currentIndex()
+        ]:
             if index.isValid():
                 text_to_copy.append(self.results_model.data(index))
         if not text_to_copy:
@@ -469,7 +494,8 @@ class UI(QMainWindow, FileDialogSource):
                 self.catalog,
                 self.results_model.row(self.results_table.selectionModel().selectedRows()[0].row()).species_tag,
                 inchi_key_search_url_template=self.settings.inchi_key_search_url_template,
-                parent=self)
+                parent=self,
+            )
             syn.exec()
 
     def toggle_results_table_column_visibility(self, column: int, is_visible: bool) -> None:
@@ -500,20 +526,24 @@ class UI(QMainWindow, FileDialogSource):
     def _on_action_check_updates_triggered(self) -> None:
         _latest_release: ReleaseInfo = latest_release()
         if not _latest_release:
-            QMessageBox.warning(self, self.tr('Release Info'), self.tr('Update check failed.'))
+            QMessageBox.warning(self, self.tr("Release Info"), self.tr("Update check failed."))
         elif _latest_release.version > __version__:
             res: QMessageBox.StandardButton = QMessageBox.question(
-                self, self.tr('Release Info'),
-                self.tr('Version {release.version} published {release.pub_date} is available. '
-                        'Would you like to get the update? '
-                        'The app will try to restart.').format(release=_latest_release),
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Ignore)
+                self,
+                self.tr("Release Info"),
+                self.tr(
+                    "Version {release.version} published {release.pub_date} is available. "
+                    "Would you like to get the update? "
+                    "The app will try to restart."
+                ).format(release=_latest_release),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Ignore,
+            )
             if res == QMessageBox.StandardButton.Yes:
                 update_with_pip()
             elif res == QMessageBox.StandardButton.Ignore:
                 self.settings.ignored_version = _latest_release.version
         else:
-            QMessageBox.information(self, self.tr('Release Info'), self.tr('You are using the latest version.'))
+            QMessageBox.information(self, self.tr("Release Info"), self.tr("You are using the latest version."))
 
     @Slot()
     def _on_action_about_catalogs_triggered(self) -> None:
@@ -522,7 +552,7 @@ class UI(QMainWindow, FileDialogSource):
             ci.catalogUpdated.connect(self._on_action_reload_triggered)
             ci.exec()
         else:
-            QMessageBox.information(self, self.tr('Catalog Info'), self.tr('No catalogs loaded'))
+            QMessageBox.information(self, self.tr("Catalog Info"), self.tr("No catalogs loaded"))
 
     @Slot()
     def _on_action_about_triggered(self) -> None:
@@ -531,27 +561,38 @@ class UI(QMainWindow, FileDialogSource):
 
         QMessageBox.about(
             self,
-            self.tr('About CatSearch'),
-            '<html><p>'
-            + '</p><p>'.join((
-                self.tr('CatSearch is a means of searching through spectroscopy lines catalogs. '
-                        "It's an offline application."),
-                self.tr('It relies on the data stored in JSON files.'),
-                self.tr('One can use their own catalogs as well as download data from '
+            self.tr("About CatSearch"),
+            "<html><p>"
+            + "</p><p>".join(
+                (
+                    self.tr(
+                        "CatSearch is a means of searching through spectroscopy lines catalogs. "
+                        "It's an offline application."
+                    ),
+                    self.tr("It relies on the data stored in JSON files."),
+                    self.tr(
+                        "One can use their own catalogs as well as download data from "
                         '<a href="https://spec.jpl.nasa.gov/">JPL</a> and '
                         '<a href="https://astro.uni-koeln.de/">CDMS</a> spectroscopy databases '
-                        'available on the Internet.'),
-                self.tr('Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported.'),
-                self.tr('See {readme_link} for more info.')
-                .format(readme_link=a_tag(url='https://github.com/StSav012/pycatsearch/blob/master/README.md',
-                                          text=self.tr('readme'))),
-                self.tr('CatSearch is licensed under the {license_link}.')
-                .format(license_link=a_tag(url='https://www.gnu.org/copyleft/lesser.html',
-                                           text=self.tr('GNU LGPL version 3'))),
-                self.tr('The source code is available on {repo_link}.')
-                .format(repo_link=a_tag(url='https://github.com/StSav012/pycatsearch', text='GitHub')),
-            ))
-            + '</p></html>'
+                        "available on the Internet."
+                    ),
+                    self.tr("Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported."),
+                    self.tr("See {readme_link} for more info.").format(
+                        readme_link=a_tag(
+                            url="https://github.com/StSav012/pycatsearch/blob/master/README.md", text=self.tr("readme")
+                        )
+                    ),
+                    self.tr("CatSearch is licensed under the {license_link}.").format(
+                        license_link=a_tag(
+                            url="https://www.gnu.org/copyleft/lesser.html", text=self.tr("GNU LGPL version 3")
+                        )
+                    ),
+                    self.tr("The source code is available on {repo_link}.").format(
+                        repo_link=a_tag(url="https://github.com/StSav012/pycatsearch", text="GitHub")
+                    ),
+                )
+            )
+            + "</p></html>",
         )
 
     @Slot()
@@ -559,42 +600,44 @@ class UI(QMainWindow, FileDialogSource):
         QMessageBox.aboutQt(self)
 
     def load_settings(self) -> None:
-        self.settings.beginGroup('search')
+        self.settings.beginGroup("search")
         catalog_file_names: list[str] = []
-        for i in range(self.settings.beginReadArray('catalogFiles')):
+        for i in range(self.settings.beginReadArray("catalogFiles")):
             self.settings.setArrayIndex(i)
-            path: str = self.settings.value('path', '', str)
+            path: str = self.settings.value("path", "", str)
             if path:
                 catalog_file_names.append(path)
         self.settings.endArray()
         if not catalog_file_names:
-            catalog_file_names = ['catalog.json.gz', 'catalog.json']
-        self.temperature = self.settings.value('temperature', self.spin_temperature.value(), float)
-        self.minimal_intensity = self.settings.value('intensity', self.spin_intensity.value(), float)
+            catalog_file_names = ["catalog.json.gz", "catalog.json"]
+        self.temperature = self.settings.value("temperature", self.spin_temperature.value(), float)
+        self.minimal_intensity = self.settings.value("intensity", self.spin_intensity.value(), float)
         self.settings.endGroup()
-        self.settings.beginGroup('displayedColumns')
-        self.menu_bar.action_show_substance.setChecked(self.settings.value('substance', True, bool))
+        self.settings.beginGroup("displayedColumns")
+        self.menu_bar.action_show_substance.setChecked(self.settings.value("substance", True, bool))
         self.toggle_results_table_column_visibility(0, self.menu_bar.action_show_substance.isChecked())
-        self.menu_bar.action_show_frequency.setChecked(self.settings.value('frequency', True, bool))
+        self.menu_bar.action_show_frequency.setChecked(self.settings.value("frequency", True, bool))
         self.toggle_results_table_column_visibility(1, self.menu_bar.action_show_frequency.isChecked())
-        self.menu_bar.action_show_intensity.setChecked(self.settings.value('intensity', True, bool))
+        self.menu_bar.action_show_intensity.setChecked(self.settings.value("intensity", True, bool))
         self.toggle_results_table_column_visibility(2, self.menu_bar.action_show_intensity.isChecked())
-        self.menu_bar.action_show_lower_state_energy.setChecked(self.settings.value('lowerStateEnergy', False, bool))
+        self.menu_bar.action_show_lower_state_energy.setChecked(self.settings.value("lowerStateEnergy", False, bool))
         self.toggle_results_table_column_visibility(3, self.menu_bar.action_show_lower_state_energy.isChecked())
-        self.results_table.horizontalHeader().restoreState(self.settings.value('state', QByteArray()))
-        self.results_table.horizontalHeader().restoreGeometry(self.settings.value('geometry', QByteArray()))
+        self.results_table.horizontalHeader().restoreState(self.settings.value("state", QByteArray()))
+        self.results_table.horizontalHeader().restoreGeometry(self.settings.value("geometry", QByteArray()))
         self.settings.endGroup()
-        self.settings.beginGroup('window')
+        self.settings.beginGroup("window")
         screens: list[QScreen] = QApplication.screens()
         if screens:
-            self.move(round(0.5 * (screens[0].size().width() - self.size().width())),
-                      round(0.5 * (screens[0].size().height() - self.size().height())))  # Fallback: Center the window
-        self.restoreGeometry(self.settings.value('geometry', QByteArray()))
-        self.restoreState(self.settings.value('state', QByteArray()))
-        self._top_matter.restoreGeometry(self.settings.value('verticalSplitterGeometry', QByteArray()))
-        self._top_matter.restoreState(self.settings.value('verticalSplitterState', QByteArray()))
-        self._central_widget.restoreGeometry(self.settings.value('horizontalSplitterGeometry', QByteArray()))
-        self._central_widget.restoreState(self.settings.value('horizontalSplitterState', QByteArray()))
+            self.move(
+                round(0.5 * (screens[0].size().width() - self.size().width())),
+                round(0.5 * (screens[0].size().height() - self.size().height())),
+            )  # Fallback: Center the window
+        self.restoreGeometry(self.settings.value("geometry", QByteArray()))
+        self.restoreState(self.settings.value("state", QByteArray()))
+        self._top_matter.restoreGeometry(self.settings.value("verticalSplitterGeometry", QByteArray()))
+        self._top_matter.restoreState(self.settings.value("verticalSplitterState", QByteArray()))
+        self._central_widget.restoreGeometry(self.settings.value("horizontalSplitterGeometry", QByteArray()))
+        self._central_widget.restoreState(self.settings.value("horizontalSplitterState", QByteArray()))
         self.settings.endGroup()
         self.fill_parameters()
 
@@ -602,30 +645,30 @@ class UI(QMainWindow, FileDialogSource):
             self.load_catalog(*catalog_file_names)
 
     def save_settings(self) -> None:
-        self.settings.beginGroup('search')
-        self.settings.beginWriteArray('catalogFiles', len(self.catalog.sources))
+        self.settings.beginGroup("search")
+        self.settings.beginWriteArray("catalogFiles", len(self.catalog.sources))
         for i, s in enumerate(self.catalog.sources):
             self.settings.setArrayIndex(i)
-            self.settings.setValue('path', str(s))
+            self.settings.setValue("path", str(s))
         self.settings.endArray()
-        self.settings.setValue('temperature', self.temperature)
-        self.settings.setValue('intensity', self.minimal_intensity)
+        self.settings.setValue("temperature", self.temperature)
+        self.settings.setValue("intensity", self.minimal_intensity)
         self.settings.endGroup()
-        self.settings.beginGroup('displayedColumns')
-        self.settings.setValue('substance', self.menu_bar.action_show_substance.isChecked())
-        self.settings.setValue('frequency', self.menu_bar.action_show_frequency.isChecked())
-        self.settings.setValue('intensity', self.menu_bar.action_show_intensity.isChecked())
-        self.settings.setValue('lowerStateEnergy', self.menu_bar.action_show_lower_state_energy.isChecked())
-        self.settings.setValue('geometry', self.results_table.horizontalHeader().saveGeometry())
-        self.settings.setValue('state', self.results_table.horizontalHeader().saveState())
+        self.settings.beginGroup("displayedColumns")
+        self.settings.setValue("substance", self.menu_bar.action_show_substance.isChecked())
+        self.settings.setValue("frequency", self.menu_bar.action_show_frequency.isChecked())
+        self.settings.setValue("intensity", self.menu_bar.action_show_intensity.isChecked())
+        self.settings.setValue("lowerStateEnergy", self.menu_bar.action_show_lower_state_energy.isChecked())
+        self.settings.setValue("geometry", self.results_table.horizontalHeader().saveGeometry())
+        self.settings.setValue("state", self.results_table.horizontalHeader().saveState())
         self.settings.endGroup()
-        self.settings.beginGroup('window')
-        self.settings.setValue('geometry', self.saveGeometry())
-        self.settings.setValue('state', self.saveState())
-        self.settings.setValue('verticalSplitterGeometry', self._top_matter.saveGeometry())
-        self.settings.setValue('verticalSplitterState', self._top_matter.saveState())
-        self.settings.setValue('horizontalSplitterGeometry', self._central_widget.saveGeometry())
-        self.settings.setValue('horizontalSplitterState', self._central_widget.saveState())
+        self.settings.beginGroup("window")
+        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.setValue("state", self.saveState())
+        self.settings.setValue("verticalSplitterGeometry", self._top_matter.saveGeometry())
+        self.settings.setValue("verticalSplitterState", self._top_matter.saveState())
+        self.settings.setValue("horizontalSplitterGeometry", self._central_widget.saveGeometry())
+        self.settings.setValue("horizontalSplitterState", self._central_widget.saveState())
         self.settings.endGroup()
         self.box_substance.save_settings()
         self.box_frequency.save_settings()
@@ -648,12 +691,12 @@ class UI(QMainWindow, FileDialogSource):
         self.box_frequency.fill_parameters()
 
         # intensity
-        self.spin_intensity.setSuffix(' ' + self.settings.intensity_unit_str)
+        self.spin_intensity.setSuffix(" " + self.settings.intensity_unit_str)
         self.spin_intensity.setValue(self.settings.from_log10_sq_nm_mhz(self.minimal_intensity))
 
         # temperature
         temperature_suffix: int = self.settings.temperature_unit
-        self.spin_temperature.setSuffix(' ' + self.settings.TEMPERATURE_UNITS[temperature_suffix])
+        self.spin_temperature.setSuffix(" " + self.settings.TEMPERATURE_UNITS[temperature_suffix])
         if temperature_suffix == 0:  # K
             self.spin_temperature.setValue(self.temperature)
             self.spin_temperature.setMinimum(0.0)
@@ -661,7 +704,7 @@ class UI(QMainWindow, FileDialogSource):
             self.spin_temperature.setMinimum(-273.15)
             self.spin_temperature.setValue(self.settings.from_k(self.temperature))
         else:
-            raise IndexError('Wrong temperature unit index', temperature_suffix)
+            raise IndexError("Wrong temperature unit index", temperature_suffix)
 
     def fill_table(self) -> None:
         self.preset_table()
@@ -688,7 +731,7 @@ class UI(QMainWindow, FileDialogSource):
 
     @Slot()
     def _on_search_requested(self) -> None:
-        self.status_bar.showMessage(self.tr('Searching…'))
+        self.status_bar.showMessage(self.tr("Searching…"))
         self.setDisabled(True)
         last_cursor: QCursor = self.cursor()
         self.setCursor(Qt.CursorShape.WaitCursor)
@@ -696,4 +739,4 @@ class UI(QMainWindow, FileDialogSource):
         self.fill_table()
         self.setCursor(last_cursor)
         self.setEnabled(True)
-        self.status_bar.showMessage(self.tr('Ready.'))
+        self.status_bar.showMessage(self.tr("Ready."))

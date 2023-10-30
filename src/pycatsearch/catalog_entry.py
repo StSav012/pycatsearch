@@ -5,12 +5,19 @@ from math import inf, log10, nan
 
 from .utils import FREQUENCY, INTENSITY, LOWER_STATE_ENERGY, M_LOG10E, T0, c, h, k
 
-__all__ = ['CatalogEntry']
+__all__ = ["CatalogEntry"]
 
 
 class CatalogEntry:
-    def __init__(self, spcat_line: str = '', *, frequency: float = nan, intensity: float = nan,
-                 degrees_of_freedom: int = -1, lower_state_energy: float = nan) -> None:
+    def __init__(
+        self,
+        spcat_line: str = "",
+        *,
+        frequency: float = nan,
+        intensity: float = nan,
+        degrees_of_freedom: int = -1,
+        lower_state_energy: float = nan,
+    ) -> None:
         self.FREQ: float  # frequency, MHz, mandatory
         self.INT: float  # intensity, log10(nm²×MHz), mandatory
         self.DR: int  # degrees of freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
@@ -34,9 +41,12 @@ class CatalogEntry:
         return self.FREQ
 
     def intensity(self, temperature: float = -inf) -> float:
-        if self.DR >= 0 and temperature > 0. and temperature != T0:
-            return self.INT + (0.5 * self.DR + 1.0) * log10(T0 / temperature) + (
-                    -(1 / temperature - 1 / T0) * self.ELO * 100. * h * c / k) * M_LOG10E
+        if self.DR >= 0 and temperature > 0.0 and temperature != T0:
+            return (
+                self.INT
+                + (0.5 * self.DR + 1.0) * log10(T0 / temperature)
+                + (-(1 / temperature - 1 / T0) * self.ELO * 100.0 * h * c / k) * M_LOG10E
+            )
         else:
             return self.INT
 
@@ -52,4 +62,4 @@ class CatalogEntry:
         return {FREQUENCY: self.FREQ, INTENSITY: self.INT, LOWER_STATE_ENERGY: self.ELO}
 
     def __repr__(self) -> str:
-        return f'{self.FREQ} {self.INT} {self.ELO}'
+        return f"{self.FREQ} {self.INT} {self.ELO}"

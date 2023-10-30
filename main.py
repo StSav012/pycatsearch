@@ -5,8 +5,12 @@ from __future__ import annotations
 import sys
 
 if sys.version_info < (3, 8):
-    message = ('The Python version ' + '.'.join(map(str, sys.version_info[:3])) + ' is not supported.\n' +
-               'Use Python 3.8 or newer.')
+    message = (
+        "The Python version "
+        + ".".join(map(str, sys.version_info[:3]))
+        + " is not supported.\n"
+        + "Use Python 3.8 or newer."
+    )
     try:
         import tkinter
     except ImportError:
@@ -18,18 +22,17 @@ if sys.version_info < (3, 8):
 
         _root = tkinter.Tk()
         _root.withdraw()
-        tkinter.messagebox.showerror(title='Outdated Python', message=message)
+        tkinter.messagebox.showerror(title="Outdated Python", message=message)
         _root.destroy()
 
     exit(1)
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     try:
         from pycatsearch import main
     except ImportError:
-        __author__ = 'StSav012'
-        __original_name__ = 'py''cat''search'
+        __author__ = "StSav012"
+        __original_name__ = "py" "cat" "search"
 
         try:
             from updater import update_with_pip

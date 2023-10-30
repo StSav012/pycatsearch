@@ -7,8 +7,18 @@ from typing import Iterable, cast
 
 from qtpy.QtCore import QDateTime, QLocale, QModelIndex, QTimeZone, QUrl, Qt, Signal, Slot
 from qtpy.QtGui import QContextMenuEvent, QDesktopServices
-from qtpy.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QDialog, QDialogButtonBox, QFormLayout, QMenu,
-                            QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+from qtpy.QtWidgets import (
+    QAbstractItemView,
+    QAbstractScrollArea,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QMenu,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from . import qta_icon
 from .selectable_label import SelectableLabel
@@ -16,11 +26,11 @@ from .titled_list_widget import TitledListWidget
 from .update_dialog import UpdateDialog
 from ..catalog import Catalog, CatalogSourceInfo
 
-__all__ = ['CatalogInfo']
+__all__ = ["CatalogInfo"]
 
 
 class SourcesList(QTableWidget):
-    catalogUpdated: Signal = Signal(name='catalogUpdated')
+    catalogUpdated: Signal = Signal(name="catalogUpdated")
 
     class Columns(enum.IntEnum):
         FileLocation = 0
@@ -34,7 +44,7 @@ class SourcesList(QTableWidget):
         self.setDragDropOverwriteMode(False)
         self.setDropIndicatorShown(False)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.setHorizontalHeaderLabels([self.tr('Filename'), self.tr('Build Time')])
+        self.setHorizontalHeaderLabels([self.tr("Filename"), self.tr("Build Time")])
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setSortingEnabled(True)
         self.horizontalHeader().setHighlightSections(False)
@@ -46,16 +56,12 @@ class SourcesList(QTableWidget):
         self._context_menu: QMenu = QMenu(self)
         self._context_menu.setDefaultAction(
             self._context_menu.addAction(
-                qta_icon('mdi6.target'),
-                self.tr('Open File &Location'),
-                self._on_open_file_location_triggered
+                qta_icon("mdi6.target"), self.tr("Open File &Location"), self._on_open_file_location_triggered
             )
         )
         self._context_menu.addSeparator()
         self._context_menu.addAction(
-            qta_icon('mdi6.update'),
-            self.tr('&Update Catalog'),
-            self._on_update_catalog_triggered
+            qta_icon("mdi6.update"), self.tr("&Update Catalog"), self._on_update_catalog_triggered
         )
 
         self.cellDoubleClicked.connect(self._on_item_double_clicked)
@@ -121,22 +127,22 @@ class SourcesList(QTableWidget):
                 qt_datetime.setTimeZone(QTimeZone(round(info_item.build_datetime.utcoffset().total_seconds())))
                 item = QTableWidgetItem(QLocale().toString(qt_datetime))
                 self.setItem(row, SourcesList.Columns.BuildTime, item)
-        self.setColumnHidden(SourcesList.Columns.BuildTime,
-                             all(self.item(row, SourcesList.Columns.BuildTime) is None
-                                 for row in range(self.rowCount()))
-                             )
+        self.setColumnHidden(
+            SourcesList.Columns.BuildTime,
+            all(self.item(row, SourcesList.Columns.BuildTime) is None for row in range(self.rowCount())),
+        )
         self.resizeColumnsToContents()
 
 
 class CatalogInfo(QDialog):
-    """ A simple dialog that displays the information about the loaded catalog(s) """
+    """A simple dialog that displays the information about the loaded catalog(s)"""
 
-    catalogUpdated: Signal = Signal(name='catalogUpdated')
+    catalogUpdated: Signal = Signal(name="catalogUpdated")
 
     def __init__(self, catalog: Catalog, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setModal(True)
-        self.setWindowTitle(self.tr('Catalog Info'))
+        self.setWindowTitle(self.tr("Catalog Info"))
         if parent is not None:
             self.setWindowIcon(parent.windowIcon())
         layout: QVBoxLayout = QVBoxLayout(self)
@@ -147,17 +153,21 @@ class CatalogInfo(QDialog):
         sources_list.catalogUpdated.connect(self._on_catalog_updated)
 
         frequency_limits_list: TitledListWidget = TitledListWidget(self)
-        frequency_limits_list.setTitle(self.tr('Frequency limits:'))
+        frequency_limits_list.setTitle(self.tr("Frequency limits:"))
         layout.addWidget(frequency_limits_list)
         locale: QLocale = QLocale()
-        frequency_limits_list.addItems([
-            self.tr('{min_frequency} to {max_frequency} MHz')
-            .format(min_frequency=locale.toString(min(frequency_limit)),
-                    max_frequency=locale.toString(max(frequency_limit)))
-            for frequency_limit in catalog.frequency_limits])
+        frequency_limits_list.addItems(
+            [
+                self.tr("{min_frequency} to {max_frequency} MHz").format(
+                    min_frequency=locale.toString(min(frequency_limit)),
+                    max_frequency=locale.toString(max(frequency_limit)),
+                )
+                for frequency_limit in catalog.frequency_limits
+            ]
+        )
 
         stat_layout: QFormLayout = QFormLayout()
-        stat_layout.addRow(self.tr('Total number of substances:'), SelectableLabel(str(catalog.entries_count)))
+        stat_layout.addRow(self.tr("Total number of substances:"), SelectableLabel(str(catalog.entries_count)))
         layout.addLayout(stat_layout, 0)
 
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)

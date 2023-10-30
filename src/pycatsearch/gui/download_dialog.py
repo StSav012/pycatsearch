@@ -11,17 +11,20 @@ from .catalog_wizard.progress_page import ProgressPage
 from .catalog_wizard.settings_page import SettingsPage
 from .catalog_wizard.summary_page import SummaryPage
 
-__all__ = ['DownloadDialog']
+__all__ = ["DownloadDialog"]
 
 
 class DownloadDialog(SaveCatalogWizard):
-    """ GUI for `async_downloader.Downloader` or `downloader.Downloader` """
+    """GUI for `async_downloader.Downloader` or `downloader.Downloader`"""
 
-    def __init__(self, frequency_limits: tuple[float, float] = (-inf, inf),
-                 parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        frequency_limits: tuple[float, float] = (-inf, inf),
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent=parent)
 
-        self.setWindowTitle(self.tr('Download Catalog'))
+        self.setWindowTitle(self.tr("Download Catalog"))
 
         self._settings_page: SettingsPage = SettingsPage(self)
         self.addPage(self._settings_page)

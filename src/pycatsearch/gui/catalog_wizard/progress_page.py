@@ -15,14 +15,14 @@ try:
 except (SyntaxError, ImportError, ModuleNotFoundError):
     from ...downloader import Downloader
 
-__all__ = ['ProgressPage']
+__all__ = ["ProgressPage"]
 
 
 class ProgressPage(QWizardPage):
     def __init__(self, parent: QWidget | None = None, existing_catalog: Catalog | None = None) -> None:
         super().__init__(parent)
 
-        self.setTitle(self.tr('Downloading catalog'))
+        self.setTitle(self.tr("Downloading catalog"))
         self.setCommitPage(True)
 
         layout: QVBoxLayout = QVBoxLayout(self)
@@ -33,8 +33,10 @@ class ProgressPage(QWizardPage):
 
         self._progress_bar: QProgressBar = QProgressBar(self)
         self._progress_bar.setFormat(
-            self.tr('%p% (%v out of %m)',
-                    '%p = the percentage. %v = the current value. %m = the total number of steps.')
+            self.tr(
+                "%p% (%v out of %m)",
+                "%p = the percentage. %v = the current value. %m = the total number of steps.",
+            )
         )
         layout.addWidget(self._progress_bar)
 
@@ -46,12 +48,14 @@ class ProgressPage(QWizardPage):
         self.setButtonText(QWizard.WizardButton.CommitButton, self.buttonText(QWizard.WizardButton.NextButton))
 
         frequency_limits: tuple[float, float] = (
-            self.field('min_frequency'),
-            self.field('max_frequency'),
+            self.field("min_frequency"),
+            self.field("max_frequency"),
         )
-        self._downloader = Downloader(frequency_limits=frequency_limits,
-                                      state_queue=self._state_queue,
-                                      existing_catalog=self._existing_catalog)
+        self._downloader = Downloader(
+            frequency_limits=frequency_limits,
+            state_queue=self._state_queue,
+            existing_catalog=self._existing_catalog,
+        )
         self._downloader.start()
         self._progress_bar.setMaximum(0)
         self._timer.start(100)

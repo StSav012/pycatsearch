@@ -56,3 +56,13 @@ write_to = 'src/pycatsearch/_version.py'
 
 [tool.setuptools.dynamic]
 version = {attr = 'pycatsearch._version.__version__'}
+
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+fixable = ['ALL']
+unfixable = []

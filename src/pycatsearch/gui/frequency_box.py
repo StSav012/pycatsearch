@@ -9,27 +9,26 @@ from qtpy.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWi
 
 from .settings import Settings
 
-__all__ = ['FrequencyBox']
+__all__ = ["FrequencyBox"]
 
 
 class FrequencySpinBox(QDoubleSpinBox):
     """`QDoubleSpinBox` with altered defaults"""
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setAlignment(Qt.AlignmentFlag.AlignRight
-                          | Qt.AlignmentFlag.AlignTrailing
-                          | Qt.AlignmentFlag.AlignVCenter)
+        self.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTrailing | Qt.AlignmentFlag.AlignVCenter)
         self.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.setAccelerated(True)
         self.setDecimals(4)
         self.setMaximum(9999999.9999)
-        self.setSuffix(self.tr(' MHz'))
+        self.setSuffix(self.tr(" MHz"))
         self.setCorrectionMode(QAbstractSpinBox.CorrectionMode.CorrectToNearestValue)
         self.setKeyboardTracking(False)  # not to emit signals while typing
 
 
 class FrequencyBox(QTabWidget):
-    frequencyLimitsChanged: Signal = Signal(name='frequencyLimitsChanged')
+    frequencyLimitsChanged: Signal = Signal(name="frequencyLimitsChanged")
 
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
         from . import qta_icon  # import locally to avoid a circular import
@@ -54,18 +53,18 @@ class FrequencyBox(QTabWidget):
 
         self._layout_by_range.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
         self._spin_frequency_from.setValue(118747.341)
-        self._layout_by_range.addRow(self.tr('From:'), self._spin_frequency_from)
+        self._layout_by_range.addRow(self.tr("From:"), self._spin_frequency_from)
         self._spin_frequency_to.setValue(118753.341)
-        self._layout_by_range.addRow(self.tr('To:'), self._spin_frequency_to)
-        self.addTab(self._page_by_range, qta_icon('mdi6.arrow-expand-horizontal'), self.tr('Range'))
+        self._layout_by_range.addRow(self.tr("To:"), self._spin_frequency_to)
+        self.addTab(self._page_by_range, qta_icon("mdi6.arrow-expand-horizontal"), self.tr("Range"))
 
         self._spin_frequency_center.setValue(118750.341)
-        self._layout_by_center.addRow(self.tr('Center:'), self._spin_frequency_center)
+        self._layout_by_center.addRow(self.tr("Center:"), self._spin_frequency_center)
         self._spin_frequency_deviation.setMaximum(99.9999)
         self._spin_frequency_deviation.setSingleStep(0.1)
         self._spin_frequency_deviation.setValue(0.4)
-        self._layout_by_center.addRow(self.tr('Deviation:'), self._spin_frequency_deviation)
-        self.addTab(self._page_by_center, qta_icon('mdi6.format-horizontal-align-center'), self.tr('Center'))
+        self._layout_by_center.addRow(self.tr("Deviation:"), self._spin_frequency_deviation)
+        self.addTab(self._page_by_center, qta_icon("mdi6.format-horizontal-align-center"), self.tr("Center"))
 
         self.load_settings()
 
@@ -75,22 +74,22 @@ class FrequencyBox(QTabWidget):
         self._spin_frequency_deviation.valueChanged.connect(self._on_spin_frequency_deviation_edited)
 
     def load_settings(self) -> None:
-        self._settings.beginGroup('search')
-        self._settings.beginGroup('frequency')
-        self._frequency_from = self._settings.value('from', self._spin_frequency_from.value(), float)
-        self._frequency_to = self._settings.value('to', self._spin_frequency_to.value(), float)
-        self._frequency_center = self._settings.value('center', self._spin_frequency_center.value(), float)
-        self._frequency_deviation = self._settings.value('deviation', self._spin_frequency_deviation.value(), float)
+        self._settings.beginGroup("search")
+        self._settings.beginGroup("frequency")
+        self._frequency_from = self._settings.value("from", self._spin_frequency_from.value(), float)
+        self._frequency_to = self._settings.value("to", self._spin_frequency_to.value(), float)
+        self._frequency_center = self._settings.value("center", self._spin_frequency_center.value(), float)
+        self._frequency_deviation = self._settings.value("deviation", self._spin_frequency_deviation.value(), float)
         self._settings.endGroup()
         self._settings.endGroup()
 
     def save_settings(self) -> None:
-        self._settings.beginGroup('search')
-        self._settings.beginGroup('frequency')
-        self._settings.setValue('from', self._frequency_from)
-        self._settings.setValue('to', self._frequency_to)
-        self._settings.setValue('center', self._frequency_center)
-        self._settings.setValue('deviation', self._frequency_deviation)
+        self._settings.beginGroup("search")
+        self._settings.beginGroup("frequency")
+        self._settings.setValue("from", self._frequency_from)
+        self._settings.setValue("to", self._frequency_to)
+        self._settings.setValue("center", self._frequency_center)
+        self._settings.setValue("deviation", self._frequency_deviation)
         self._settings.endGroup()
         self._settings.endGroup()
 
@@ -109,8 +108,11 @@ class FrequencyBox(QTabWidget):
             return self._frequency_center + self._frequency_deviation
 
     def set_frequency_limits(self, min_value: float, max_value: float) -> None:
-        frequency_spins: list[QDoubleSpinBox] = [self._spin_frequency_from, self._spin_frequency_to,
-                                                 self._spin_frequency_center]
+        frequency_spins: list[QDoubleSpinBox] = [
+            self._spin_frequency_from,
+            self._spin_frequency_to,
+            self._spin_frequency_center,
+        ]
         min_value = self._settings.from_mhz(min_value)
         max_value = self._settings.from_mhz(max_value)
         spin: QDoubleSpinBox
@@ -140,7 +142,7 @@ class FrequencyBox(QTabWidget):
 
     def fill_parameters(self) -> None:
         frequency_suffix: int = self._settings.frequency_unit
-        frequency_suffix_str: str = ' ' + self._settings.FREQUENCY_UNITS[frequency_suffix]
+        frequency_suffix_str: str = " " + self._settings.FREQUENCY_UNITS[frequency_suffix]
         from_mhz: Callable[[float], float] = self._settings.from_mhz
         if frequency_suffix in (0, 1, 2):  # MHz, GHz, cm⁻¹
             self._spin_frequency_from.setValue(from_mhz(self._frequency_from))
@@ -152,14 +154,22 @@ class FrequencyBox(QTabWidget):
             self._spin_frequency_to.setValue(from_mhz(self._frequency_to))
             self._spin_frequency_center.setValue(from_mhz(self._frequency_center))
             self._spin_frequency_deviation.setValue(
-                abs(from_mhz(self._frequency_center - self._frequency_deviation) -
-                    from_mhz(self._frequency_center + self._frequency_deviation)) / 2.0)
+                abs(
+                    from_mhz(self._frequency_center - self._frequency_deviation)
+                    - from_mhz(self._frequency_center + self._frequency_deviation)
+                )
+                / 2.0
+            )
         else:
-            raise IndexError('Wrong frequency unit index', frequency_suffix)
+            raise IndexError("Wrong frequency unit index", frequency_suffix)
         precision: int = [4, 7, 8, 8][frequency_suffix]
         step_factor: float = [2.5, 2.5, 2.5, 0.25][frequency_suffix]
-        frequency_spins: list[QDoubleSpinBox] = [self._spin_frequency_from, self._spin_frequency_to,
-                                                 self._spin_frequency_center, self._spin_frequency_deviation]
+        frequency_spins: list[QDoubleSpinBox] = [
+            self._spin_frequency_from,
+            self._spin_frequency_to,
+            self._spin_frequency_center,
+            self._spin_frequency_deviation,
+        ]
         for spin in frequency_spins:
             spin.setSuffix(frequency_suffix_str)
             spin.setDecimals(precision)

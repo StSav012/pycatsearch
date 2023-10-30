@@ -14,19 +14,18 @@ from .catalog_wizard.settings_page import SettingsPage
 from .catalog_wizard.summary_page import SummaryPage
 from ..catalog import Catalog
 
-__all__ = ['UpdateDialog']
+__all__ = ["UpdateDialog"]
 
 
 class UpdateDialog(SaveCatalogWizard):
-    """ GUI for `async_downloader.Downloader` or `downloader.Downloader` """
+    """GUI for `async_downloader.Downloader` or `downloader.Downloader`"""
 
-    def __init__(self, existing_catalog_location: str | PathLike[str],
-                 parent: QWidget | None = None) -> None:
+    def __init__(self, existing_catalog_location: str | PathLike[str], parent: QWidget | None = None) -> None:
         super().__init__(parent=parent, default_save_location=Path(existing_catalog_location))
 
         self._old_catalog: Catalog = Catalog(existing_catalog_location)
 
-        self.setWindowTitle(self.tr('Update Catalog'))
+        self.setWindowTitle(self.tr("Update Catalog"))
 
         self._settings_page: SettingsPage = SettingsPage(self)
         self.addPage(self._settings_page)
