@@ -10,8 +10,9 @@ site.main()
 
 def required_packages() -> list[str]:
     import sys
+
     if sys.version_info < (3, 8):
-        raise SystemError('Python versions prior to 3.8 are not supported')
+        raise SystemError("Python versions prior to 3.8 are not supported")
 
     import platform
     from typing import NamedTuple, Sequence
@@ -20,11 +21,11 @@ def required_packages() -> list[str]:
 
     class PackageRequirement(NamedTuple):
         package_name: str
-        min_version: str = ''
+        min_version: str = ""
 
         def __str__(self) -> str:
             if self.min_version:
-                return self.package_name + ' >= ' + self.min_version
+                return self.package_name + " >= " + self.min_version
             return self.package_name
 
     def is_package_importable(package_requirement: PackageRequirement) -> bool:
@@ -35,9 +36,10 @@ def required_packages() -> list[str]:
         except PackageNotFoundError:
             return False
         else:
-            if (package_requirement.min_version
-                    and (parse_version(version(package_requirement.package_name))
-                         < parse_version(package_requirement.min_version))):
+            if package_requirement.min_version and (
+                parse_version(version(package_requirement.package_name))
+                < parse_version(package_requirement.min_version)
+            ):
                 return False
         return True
 
@@ -45,13 +47,13 @@ def required_packages() -> list[str]:
         """
         Install packages if missing
 
-        :param package_requirement: a package name or a sequence of the names of alternative packages;
+        :param package_requirement: A package name or a sequence of the alternative packages names;
                              if none of the packages installed beforehand, install the first one given
-        :returns bool: True if a package is importable, False when an attempt to install the package made
+        :returns bool: `True` if a package is importable, `False` when an attempt to install the package is made
         """
 
         if not package_requirement:
-            raise ValueError('No package requirements given')
+            raise ValueError("No package requirements given")
 
         if not isinstance(package_requirement, PackageRequirement) and isinstance(package_requirement, Sequence):
             for _package_requirement in package_requirement:
@@ -61,28 +63,31 @@ def required_packages() -> list[str]:
 
         if isinstance(package_requirement, PackageRequirement):
             return package_requirement
-        raise ValueError('Invalid requirements')
+        raise ValueError("Invalid requirements")
 
     qt_list: list[PackageRequirement]
     uname: platform.uname_result = platform.uname()
-    if ((uname.system == 'Windows'
-         and parse_version(uname.version) < parse_version('10.0.19044'))  # Windows 10 21H2 or later required
-            or uname.machine not in ('x86_64', 'AMD64')):
+    if (
+        uname.system == "Windows" and parse_version(uname.version) < parse_version("10.0.19044")
+    ) or uname.machine not in (  # Windows 10 21H2 or later required
+        "x86_64",
+        "AMD64",
+    ):
         # Qt6 does not support the OSes
         qt_list = [
-            PackageRequirement(package_name='PyQt5', min_version='5.15.0'),
-            PackageRequirement(package_name='PySide2', min_version='5.15.0'),
+            PackageRequirement(package_name="PyQt5", min_version="5.15.0"),
+            PackageRequirement(package_name="PySide2", min_version="5.15.0"),
         ]
     else:
         qt_list = [
-            PackageRequirement(package_name='PySide6-Essentials', min_version='6.2.0'),
-            PackageRequirement(package_name='PyQt6', min_version='6.2.0'),
-            PackageRequirement(package_name='PyQt5', min_version='5.15.0'),
-            PackageRequirement(package_name='PySide2', min_version='5.15.0'),
+            PackageRequirement(package_name="PySide6-Essentials", min_version="6.2.0"),
+            PackageRequirement(package_name="PyQt6", min_version="6.2.0"),
+            PackageRequirement(package_name="PyQt5", min_version="5.15.0"),
+            PackageRequirement(package_name="PySide2", min_version="5.15.0"),
         ]
 
     requirements: list[PackageRequirement | Sequence[PackageRequirement]] = [
-        PackageRequirement(package_name='qtpy', min_version='2.3.1'),
+        PackageRequirement(package_name="qtpy", min_version="2.3.1"),
         qt_list,
     ]
     return [str(required_package(requirement)) for requirement in requirements]

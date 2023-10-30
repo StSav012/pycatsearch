@@ -23,7 +23,8 @@ def main() -> int:
     )
     ap.add_argument("catalog", type=Path, help="the catalog location to load", nargs=argparse.ZERO_OR_MORE)
     ap_group = ap.add_argument_group(
-        title="Search options", description="If any of the following arguments specified, a search conducted."
+        title="Search options",
+        description="If any of the following arguments are specified, a search is conducted.",
     )
     ap_group.add_argument("-f" "min", "--min-frequency", type=float, help="the lower frequency [MHz] to take")
     ap_group.add_argument("-f" "max", "--max-frequency", type=float, help="the upper frequency [MHz] to take")
@@ -37,10 +38,15 @@ def main() -> int:
         "-T",
         "--temperature",
         type=float,
-        help="the temperature [K] to calculate the line intensity at, " "use the catalog intensity if not set",
+        help="the temperature [K] to calculate the line intensity at, use the catalog intensity if not set",
     )
     ap_group.add_argument(
-        "-t", "--tag", "--species-tag", type=int, dest="species_tag", help="a number to match the `species" "tag` field"
+        "-t",
+        "--tag",
+        "--species-tag",
+        type=int,
+        dest="species_tag",
+        help="a number to match the `speciestag` field",
     )
     ap_group.add_argument(
         "-n",
@@ -48,24 +54,19 @@ def main() -> int:
         type=str,
         help="a string to match any field used by `any_name` and `any_formula` options",
     )
-    ap_group.add_argument("-a", "--anything", type=str, help="a string to match any field at all")
+    ap_group.add_argument("-a", "--anything", type=str, help="a string to match any field")
     ap_group.add_argument("--any-name", type=str, help="a string to match the `trivial" "name` or the `name` field")
     ap_group.add_argument(
         "--any-formula",
         type=str,
-        help="a string to match the `structural"
-        "formula`, `molecule"
-        "symbol`, "
-        "`stoichiometric"
-        "formula`, or `isotopolog` field",
+        help="a string to match the `structuralformula`, `moleculesymbol`, `stoichiometricformula`, or `isotopolog` field",
     )
     ap_group.add_argument(
         "--InChI-key",
         "--inchi-key",
         type=str,
         dest="inchi_key",
-        help="a string to match the `inchikey` field, "
-        "which contains the IUPAC International Chemical Identifier (InChI™)",
+        help="a string to match the `inchikey` field, which contains the IUPAC International Chemical Identifier (InChI™)",
     )
     ap_group.add_argument("--trivial-name", type=str, help="a string to match the `trivial" "name` field")
     ap_group.add_argument("--structural-formula", type=str, help="a string to match the `structural" "formula` field")
@@ -137,10 +138,8 @@ def main_gui() -> int:
             error_message = "Python " + platform.python_version() + " is not supported.\n" + "Get a newer Python!"
         elif isinstance(ex, ImportError):
             error_message = (
-                "Module "
-                + repr(ex.name)
-                + " is either missing from the system or cannot be loaded for another reason.\n"
-                + "Try to install or reinstall it."
+                "Module %s is either missing from the system or cannot be loaded for another reason.\n"
+                "Try to install or reinstall it." % repr(ex.name)
             )
         else:
             error_message = str(ex)

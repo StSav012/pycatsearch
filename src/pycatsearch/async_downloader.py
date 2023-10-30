@@ -151,7 +151,7 @@ class Downloader(Thread):
                         entry_filename: str = f"c{_species_tag:06}.cat"
 
                         if entry_filename in ("c044009.cat", "c044012.cat"):
-                            return ""  # merged with c044004.cat — Brian J. Drouin
+                            return ""  # merged with c044004.cat — Brian J. Drouin
                         if _species_tag % 1000 > 500:
                             return "https://cdms.astro.uni-koeln.de/classic/entries/" + entry_filename
                         else:
@@ -243,10 +243,10 @@ def get_catalog(
     """
     Download the spectral lines catalog data
 
-    :param tuple frequency_limits: the frequency range of the catalog entries to keep.
-    :param Catalog | None existing_catalog: an existing catalog to base the data on.
+    :param tuple frequency_limits: The frequency range of the catalog entries to keep.
+    :param Catalog | None existing_catalog: An existing catalog to base the data on.
         If specified, only the entries not presented in it will be downloaded.
-    :return: a list of the spectral lines catalog entries.
+    :return: A list of the spectral lines catalog entries.
     """
 
     state_queue: Queue[tuple[int, int]] = Queue()
@@ -301,11 +301,11 @@ def save_catalog(
     """
     Download and save the spectral lines catalog data
 
-    :param str filename: the name of the file to save the downloaded catalog to.
+    :param str filename: The name of the file to save the downloaded catalog to.
         If it ends with an unknown suffix, `'.json.gz'` is appended to it.
-    :param tuple frequency_limits: the tuple of the maximal and the minimal frequencies of the lines being stored.
+    :param tuple frequency_limits: The tuple of the maximal and the minimal frequencies of the lines being stored.
         All the lines outside the specified frequency range are omitted.
-    :param Catalog | None existing_catalog: an existing catalog to base the data on.
+    :param Catalog | None existing_catalog: An existing catalog to base the data on.
         If specified, only the entries not presented in it will be downloaded.
     """
 

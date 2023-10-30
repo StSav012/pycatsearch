@@ -24,9 +24,7 @@ class SummaryPage(QWizardPage):
             self.setTitle(self.tr("Success"))
             self.setButtonText(QWizard.WizardButton.FinishButton, self.tr("&Save"))
             self._label.setText(
-                self.tr(
-                    "Click {button_text} to save the catalog" " for {min_frequency} to {max_frequency} MHz."
-                ).format(
+                self.tr("Click {button_text} to save the catalog for {min_frequency} to {max_frequency} MHz.").format(
                     button_text=self.buttonText(QWizard.WizardButton.FinishButton).replace("&", ""),
                     min_frequency=QLocale().toString(self.field("min_frequency")),
                     max_frequency=QLocale().toString(self.field("max_frequency")),

@@ -37,7 +37,7 @@ from .preferences import Preferences
 from .save_catalog_waiting_screen import SaveCatalogWaitingScreen
 from .settings import Settings
 from .substance_info import SubstanceInfo
-from .substances_box import SubstancesBox
+from .substances_box import SubstanceBox
 from .. import __version__
 from ..catalog import Catalog, CatalogType
 from ..utils import ReleaseInfo, latest_release, remove_html, update_with_pip, wrap_in_html
@@ -77,7 +77,7 @@ class UI(QMainWindow, FileDialogSource):
         self.spin_intensity: FloatSpinBox = FloatSpinBox(self._central_widget)
         self.spin_temperature: QDoubleSpinBox = QDoubleSpinBox(self._central_widget)
 
-        self.box_substance: SubstancesBox = SubstancesBox(self.catalog, self.settings, self._central_widget)
+        self.box_substance: SubstanceBox = SubstanceBox(self.catalog, self.settings, self._central_widget)
         self.box_frequency: FrequencyBox = FrequencyBox(self.settings, self._central_widget)
         self.button_search: QPushButton = QPushButton(self._central_widget)
 

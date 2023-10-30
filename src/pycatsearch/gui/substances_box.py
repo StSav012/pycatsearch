@@ -36,10 +36,10 @@ from ..utils import (
     remove_html,
 )
 
-__all__ = ["SubstancesBox"]
+__all__ = ["SubstanceBox"]
 
 
-class SubstancesBox(QGroupBox):
+class SubstanceBox(QGroupBox):
     selectedSubstancesChanged: Signal = Signal(name="selectedSubstancesChanged")
 
     def __init__(self, catalog: Catalog, settings: Settings, parent: QWidget | None = None) -> None:

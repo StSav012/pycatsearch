@@ -29,7 +29,7 @@ from .settings import Settings
 __all__ = ["Preferences"]
 
 
-class PreferencesPage(QWidget):
+class PreferencePage(QWidget):
     """A page of the Preferences dialog"""
 
     def __init__(
@@ -181,7 +181,7 @@ class PreferencesBody(QScrollArea):
                 logger.error(f"Invalid key type: {key!r}")
                 continue
             content.addItem(new_item)
-            box: PreferencesPage = PreferencesPage(value, settings, self)
+            box: PreferencePage = PreferencePage(value, settings, self)
             stack.addWidget(box)
         content.setMinimumWidth(content.sizeHintForColumn(0) + 2 * content.frameWidth())
         layout.addWidget(content)

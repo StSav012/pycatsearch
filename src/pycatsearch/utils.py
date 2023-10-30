@@ -415,9 +415,10 @@ def cm_per_molecule_to_log10_sq_nm_mhz(intensity_cm_per_molecule: float) -> floa
 def tex_to_html_entity(s: str) -> str:
     r"""
     Change LaTeX entities syntax to HTML one.
-    Get ‘\alpha’ to be ‘&alpha;’ and so on. Unknown LaTeX entities do not get replaced.
+    Get ‘\alpha’ to be ‘&alpha;’ and so on.
+    Unknown LaTeX entities do not get replaced.
 
-    :param s: a line to convert
+    :param s: A line to convert
     :return: a line with all LaTeX entities renamed
     """
     word_start: int = -1
