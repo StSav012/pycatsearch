@@ -70,20 +70,20 @@ c.print(min_frequency=140141, max_frequency=140142)
     - `float max_intensity`: the maximal intensity \[log10(nm²×MHz)\] to take, use to avoid meta-stable substances.
     - `float temperature`: the temperature to calculate the line intensity at,
       use the catalog intensity if not set.
-    - `str any_name`: a string to match the ``trivialname`` or the ``name`` field.
-    - `str any_formula`: a string to match the ``structuralformula``, ``moleculesymbol``,
-      ``stoichiometricformula``, or ``isotopolog`` field.
+    - `str any_name`: a string to match the “trivialname” or the “name” field.
+    - `str any_formula`: a string to match the “structuralformula,” “moleculesymbol,”
+      “stoichiometricformula,” or “isotopolog” field.
     - `str any_name_or_formula`: a string to match any field used by `any_name` and `any_formula`.
     - `str anything`: a string to match any field.
-    - `int species_tag`: a number to match the ``speciestag`` field.
-    - `str inchi`: a string to match the ``inchikey`` field.
+    - `int species_tag`: a number to match the “speciestag” field.
+    - `str inchi`: a string to match the “inchikey” field.
       See https://iupac.org/who-we-are/divisions/division-details/inchi/ for more.
-    - `str trivial_name`: a string to match the ``trivialname`` field.
-    - `str structural_formula`: a string to match the ``structuralformula`` field.
-    - `str name`: a string to match the ``name`` field.
-    - `str stoichiometric_formula`: a string to match the ``stoichiometricformula`` field.
-    - `str isotopolog`: a string to match the ``isotopolog`` field.
-    - `str state`: a string to match the ``state`` or the ``state_html`` field.
+    - `str trivial_name`: a string to match the “trivialname” field.
+    - `str structural_formula`: a string to match the “structuralformula” field.
+    - `str name`: a string to match the “name” field.
+    - `str stoichiometric_formula`: a string to match the “stoichiometricformula” field.
+    - `str isotopolog`: a string to match the “isotopolog” field.
+    - `str state`: a string to match the “state” or the “state_html” field.
     - `int degrees_of_freedom`: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
 - `filter_by_species_tags(self, *,
   species_tags: Iterable[int] | None = None,
@@ -94,9 +94,9 @@ c.print(min_frequency=140141, max_frequency=140142)
   temperature: float = -math.inf,
   ) -> dict[int, dict[str, int | str | list[dict[str, float]]]]`
   returns only the catalog entries that meet the criteria specified.
-  It's a faster version of the `filter` function, for it makes fewer comparisons.
+  It is a faster version of the `filter` function, for it makes fewer comparisons.
   The arguments are the following:
-    - `Iterable[int] | None species_tags`: numbers to match the ``speciestag`` field,
+    - `Iterable[int] | None species_tags`: numbers to match the “speciestag” field,
       use all items listed in the catalog if not set or set to `None`.
     - `float min_frequency`: the lower frequency \[MHz\] to take.
     - `float max_frequency`: the upper frequency \[MHz\] to take.
@@ -147,7 +147,7 @@ downloader.save_catalog('catalog.json.gz', (115000, 178000))
 
 ### `async_downloader`
 
-This is just like `downloader`, but much, much faster.
+This is like `downloader`, but much, much faster.
 The download speed is limited by the remote servers.
 Most of the time, it takes no more than 90 seconds to load all the data.
 
@@ -189,7 +189,7 @@ An instance of `Downloader` class is created in `get_catalog` function.
 Then, a separate thread takes care of the downloading.
 If the thread fails, `get_catalog` returns an empty list, almost never raising an exception.
 
-The class constructor accepts the frequency limits, just like `get_catalog` function.
+The class constructor accepts the frequency limits, like `get_catalog` function.
 
 One also may provide the constructor with a `multiprocessing.Queue[tuple[int, int]]`
 to see the downloading progress.
@@ -202,7 +202,7 @@ The numbers are the same as what `get_catalog` function types.
 ### `gui`
 
 This is the graphical interface built with Python bindings for Qt (`PyQt5`, `PySide6`, `PyQt6`, or `PySide2`).
-Just run `pycatsearch` and see for yourself.
+Run `pycatsearch` and see for yourself.
 
 ### Requirements
 

@@ -316,20 +316,20 @@ class Catalog:
         :param float max_intensity: The maximal intensity [log10(nm²×MHz)] to take, use to avoid meta-stable substances.
         :param float temperature: The temperature to calculate the line intensity at,
                                   use the catalog intensity if not set.
-        :param str any_name: A string to match the ``trivialname`` or the ``name`` field.
-        :param str any_formula: A string to match the ``structuralformula``, ``moleculesymbol``,
-                                ``stoichiometricformula``, or ``isotopolog`` field.
+        :param str any_name: A string to match the “trivialname” or the “name” field.
+        :param str any_formula: A string to match the “structuralformula,” “moleculesymbol,”
+                                “stoichiometricformula,” or “isotopolog” field.
         :param str any_name_or_formula: A string to match any field used by :param:any_name and :param:any_formula.
         :param str anything: A string to match any field.
-        :param int species_tag: A number to match the ``speciestag`` field.
-        :param str inchi_key: A string to match the ``inchikey`` field.
+        :param int species_tag: A number to match the “speciestag” field.
+        :param str inchi_key: A string to match the “inchikey” field.
                               See https://iupac.org/who-we-are/divisions/division-details/inchi/ for more.
-        :param str trivial_name: A string to match the ``trivialname`` field.
-        :param str structural_formula: A string to match the ``structuralformula`` field.
-        :param str name: A string to match the ``name`` field.
-        :param str stoichiometric_formula: A string to match the ``stoichiometricformula`` field.
-        :param str isotopolog: A string to match the ``isotopolog`` field.
-        :param str state: A string to match the ``state`` or the ``state_html`` field.
+        :param str trivial_name: A string to match the “trivialname” field.
+        :param str structural_formula: A string to match the “structuralformula” field.
+        :param str name: A string to match the “name” field.
+        :param str stoichiometric_formula: A string to match the “stoichiometricformula” field.
+        :param str isotopolog: A string to match the “isotopolog” field.
+        :param str state: A string to match the “state” or the “state_html” field.
         :param int degrees_of_freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
         :return: A dict of substances with non-empty lists of absorption lines that match all the conditions.
         """
@@ -456,7 +456,7 @@ class Catalog:
         """
         Extract only the entries that match the specified conditions
 
-        :param Iterable[int] species_tags: Numbers to match the ``speciestag`` field.
+        :param Iterable[int] species_tags: Numbers to match the “speciestag” field.
         :param float min_frequency: The lower frequency [MHz] to take.
         :param float max_frequency: The upper frequency [MHz] to take.
         :param float min_intensity: The minimal intensity [log10(nm²×MHz)] to take.
@@ -521,7 +521,9 @@ class Catalog:
 
     @classmethod
     def from_data(
-        cls, catalog_data: CatalogType | CatalogJSONType, frequency_limits: tuple[float, float] = (0.0, math.inf)
+        cls,
+        catalog_data: CatalogType | CatalogJSONType,
+        frequency_limits: tuple[float, float] = (0.0, math.inf),
     ) -> "Catalog":
         catalog: Catalog = Catalog()
         catalog._data.catalog = catalog_data
