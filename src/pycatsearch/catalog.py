@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from os import PathLike, fsync
 from pathlib import Path
-from typing import Any, AnyStr, BinaryIO, Callable, Dict, Iterable, List, NamedTuple, TextIO, Union, cast
+from typing import AnyStr, BinaryIO, Callable, Dict, Iterable, List, NamedTuple, TextIO, Union, cast
 
 try:
     import orjson as json
@@ -510,14 +510,29 @@ class Catalog:
                 frequencies.append(line[FREQUENCY])
                 intensities.append(line[INTENSITY])
 
-        def max_width(items: list[Any]) -> int:
-            return max(len(str(item)) for item in items)
+        def max_width(items: list[str]) -> int:
+            return max(len(item) for item in items)
+
+        def max_precision(items: list[str]) -> int:
+            return max((len(item) - item.find(".")) for item in items) - 1
 
         names_width: int = max_width(names)
-        frequencies_width: int = max_width(frequencies)
-        intensities_width: int = max_width(intensities)
+        frequencies_str: list[str] = list(map(str, frequencies))
+        intensities_str: list[str] = list(map(str, intensities))
+        frequencies_width: int = max_width(frequencies_str)
+        intensities_width: int = max_width(intensities_str)
+        frequencies_precision: int = max_precision(frequencies_str)
+        intensities_precision: int = max_precision(intensities_str)
         for j, (n, f, i) in enumerate(zip(names, frequencies, intensities)):
-            print(f"{n:<{names_width}} {f:>{frequencies_width}} {i:>{intensities_width}}")
+            print(
+                " ".join(
+                    (
+                        f"{n:<{names_width}}",
+                        f"{f:>{frequencies_width}.{frequencies_precision}f}",
+                        f"{i:>{intensities_width}.{intensities_precision}f}",
+                    )
+                )
+            )
 
     @classmethod
     def from_data(
