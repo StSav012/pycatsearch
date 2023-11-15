@@ -184,11 +184,13 @@ def _make_old_qt_compatible_again() -> None:
             package_version="2.4.1",
             release_time=datetime.fromisoformat(to_iso_format("2023-10-23T23:57:23Z")),
         )
-        if PYSIDE2:
-            QAbstractSpinBox.setAlignment = partialmethod(
-                lambda self, flag, _old: _old(self, Qt.Alignment(flag)),
-                _old=QAbstractSpinBox.setAlignment,
-            )
+
+    # not a part of any QtPy (yet)
+    if PYSIDE2:
+        QAbstractSpinBox.setAlignment = partialmethod(
+            lambda self, flag, _old: _old(self, Qt.Alignment(flag)),
+            _old=QAbstractSpinBox.setAlignment,
+        )
 
 
 def qta_icon(*qta_name: str, **qta_specs: Any) -> QIcon:
