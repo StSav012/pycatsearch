@@ -87,8 +87,8 @@ def required_packages() -> list[str]:
         ]
 
     requirements: list[PackageRequirement | Sequence[PackageRequirement]] = [
-        PackageRequirement(package_name="qtpy", min_version="2.3.1"),
         qt_list,
+        PackageRequirement(package_name="qtpy", min_version="2.4.1"),
     ]
     return [str(required_package(requirement)) for requirement in requirements]
 
