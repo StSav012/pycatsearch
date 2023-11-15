@@ -68,11 +68,10 @@ def required_packages() -> list[str]:
     qt_list: list[PackageRequirement]
     uname: platform.uname_result = platform.uname()
     if (
-        uname.system == "Windows" and parse_version(uname.version) < parse_version("10.0.19044")
-    ) or uname.machine not in (  # Windows 10 21H2 or later required
-        "x86_64",
-        "AMD64",
-    ):
+        # Windows 10 21H2 or later required
+        uname.system == "Windows"
+        and parse_version(uname.version) < parse_version("10.0.19044")
+    ) or uname.machine not in ("x86_64", "AMD64"):
         # Qt6 does not support the OSes
         qt_list = [
             PackageRequirement(package_name="PyQt5", min_version="5.15.0"),
