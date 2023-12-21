@@ -340,24 +340,29 @@ class Catalog:
         if min_frequency > max_frequency or min_frequency > self.max_frequency or max_frequency < self.min_frequency:
             return dict()
 
+        def check_str(pattern: str, *text: str) -> bool:
+            return not pattern or any(pattern == t for t in text)
+
         st: int
         selected_entries: CatalogType = dict()
         entry: CatalogEntryType
         filtered_entry: CatalogEntryType
-        if (
-            species_tag
-            or inchi_key
-            or trivial_name
-            or structural_formula
-            or name
-            or stoichiometric_formula
-            or isotopolog
-            or state
-            or degrees_of_freedom
-            or any_name
-            or any_formula
-            or any_name_or_formula
-            or anything
+        if any(
+            (
+                species_tag,
+                inchi_key,
+                trivial_name,
+                structural_formula,
+                name,
+                stoichiometric_formula,
+                isotopolog,
+                state,
+                degrees_of_freedom,
+                any_name,
+                any_formula,
+                any_name_or_formula,
+                anything,
+            )
         ):
             trivial_name: str = trivial_name.casefold()
             name: str = name.casefold()
@@ -366,56 +371,52 @@ class Catalog:
             anything_lowercase: str = anything.casefold()
             for st in self._data.catalog if not species_tag else [species_tag]:
                 entry = self._data.catalog[st]
-                if (
-                    (not inchi_key or entry.get(INCHI_KEY, "") == inchi_key)
-                    and (not trivial_name or entry.get(TRIVIAL_NAME, "").casefold() == trivial_name)
-                    and (not structural_formula or entry.get(STRUCTURAL_FORMULA, "") == structural_formula)
-                    and (not name or entry.get(NAME, "").casefold() == name)
-                    and (not stoichiometric_formula or entry.get(STOICHIOMETRIC_FORMULA, "") == stoichiometric_formula)
-                    and (not isotopolog or entry.get(ISOTOPOLOG, "") == isotopolog)
-                    and (not state or state in (entry.get(STATE, ""), entry.get(STATE_HTML, "")))
-                    and (degrees_of_freedom is None or entry.get(DEGREES_OF_FREEDOM, -1) == degrees_of_freedom)
-                    and (
-                        not any_name
-                        or any_name
-                        in (
+                if all(
+                    (
+                        check_str(inchi_key, entry.get(INCHI_KEY, "")),
+                        check_str(trivial_name, entry.get(TRIVIAL_NAME, "").casefold()),
+                        check_str(structural_formula, entry.get(STRUCTURAL_FORMULA, "")),
+                        check_str(name, entry.get(NAME, "").casefold()),
+                        check_str(stoichiometric_formula, entry.get(STOICHIOMETRIC_FORMULA, "")),
+                        check_str(isotopolog, entry.get(ISOTOPOLOG, "")),
+                        check_str(state, entry.get(STATE, ""), entry.get(STATE_HTML, "")),
+                        (degrees_of_freedom is None or entry.get(DEGREES_OF_FREEDOM, -1) == degrees_of_freedom),
+                        check_str(
+                            any_name,
                             entry.get(TRIVIAL_NAME, "").casefold(),
                             entry.get(NAME, "").casefold(),
-                        )
-                    )
-                    and (
-                        not any_formula
-                        or any_formula
-                        in (
+                        ),
+                        check_str(
+                            any_formula,
                             entry.get(STRUCTURAL_FORMULA, ""),
                             entry.get(MOLECULE_SYMBOL, ""),
                             entry.get(STOICHIOMETRIC_FORMULA, ""),
                             entry.get(ISOTOPOLOG, ""),
-                        )
-                    )
-                    and (
-                        not any_name_or_formula
-                        or any_name_or_formula_lowercase
-                        in (
-                            entry.get(TRIVIAL_NAME, "").casefold(),
-                            entry.get(NAME, "").casefold(),
-                        )
-                        or any_name_or_formula
-                        in (
-                            entry.get(STRUCTURAL_FORMULA, ""),
-                            entry.get(MOLECULE_SYMBOL, ""),
-                            entry.get(STOICHIOMETRIC_FORMULA, ""),
-                            entry.get(ISOTOPOLOG, ""),
-                        )
-                    )
-                    and (
-                        not anything
-                        or anything in (str(entry[key]) for key in entry if key != LINES)
-                        or anything_lowercase
-                        in (
-                            entry.get(TRIVIAL_NAME, "").casefold(),
-                            entry.get(NAME, "").casefold(),
-                        )
+                        ),
+                        (
+                            not any_name_or_formula
+                            or check_str(
+                                any_name_or_formula_lowercase,
+                                entry.get(TRIVIAL_NAME, "").casefold(),
+                                entry.get(NAME, "").casefold(),
+                            )
+                            or check_str(
+                                any_name_or_formula,
+                                entry.get(STRUCTURAL_FORMULA, ""),
+                                entry.get(MOLECULE_SYMBOL, ""),
+                                entry.get(STOICHIOMETRIC_FORMULA, ""),
+                                entry.get(ISOTOPOLOG, ""),
+                            )
+                        ),
+                        (
+                            not anything
+                            or anything in (str(entry[key]) for key in entry if key != LINES)
+                            or check_str(
+                                anything_lowercase,
+                                entry.get(TRIVIAL_NAME, "").casefold(),
+                                entry.get(NAME, "").casefold(),
+                            )
+                        ),
                     )
                 ):
                     filtered_entry = filter_by_frequency_and_intensity(
