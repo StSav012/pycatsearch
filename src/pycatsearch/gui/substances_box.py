@@ -108,7 +108,11 @@ class SubstanceBox(QGroupBox):
         return super().contextMenuEvent(event)
 
     def _icon(
-        self, theme_name: str, *qta_name: str, standard_pixmap: QStyle.StandardPixmap | None = None, **qta_specs: Any
+        self,
+        theme_name: str,
+        *qta_name: str,
+        standard_pixmap: QStyle.StandardPixmap | None = None,
+        **qta_specs: Any,
     ) -> QIcon:
         if theme_name and QIcon.hasThemeIcon(theme_name):
             return QIcon.fromTheme(theme_name)
