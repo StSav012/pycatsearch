@@ -204,6 +204,12 @@ def qta_icon(*qta_name: str, **qta_specs: Any) -> QIcon:
 
 
 def run() -> int:
+    import re
+
+    # fix `re.RegexFlag.NOFLAG` missing on some systems
+    if not hasattr(re.RegexFlag, "NOFLAG"):
+        re.RegexFlag.NOFLAG = 0
+
     _make_old_qt_compatible_again()
 
     from .ui import UI
