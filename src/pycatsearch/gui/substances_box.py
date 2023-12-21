@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import re
 from contextlib import suppress
 from typing import Any, Callable
 
@@ -135,25 +136,56 @@ class SubstanceBox(QGroupBox):
         species_tag: int
         entry: CatalogEntryType
         if filter_text:
-            filter_text_lowercase: str = filter_text.casefold()
-            cmp_function: Callable[[str, str], bool]
-            for cmp_function in (str.startswith, str.__contains__):
-                for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                    for species_tag, entry in self._catalog.catalog.items():
-                        plain_text_name = remove_html(str(entry[name_key]))
-                        if name_key in entry and (
-                            cmp_function(plain_text_name, filter_text)
-                            or (
-                                name_key in (NAME, TRIVIAL_NAME)
-                                and cmp_function(plain_text_name.casefold(), filter_text_lowercase)
-                            )
-                        ):
-                            if plain_text_name not in list_items:
-                                list_items[plain_text_name] = set()
-                            list_items[plain_text_name].add(species_tag)
-                            if (html_name := best_name(entry, allow_html=allow_html)) not in list_items:
-                                list_items[html_name] = set()
-                            list_items[html_name].add(species_tag)
+            is_filter_regexp: bool = False
+            if filter_text.startswith("/"):
+                is_filter_regexp = True
+                closing_slash_position: int = filter_text.rfind("/")
+                pattern: re.Pattern[str]
+                try:
+                    if closing_slash_position:
+                        flag: re.RegexFlag = re.RegexFlag.NOFLAG
+                        for f in filter_text[closing_slash_position + 1 :].casefold():
+                            flag |= {"a": re.A, "i": re.I, "m": re.M, "s": re.S}.get(f, re.RegexFlag.NOFLAG)
+                        pattern = re.compile(filter_text[1:closing_slash_position], flag)
+                    else:
+                        pattern = re.compile(filter_text[1:])
+                except re.error:
+                    is_filter_regexp = False
+                else:
+                    for match_function in (pattern.fullmatch, pattern.match, pattern.search):
+                        for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
+                            for species_tag, entry in self._catalog.catalog.items():
+                                with suppress(LookupError):
+                                    plain_text_name = remove_html(str(entry[name_key]))
+                                    if match_function(plain_text_name):
+                                        if plain_text_name not in list_items:
+                                            list_items[plain_text_name] = set()
+                                        list_items[plain_text_name].add(species_tag)
+                                        html_name = best_name(entry, allow_html=allow_html)
+                                        try:
+                                            list_items[html_name].add(species_tag)
+                                        except LookupError:
+                                            list_items[html_name] = {species_tag}
+            if not is_filter_regexp:
+                filter_text_lowercase: str = filter_text.casefold()
+                cmp_function: Callable[[str, str], bool]
+                for cmp_function in (str.startswith, str.__contains__):
+                    for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
+                        for species_tag, entry in self._catalog.catalog.items():
+                            with suppress(LookupError):
+                                plain_text_name = remove_html(str(entry[name_key]))
+                                if cmp_function(plain_text_name, filter_text) or (
+                                    name_key in (NAME, TRIVIAL_NAME)
+                                    and cmp_function(plain_text_name.casefold(), filter_text_lowercase)
+                                ):
+                                    if plain_text_name not in list_items:
+                                        list_items[plain_text_name] = set()
+                                    list_items[plain_text_name].add(species_tag)
+                                    html_name = best_name(entry, allow_html=allow_html)
+                                    try:
+                                        list_items[html_name].add(species_tag)
+                                    except LookupError:
+                                        list_items[html_name] = {species_tag}
             # species tag suspected
             if filter_text.isdecimal():
                 for species_tag in self._catalog.catalog:
