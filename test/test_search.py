@@ -8,6 +8,7 @@ def test_search():
 
     c = Catalog("catalog.json.gz")
     c.print(min_frequency=140141, max_frequency=140142)
+    c.print(any_name_or_formula="oxygen")
 
 
 if __name__ == "__main__":
