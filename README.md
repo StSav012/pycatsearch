@@ -138,7 +138,7 @@ downloader.save_catalog('catalog.json.gz', (115000, 178000))
   Inside, `get_catalog` function is called.
   The function returns `True` if something got downloaded, `False` otherwise.
   The function fails with an error if `get_catalog` raises an error,
-  or if the result can not be stored in the specified file.
+  or if the result cannot be stored in the specified file.
   The parameters of `save_catalog` are the following:
     - `str filename`: the name of the file to save the downloaded catalog to.
       If it ends with an unknown suffix, `'.json.gz'` is appended to it.
@@ -208,7 +208,7 @@ Run `pycatsearch` and see for yourself.
 
 The code is developed under `python 3.11`. It should work under `python 3.8` but merely tested.
 
-The non-GUI parts require absolute minimum of non-standard modules.
+The non-GUI parts require an absolute minimum of non-standard modules.
 If you want to download the catalog data faster, consider `async_downloader` module;
 it requires `aiohttp`.
 Otherwise, only the built-ins are used.
