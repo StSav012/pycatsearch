@@ -1,6 +1,6 @@
 # PyCatSearch
 
-Yet another implementation of [JPL](https://spec.jpl.nasa.gov/) and [CDMS](https://astro.uni-koeln.de/)
+Yet another implementation of [JPL](https://spec.jpl.nasa.gov/) and [CDMS](https://cdms.astro.uni-koeln.de/)
 spectroscopy catalogs offline search.
 
 ## Installation

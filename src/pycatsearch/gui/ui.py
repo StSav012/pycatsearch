@@ -573,7 +573,7 @@ class UI(QMainWindow, FileDialogSource):
                     self.tr(
                         "One can use their own catalogs as well as download data from "
                         '<a href="https://spec.jpl.nasa.gov/">JPL</a> and '
-                        '<a href="https://astro.uni-koeln.de/">CDMS</a> spectroscopy databases '
+                        '<a href="https://cdms.astro.uni-koeln.de/">CDMS</a> spectroscopy databases '
                         "available on the Internet."
                     ),
                     self.tr("Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported."),
