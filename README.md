@@ -3,7 +3,27 @@
 Yet another implementation of [JPL](https://spec.jpl.nasa.gov/) and [CDMS](https://astro.uni-koeln.de/)
 spectroscopy catalogs offline search.
 
-It consists of three parts:
+## Installation
+
+The package is available from the PyPI repo:
+
+```commandline
+python3 -m pip install pycatsearch
+```
+
+One may provide a Qt binding beforehand manually installing
+- `PySide6-Essentials`,
+- `PyQt6`,
+- `PyQt5`, or
+- `PySide2`.
+
+Otherwise, one of them will be installed automatically.
+Currently, it is unavoidable.
+If you need the non-GUI parts only, get the files from the GitHub repo manually.
+
+For a bit faster downloading the catalog data, install `aiohttp`.
+
+## Usage
 
 ### `catalog`
 
