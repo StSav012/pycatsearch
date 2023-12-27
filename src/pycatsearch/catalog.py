@@ -370,7 +370,9 @@ class Catalog:
             any_name_or_formula_lowercase: str = any_name_or_formula.casefold()
             anything_lowercase: str = anything.casefold()
             for st in self._data.catalog if not species_tag else [species_tag]:
-                entry = self._data.catalog[st]
+                entry = self._data.catalog.get(st, dict())
+                if not entry:
+                    continue
                 if all(
                     (
                         check_str(inchi_key, entry.get(INCHI_KEY, "")),
@@ -431,7 +433,9 @@ class Catalog:
                         selected_entries[st] = filtered_entry
         else:
             for st in self._data.catalog:
-                entry = self.catalog[st]
+                entry = self.catalog.get(st, dict())
+                if not entry:
+                    continue
                 filtered_entry = filter_by_frequency_and_intensity(
                     entry,
                     temperature=temperature,
@@ -475,10 +479,14 @@ class Catalog:
 
         species_tag: int
         selected_entries: CatalogType = dict()
+        entry: CatalogEntryType
         filtered_entry: CatalogEntryType
         for species_tag in species_tags if species_tags is not None else self._data.catalog:
+            entry = self.catalog.get(species_tag, dict())
+            if not entry:
+                continue
             filtered_entry = filter_by_frequency_and_intensity(
-                self._data.catalog[species_tag],
+                entry,
                 temperature=temperature,
                 min_frequency=min_frequency,
                 max_frequency=max_frequency,
@@ -504,8 +512,9 @@ class Catalog:
         names: list[str] = []
         frequencies: list[float] = []
         intensities: list[float] = []
+        entry: CatalogEntryType
         for species_tag in entries:
-            entry: CatalogEntryType = entries[species_tag]
+            entry = entries[species_tag]
             for line in cast(LinesType, entry[LINES]):
                 names.append(entry[NAME])
                 frequencies.append(line[FREQUENCY])
