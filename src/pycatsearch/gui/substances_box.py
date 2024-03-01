@@ -70,7 +70,7 @@ class SubstanceBox(QGroupBox):
         self._list_substance.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._list_substance.setSortingEnabled(False)
         self._list_substance.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-        self._list_substance.setItemDelegateForColumn(0, HTMLDelegate())
+        self._list_substance.setItemDelegateForColumn(0, HTMLDelegate(self._list_substance))
         self._layout_substance.addWidget(self._list_substance)
         self._check_keep_selection.setStatusTip(self.tr("Keep substances list selection through filter changes"))
         self._check_keep_selection.setText(self.tr("Persistent Selection"))

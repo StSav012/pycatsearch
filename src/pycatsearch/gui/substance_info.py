@@ -51,7 +51,7 @@ class SubstanceInfoSelector(QDialog):
         self._list_box: QListWidget = QListWidget(self)
         self._list_box.itemChanged.connect(self._on_list_item_changed)
         self._list_box.doubleClicked.connect(self._on_list_double_clicked)
-        self._list_box.setItemDelegateForColumn(0, HTMLDelegate())
+        self._list_box.setItemDelegateForColumn(0, HTMLDelegate(self._list_box))
         layout.addWidget(self._list_box)
         species_tags = set(species_tags)
         while species_tags:

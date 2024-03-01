@@ -124,7 +124,7 @@ class UI(QMainWindow, FileDialogSource):
             layout_options: QFormLayout = QFormLayout()
 
             self.results_table.setModel(self.results_model)
-            self.results_table.setItemDelegateForColumn(0, HTMLDelegate())
+            self.results_table.setItemDelegateForColumn(0, HTMLDelegate(self.results_table))
             self.results_table.setMouseTracking(True)
             self.results_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
             self.results_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
