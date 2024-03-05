@@ -25,6 +25,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from .about_dialog import about
 from .catalog_info import CatalogInfo
 from .download_dialog import DownloadDialog
 from .file_dialog_source import FileDialogSource
@@ -40,7 +41,7 @@ from .substance_info import SubstanceInfo
 from .substances_box import SubstanceBox
 from .. import __version__
 from ..catalog import Catalog, CatalogType
-from ..utils import ReleaseInfo, latest_release, remove_html, update_with_pip, wrap_in_html
+from ..utils import ReleaseInfo, a_tag, latest_release, p_tag, remove_html, tag, update_with_pip, wrap_in_html
 
 if sys.version_info < (3, 10):
     from ..utils import zip
@@ -556,43 +557,34 @@ class UI(QMainWindow, FileDialogSource):
 
     @Slot()
     def _on_action_about_triggered(self) -> None:
-        def a_tag(text: str, url: str) -> str:
-            return f'<a href="{url}">{text}</a>'
-
-        QMessageBox.about(
+        lines: list[str] = [
+            self.tr(
+                "CatSearch is a means of searching through spectroscopy lines catalogs. It's an offline application."
+            ),
+            self.tr("It relies on the data stored in JSON files."),
+            self.tr(
+                "One can use their own catalogs as well as download data from "
+                '<a href="https://spec.jpl.nasa.gov/">JPL</a> and '
+                '<a href="https://cdms.astro.uni-koeln.de/">CDMS</a> spectroscopy databases '
+                "available on the Internet."
+            ),
+            self.tr("Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported."),
+            self.tr("See {readme_link} for more info.").format(
+                readme_link=a_tag(
+                    url="https://github.com/StSav012/pycatsearch/blob/master/README.md", text=self.tr("readme")
+                )
+            ),
+            self.tr("CatSearch is licensed under the {license_link}.").format(
+                license_link=a_tag(url="https://www.gnu.org/copyleft/lesser.html", text=self.tr("GNU LGPL version 3"))
+            ),
+            self.tr("The source code is available on {repo_link}.").format(
+                repo_link=a_tag(url="https://github.com/StSav012/pycatsearch", text="GitHub")
+            ),
+        ]
+        about(
             self,
             self.tr("About CatSearch"),
-            "<html><p>"
-            + "</p><p>".join(
-                (
-                    self.tr(
-                        "CatSearch is a means of searching through spectroscopy lines catalogs. "
-                        "It's an offline application."
-                    ),
-                    self.tr("It relies on the data stored in JSON files."),
-                    self.tr(
-                        "One can use their own catalogs as well as download data from "
-                        '<a href="https://spec.jpl.nasa.gov/">JPL</a> and '
-                        '<a href="https://cdms.astro.uni-koeln.de/">CDMS</a> spectroscopy databases '
-                        "available on the Internet."
-                    ),
-                    self.tr("Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported."),
-                    self.tr("See {readme_link} for more info.").format(
-                        readme_link=a_tag(
-                            url="https://github.com/StSav012/pycatsearch/blob/master/README.md", text=self.tr("readme")
-                        )
-                    ),
-                    self.tr("CatSearch is licensed under the {license_link}.").format(
-                        license_link=a_tag(
-                            url="https://www.gnu.org/copyleft/lesser.html", text=self.tr("GNU LGPL version 3")
-                        )
-                    ),
-                    self.tr("The source code is available on {repo_link}.").format(
-                        repo_link=a_tag(url="https://github.com/StSav012/pycatsearch", text="GitHub")
-                    ),
-                )
-            )
-            + "</p></html>",
+            tag("html", "".join(map(p_tag, lines))),
         )
 
     @Slot()

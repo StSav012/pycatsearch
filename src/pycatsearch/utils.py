@@ -75,6 +75,9 @@ __all__ = [
     "ReleaseInfo",
     "latest_release",
     "update_with_pip",
+    "tag",
+    "p_tag",
+    "a_tag",
 ]
 
 M_LOG10E: Final[float] = log10(_e)
@@ -749,6 +752,23 @@ def update_with_pip() -> None:
         ]
     )
     sys.exit(0)
+
+
+def tag(name: str, text: str = "", **attrs: str) -> str:
+    parts: list[str] = ["<", " ".join((name, *itertools.starmap(lambda a, v: f"{a}={str(v)!r}", attrs.items())))]
+    if text:
+        parts.extend([">", text, "</", name, ">"])
+    else:
+        parts.append("/>")
+    return "".join(parts)
+
+
+def p_tag(text: str) -> str:
+    return tag("p", text)
+
+
+def a_tag(text: str, url: str) -> str:
+    return tag("a", text, href=url)
 
 
 if sys.version_info < (3, 10):
