@@ -191,6 +191,8 @@ def _make_old_qt_compatible_again() -> None:
             lambda self, flag, _old: _old(self, Qt.Alignment(flag)),
             _old=QAbstractSpinBox.setAlignment,
         )
+        Qt.AlignmentFlag.__or__ = lambda self, other: int(self) | int(other)
+        Qt.AlignmentFlag.__ror__ = lambda self, other: int(other) | int(self)
 
 
 def qta_icon(*qta_name: str, **qta_specs: Any) -> QIcon:
