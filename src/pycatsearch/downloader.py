@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import random
 import time
+from http import HTTPMethod, HTTPStatus
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from math import inf
 from queue import Empty, Queue
@@ -82,7 +83,7 @@ class Downloader(Thread):
             response: HTTPResponse
             while True:
                 try:
-                    session.request(method="GET", url=parse_result.path, headers=(headers or dict()))
+                    session.request(method=HTTPMethod.GET, url=parse_result.path, headers=(headers or dict()))
                     response = session.getresponse()
                 except ConnectionResetError:
                     time.sleep(random.random())
@@ -95,14 +96,17 @@ class Downloader(Thread):
             except AttributeError:  # `response.fp` became `None` before the socket began closing
                 return ""
 
-        def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> str:
+        def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> bytes:
             parse_result: ParseResult = urlparse(url)
             session: HTTPConnection | HTTPSConnection = session_for_url(parse_result.scheme, parse_result.netloc)
             response: HTTPResponse
             while True:
                 try:
                     session.request(
-                        method="POST", url=parse_result.path, body=urlencode(data), headers=(headers or dict())
+                        method=HTTPMethod.POST,
+                        url=parse_result.path,
+                        body=urlencode(data),
+                        headers=(headers or dict()),
                     )
                     response = session.getresponse()
                 except ConnectionResetError:
@@ -110,11 +114,16 @@ class Downloader(Thread):
                 else:
                     break
             if response.closed:
-                return ""
+                logger.error(f"Stream closed before read the response from {url}")
+                return b""
+            if response.status != HTTPStatus.OK:
+                logger.error(f"Status {response.status} ({response.reason}) while posting to {url}")
+                return b""
             try:
-                return response.read().decode()
-            except AttributeError:  # `response.fp` became `None` before the socket began closing
-                return ""
+                return response.read()
+            except AttributeError:
+                logger.warning("`response.fp` became `None` before the socket began closing")
+                return b""
 
         def get_species() -> list[dict[str, int | str]]:
             def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
@@ -143,13 +152,14 @@ class Downloader(Thread):
                 else:
                     return entries
 
-            data: dict[str, int | str | list[dict[str, None | int | str]]] = json.loads(
-                post(
-                    "https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/",
-                    {"database": -1},
-                    headers={"Content-Type": "application/x-www-form-urlencoded"},
-                )
+            species_list: bytes = post(
+                "https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/",
+                {"database": -1},
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             )
+            if not species_list:
+                return []
+            data: dict[str, int | str | list[dict[str, None | int | str]]] = json.loads(species_list)
             return ensure_unique_species_tags([purge_null_data(trim_strings(s)) for s in data.get("species", [])])
 
         def get_substance_catalog(species_entry: dict[str, int | str]) -> CatalogEntryType:
@@ -237,7 +247,9 @@ class Downloader(Thread):
 
 
 def get_catalog(
-    frequency_limits: tuple[float, float] = (-inf, inf), *, existing_catalog: Catalog | None = None
+    frequency_limits: tuple[float, float] = (-inf, inf),
+    *,
+    existing_catalog: Catalog | None = None,
 ) -> CatalogType:
     """
     Download the spectral lines catalog data
@@ -290,7 +302,10 @@ def get_catalog(
 
 
 def save_catalog(
-    filename: str, frequency_limits: tuple[float, float] = (0, inf), *, existing_catalog: Catalog | None = None
+    filename: str,
+    frequency_limits: tuple[float, float] = (0, inf),
+    *,
+    existing_catalog: Catalog | None = None,
 ) -> bool:
     """
     Download and save the spectral lines catalog data

@@ -102,9 +102,12 @@ class Downloader(Thread):
                             await asyncio.sleep(random.random())
                     return bytes()
 
-                async def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> str:
+                async def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> bytes:
                     async with session.post(url, data=urlencode(data).encode(), headers=headers) as response:
-                        return (await response.read()).decode()
+                        if response.status != 200:
+                            logger.error(f"Status {response.status} ({response.reason}) while posting to {url}")
+                            return b""
+                        return await response.read()
 
                 async def get_species() -> list[dict[str, int | str]]:
                     def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
@@ -135,13 +138,14 @@ class Downloader(Thread):
                         else:
                             return entries
 
-                    data: dict[str, int | str | list[dict[str, None | int | str]]] = json.loads(
-                        await post(
-                            "https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/",
-                            {"database": -1},
-                            headers={"Content-Type": "application/x-www-form-urlencoded"},
-                        )
+                    species_list: bytes = await post(
+                        "https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/",
+                        {"database": -1},
+                        headers={"Content-Type": "application/x-www-form-urlencoded"},
                     )
+                    if not species_list:
+                        return []
+                    data: dict[str, int | str | list[dict[str, None | int | str]]] = json.loads(species_list)
                     return ensure_unique_species_tags(
                         [purge_null_data(trim_strings(s)) for s in data.get("species", [])]
                     )
