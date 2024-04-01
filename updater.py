@@ -33,12 +33,13 @@ def get_github_date(user: str, repo_name: str, branch: str = "master") -> dateti
 
     url: str = f"https://api.github.com/repos/{user}/{repo_name}/commits/{branch}"
     logger.debug(f"Requesting {url}")
-    r: HTTPResponse = urllib.request.urlopen(url, timeout=1)
-    logger.debug(f"Response code: {r.getcode()}")
-    if r.getcode() != HTTPStatus.OK:
-        logger.warning(f"Response code is not OK: {r.getcode()}")
-        return None
-    content: bytes = r.read()
+    r: HTTPResponse
+    with urllib.request.urlopen(url, timeout=1) as r:
+        logger.debug(f"Response code: {r.getcode()}")
+        if r.getcode() != HTTPStatus.OK:
+            logger.warning(f"Response code is not OK: {r.getcode()}")
+            return None
+        content: bytes = r.read()
     if not content:
         logger.warning(f"No data received from {url}")
         return None
@@ -76,12 +77,17 @@ def upgrade_files(code_directory: Path, user: str, repo_name: str, branch: str =
 
     url: str = f"https://github.com/{user}/{repo_name}/archive/{branch}.zip"
     logger.debug(f"Requesting {url}")
-    r: HTTPResponse = urllib.request.urlopen(url, timeout=1)
-    logger.debug(f"Response code: {r.getcode()}")
-    if r.getcode() != HTTPStatus.OK:
-        logger.warning(f"Response code is not OK: {r.getcode()}")
+    r: HTTPResponse
+    with urllib.request.urlopen(url, timeout=1) as r:
+        logger.debug(f"Response code: {r.getcode()}")
+        if r.getcode() != HTTPStatus.OK:
+            logger.warning(f"Response code is not OK: {r.getcode()}")
+            return False
+        content: bytes = r.read()
+    if not content:
+        logger.warning(f"No data received from {url}")
         return False
-    with zipfile.ZipFile(io.BytesIO(r.read())) as inner_zip:
+    with zipfile.ZipFile(io.BytesIO(content)) as inner_zip:
         root: Path = Path(f"{repo_name}-{branch}/")
         member: zipfile.ZipInfo
         for member in inner_zip.infolist():
