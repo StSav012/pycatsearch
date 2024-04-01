@@ -7,6 +7,7 @@ import sys
 import urllib.request
 from contextlib import suppress
 from datetime import datetime
+from http import HTTPStatus
 from http.client import HTTPResponse
 from pathlib import Path
 
@@ -34,7 +35,7 @@ def get_github_date(user: str, repo_name: str, branch: str = "master") -> dateti
     logger.debug(f"Requesting {url}")
     r: HTTPResponse = urllib.request.urlopen(url, timeout=1)
     logger.debug(f"Response code: {r.getcode()}")
-    if r.getcode() != 200:
+    if r.getcode() != HTTPStatus.OK:
         logger.warning(f"Response code is not OK: {r.getcode()}")
         return None
     content: bytes = r.read()
@@ -77,7 +78,7 @@ def upgrade_files(code_directory: Path, user: str, repo_name: str, branch: str =
     logger.debug(f"Requesting {url}")
     r: HTTPResponse = urllib.request.urlopen(url, timeout=1)
     logger.debug(f"Response code: {r.getcode()}")
-    if r.getcode() != 200:
+    if r.getcode() != HTTPStatus.OK:
         logger.warning(f"Response code is not OK: {r.getcode()}")
         return False
     with zipfile.ZipFile(io.BytesIO(r.read())) as inner_zip:
