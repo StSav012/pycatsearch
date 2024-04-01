@@ -15,7 +15,7 @@ except ImportError:
     __version__ = ""
 
 
-def main() -> int:
+def main_cli() -> int:
     ap: argparse.ArgumentParser = argparse.ArgumentParser(
         allow_abbrev=True,
         description="Yet another implementation of JPL and CDMS spectroscopy catalogs offline search.\n"
@@ -92,58 +92,19 @@ def main() -> int:
 
     args: argparse.Namespace = ap.parse_intermixed_args()
 
-    arg_names: list[str] = [
-        "min_frequency",
-        "max_frequency",
-        "min_intensity",
-        "max_intensity",
-        "temperature",
-        "species_tag",
-        "any_name_or_formula",
-        "anything",
-        "any_name",
-        "any_formula",
-        "inchi_key",
-        "trivial_name",
-        "structural_formula",
-        "name",
-        "stoichiometric_formula",
-        "isotopolog",
-        "state",
-        "degrees_of_freedom",
-    ]
     search_args: dict[str, str | float | int] = dict(
-        (arg, getattr(args, arg)) for arg in arg_names if getattr(args, arg) is not None
+        (key, value) for key, value in args.__dict__.items() if key != "catalog"
     )
-    if search_args:
+    if any(value is not None for value in search_args.values()):
         from .catalog import Catalog
 
         c: Catalog = Catalog(*args.catalog)
         c.print(**search_args)
         return 0
-
-    ret_code: int = main_gui()
-    if ret_code != 0:
-        if (ex := getattr(main_gui, "exception", None)) is not None:
-            error_message: str
-            if isinstance(ex, SyntaxError):
-                error_message = "Python %s is not supported.\nGet a newer Python!" % platform.python_version()
-            elif isinstance(ex, ImportError):
-                if ex.name is not None:
-                    error_message = (
-                        "Module %s is either missing from the system or cannot be loaded for another reason.\n"
-                        "Try to install or reinstall it." % repr(ex.name)
-                    )
-                else:
-                    error_message = str(ex)
-            else:
-                import traceback
-
-                error_message = "".join(traceback.format_exception(type(ex), value=ex, tb=None, limit=0))
-            print(error_message, file=sys.stderr)
-        else:
-            ap.print_usage()
-    return ret_code
+    else:
+        print("No search parameter specified", file=sys.stderr)
+        ap.print_help(file=sys.stderr)
+        return 1
 
 
 def main_gui() -> int:

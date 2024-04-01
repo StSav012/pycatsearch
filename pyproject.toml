@@ -39,7 +39,7 @@ dynamic = [
 ]
 
 [project.scripts]
-pycatsearch-cli = 'pycatsearch:main'
+pycatsearch-cli = 'pycatsearch:main_cli'
 pycatsearch-downloader = 'pycatsearch:download'
 pycatsearch-async-downloader = 'pycatsearch:async_download'
 
