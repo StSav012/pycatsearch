@@ -5,6 +5,7 @@ import sys
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 from functools import partialmethod
+from os import PathLike
 from pathlib import Path
 from typing import Any, AnyStr
 
@@ -205,7 +206,7 @@ def qta_icon(*qta_name: str, **qta_specs: Any) -> QIcon:
     return QIcon()
 
 
-def run() -> int:
+def run(*catalogs: str | PathLike[str]) -> int:
     import re
 
     # fix `re.RegexFlag.NOFLAG` missing on some systems
@@ -238,6 +239,6 @@ def run() -> int:
             QApplication.installTranslator(my_translator)
             break
 
-    window: UI = UI(Catalog(*sys.argv[1:]))
+    window: UI = UI(Catalog(*catalogs))
     window.show()
     return app.exec()
