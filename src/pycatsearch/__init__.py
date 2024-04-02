@@ -97,7 +97,7 @@ def main_cli() -> int:
     args: Namespace = ap.parse_intermixed_args()
 
     search_args: dict[str, str | float | int] = dict(
-        (key, value) for key, value in args.__dict__.items() if key != "catalog"
+        (key, value) for key, value in args.__dict__.items() if key != "catalog" and value is not None
     )
     if any(value is not None for value in search_args.values()):
         from .catalog import Catalog
