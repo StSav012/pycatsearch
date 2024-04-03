@@ -47,4 +47,9 @@ def test_cli():
 
 
 if __name__ == "__main__":
+    import sys
+    from os import path
+
+    sys.path = list(set(sys.path) | {path.abspath(path.join(__file__, path.pardir, path.pardir))})
+
     test_cli()
