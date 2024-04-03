@@ -400,7 +400,7 @@ class UI(QMainWindow, FileDialogSource):
                 format_value(_v, _u)
                 for _u, _v, _a in zip(
                     units,
-                    (row.name, row.frequency, row.intensity, row.lower_state_energy),
+                    (row.name, row.frequency_str, row.intensity_str, row.lower_state_energy_str),
                     actions_checked,
                     strict=True,
                 )
