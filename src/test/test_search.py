@@ -2,15 +2,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import os
-
 
 def test_search():
     from tempfile import NamedTemporaryFile
 
     from pycatsearch.catalog import Catalog
 
-    with NamedTemporaryFile("wb", suffix=".json", delete=False) as f:
+    with NamedTemporaryFile("wb", suffix=".json") as f:
         f.write(
             b"""\
 {
@@ -54,10 +52,8 @@ def test_search():
 }
 """
         )
-    c = Catalog(f.name)
-    # clean up the file
-    for s in c.sources:
-        os.unlink(s)
+        f.flush()
+        c = Catalog(f.name)
     assert c, c.sources
 
     assert len(c.filter(min_frequency=140141, max_frequency=140142)[17004]["lines"]) == 1
