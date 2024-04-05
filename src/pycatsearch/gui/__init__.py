@@ -188,6 +188,7 @@ def _make_old_qt_compatible_again() -> None:
 
     # not a part of any QtPy (yet)
     if PYSIDE2:
+        # noinspection PyUnresolvedReferences
         QAbstractSpinBox.setAlignment = partialmethod(
             lambda self, flag, _old: _old(self, Qt.Alignment(flag)),
             _old=QAbstractSpinBox.setAlignment,
