@@ -117,8 +117,10 @@ class FrequencyBox(QTabWidget):
         max_value = self._settings.from_mhz(max_value)
         spin: QDoubleSpinBox
         for spin in frequency_spins:
+            spin.blockSignals(True)
             spin.setMinimum(min_value)
             spin.setMaximum(max_value)
+            spin.blockSignals(False)
 
     @Slot(float)
     def _on_spin_frequency_from_edited(self, value: float) -> None:
