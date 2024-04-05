@@ -111,6 +111,42 @@ def main_cli() -> int:
         return 1
 
 
+def _show_exception(ex: Exception) -> None:
+    error_message: str
+    if isinstance(ex, SyntaxError):
+        error_message = "Python %s is not supported.\nGet a newer Python!" % platform.python_version()
+    elif isinstance(ex, ImportError):
+        if ex.name is not None:
+            error_message = (
+                "Module %s is either missing from the system or cannot be loaded for another reason.\n"
+                "Try to install or reinstall it." % repr(ex.name)
+            )
+        else:
+            error_message = str(ex)
+    else:
+        import traceback
+
+        error_message = "".join(traceback.format_exception(type(ex), value=ex, tb=None))
+
+    print(error_message, file=sys.stderr)
+
+    try:
+        import tkinter
+        import tkinter.messagebox
+    except (ModuleNotFoundError, ImportError):
+        pass
+    else:
+        root: tkinter.Tk = tkinter.Tk()
+        root.withdraw()
+        if isinstance(ex, SyntaxError):
+            tkinter.messagebox.showerror(title="Syntax Error", message=error_message)
+        elif isinstance(ex, ImportError):
+            tkinter.messagebox.showerror(title="Package Missing", message=error_message)
+        else:
+            tkinter.messagebox.showerror(title="Error", message=error_message)
+        root.destroy()
+
+
 def main_gui() -> int:
     ap: ArgumentParser = _argument_parser()
     args: Namespace = ap.parse_intermixed_args()
@@ -118,45 +154,13 @@ def main_gui() -> int:
     try:
         from . import gui
     except Exception as ex:
-        error_message: str
-        if isinstance(ex, SyntaxError):
-            error_message = "Python %s is not supported.\nGet a newer Python!" % platform.python_version()
-        elif isinstance(ex, ImportError):
-            if ex.name is not None:
-                error_message = (
-                    "Module %s is either missing from the system or cannot be loaded for another reason.\n"
-                    "Try to install or reinstall it." % repr(ex.name)
-                )
-            else:
-                error_message = str(ex)
-        else:
-            import traceback
-
-            error_message = "".join(traceback.format_exception(type(ex), value=ex, tb=None))
-
-        print(error_message, file=sys.stderr)
-
-        try:
-            import tkinter
-            import tkinter.messagebox
-        except (ModuleNotFoundError, ImportError):
-            pass
-        else:
-            root: tkinter.Tk = tkinter.Tk()
-            root.withdraw()
-            if isinstance(ex, SyntaxError):
-                tkinter.messagebox.showerror(title="Syntax Error", message=error_message)
-            elif isinstance(ex, ImportError):
-                tkinter.messagebox.showerror(title="Package Missing", message=error_message)
-            else:
-                tkinter.messagebox.showerror(title="Error", message=error_message)
-            root.destroy()
+        _show_exception(ex)
         return 1
     else:
         try:
             return gui.run(*args.catalog)
         except Exception as ex:
-            setattr(main_gui, "exception", ex)
+            _show_exception(ex)
             return 1
 
 
