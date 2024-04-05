@@ -28,7 +28,7 @@ from qtpy.QtWidgets import (
 from .about_dialog import about
 from .catalog_info import CatalogInfo
 from .download_dialog import DownloadDialog
-from .file_dialog_source import FileDialogSource
+from .file_dialog import OpenFileDialog, SaveFileDialog
 from .float_spinbox import FloatSpinBox
 from .found_lines_model import FoundLinesModel
 from .frequency_box import FrequencyBox
@@ -65,13 +65,67 @@ def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.
 
 
 @final
-class UI(QMainWindow, FileDialogSource):
+class UI(QMainWindow):
     def __init__(self, catalog: Catalog, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("mainWindow")
 
         self.catalog: Catalog = catalog
         self.settings: Settings = Settings("SavSoft", "CatSearch", self)
+
+        self.open_dialog: OpenFileDialog = OpenFileDialog(
+            settings=self.settings,
+            supported_name_filters=[
+                OpenFileDialog.SupportedNameFilterItem(
+                    required_packages=["gzip"],
+                    name=self.tr("JSON with GZip compression", "file type"),
+                    file_extensions=[".json.gz"],
+                ),
+                OpenFileDialog.SupportedNameFilterItem(
+                    required_packages=["bz2"],
+                    name=self.tr("JSON with Bzip2 compression", "file type"),
+                    file_extensions=[".json.bz2"],
+                ),
+                OpenFileDialog.SupportedNameFilterItem(
+                    required_packages=["lzma"],
+                    name=self.tr("JSON with LZMA2 compression", "file type"),
+                    file_extensions=[".json.xz", ".json.lzma"],
+                ),
+            ],
+            supported_mimetype_filters=[
+                OpenFileDialog.SupportedMimetypeItem(
+                    required_packages=[],
+                    file_extension=".json",
+                ),
+            ],
+            parent=self,
+        )
+        self.save_dialog: SaveFileDialog = SaveFileDialog(
+            settings=self.settings,
+            supported_name_filters=[
+                SaveFileDialog.SupportedNameFilterItem(
+                    required_packages=["gzip"],
+                    name=self.tr("JSON with GZip compression", "file type"),
+                    file_extensions=[".json.gz"],
+                ),
+                SaveFileDialog.SupportedNameFilterItem(
+                    required_packages=["bz2"],
+                    name=self.tr("JSON with Bzip2 compression", "file type"),
+                    file_extensions=[".json.bz2"],
+                ),
+                SaveFileDialog.SupportedNameFilterItem(
+                    required_packages=["lzma"],
+                    name=self.tr("JSON with LZMA2 compression", "file type"),
+                    file_extensions=[".json.xz", ".json.lzma"],
+                ),
+                SaveFileDialog.SupportedNameFilterItem(
+                    required_packages=[],
+                    name=self.tr("JSON", "file type"),
+                    file_extensions=[".json"],
+                ),
+            ],
+            parent=self,
+        )
 
         self._central_widget: QSplitter = QSplitter(Qt.Orientation.Vertical, self)
         self._central_widget.setObjectName("horizontalSplitter")
@@ -312,12 +366,11 @@ class UI(QMainWindow, FileDialogSource):
     @Slot()
     def _on_action_load_triggered(self) -> None:
         self.status_bar.showMessage(self.tr("Select a catalog file to load."))
-        new_catalog_file_names: list[str]
-        new_catalog_file_names, _ = self.get_open_file_names(directory=str((*self.catalog.sources, "")[0]))
+        new_catalog_filenames: list[str] = self.open_dialog.get_open_filenames()
 
-        if new_catalog_file_names:
+        if new_catalog_filenames:
             self.status_bar.showMessage(self.tr("Loading…"))
-            if self.load_catalog(*new_catalog_file_names):
+            if self.load_catalog(*new_catalog_filenames):
                 self.status_bar.showMessage(self.tr("Catalogs loaded."))
             else:
                 self.status_bar.showMessage(self.tr("Failed to load a catalog."))
@@ -340,16 +393,15 @@ class UI(QMainWindow, FileDialogSource):
     def _on_action_save_as_triggered(self) -> None:
         catalog: CatalogType = self.catalog.catalog
         frequency_limits: tuple[float, float] = (self.catalog.min_frequency, self.catalog.max_frequency)
-        save_file_name: str
+        save_filename: Path | None
         while True:
-            save_file_name, _ = self.get_save_file_name(directory=str([*self.catalog.sources, ""][0]))
-            if not save_file_name:
+            if not (save_filename := self.save_dialog.get_save_filename()):
                 return
 
             try:
                 ws = SaveCatalogWaitingScreen(
                     self,
-                    filename=save_file_name,
+                    filename=save_filename,
                     catalog=catalog,
                     frequency_limits=frequency_limits,
                 )
@@ -360,7 +412,7 @@ class UI(QMainWindow, FileDialogSource):
                     self.tr("Unable to save the catalog"),
                     self.tr("Error {exception} occurred while saving {filename}. Try another location.").format(
                         exception=ex,
-                        filename=save_file_name,
+                        filename=save_filename,
                     ),
                 )
             else:
@@ -420,6 +472,7 @@ class UI(QMainWindow, FileDialogSource):
     @Slot()
     def _on_action_download_catalog_triggered(self) -> None:
         downloader: DownloadDialog = DownloadDialog(
+            settings=self.settings,
             frequency_limits=(self.catalog.min_frequency, self.catalog.max_frequency),
             parent=self,
         )
@@ -554,7 +607,7 @@ class UI(QMainWindow, FileDialogSource):
     @Slot()
     def _on_action_about_catalogs_triggered(self) -> None:
         if self.catalog:
-            ci: CatalogInfo = CatalogInfo(self.catalog, self)
+            ci: CatalogInfo = CatalogInfo(settings=self.settings, catalog=self.catalog, parent=self)
             ci.catalogUpdated.connect(self._on_action_reload_triggered)
             ci.exec()
         else:

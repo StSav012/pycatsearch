@@ -10,6 +10,7 @@ from .catalog_wizard.download_confirmation_page import DownloadConfirmationPage
 from .catalog_wizard.progress_page import ProgressPage
 from .catalog_wizard.settings_page import SettingsPage
 from .catalog_wizard.summary_page import SummaryPage
+from .settings import Settings
 
 __all__ = ["DownloadDialog"]
 
@@ -19,10 +20,11 @@ class DownloadDialog(SaveCatalogWizard):
 
     def __init__(
         self,
+        settings: Settings,
         frequency_limits: tuple[float, float] = (-inf, inf),
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__(parent=parent)
+        super().__init__(settings=settings, parent=parent)
 
         self.setWindowTitle(self.tr("Download Catalog"))
 

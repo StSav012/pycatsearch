@@ -22,6 +22,7 @@ from qtpy.QtWidgets import (
 
 from . import qta_icon
 from .selectable_label import SelectableLabel
+from .settings import Settings
 from .titled_list_widget import TitledListWidget
 from .update_dialog import UpdateDialog
 from ..catalog import Catalog, CatalogSourceInfo
@@ -36,8 +37,11 @@ class SourcesList(QTableWidget):
         FileLocation = 0
         BuildTime = 1
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+
+        self.settings: Settings = settings
+
         self.setAlternatingRowColors(True)
         self.setColumnCount(len(SourcesList.Columns.__members__))
         self.setCornerButtonEnabled(False)
@@ -109,7 +113,11 @@ class SourcesList(QTableWidget):
         file_location: Path | None = self._file_location(row)
         if file_location is None:
             return
-        ud: UpdateDialog = UpdateDialog(file_location, parent=self.parent())
+        ud: UpdateDialog = UpdateDialog(
+            settings=self.settings,
+            existing_catalog_location=file_location,
+            parent=self.parent(),
+        )
         if ud.exec():
             self.catalogUpdated.emit()
 
@@ -140,7 +148,7 @@ class CatalogInfo(QDialog):
 
     catalogUpdated: Signal = Signal(name="catalogUpdated")
 
-    def __init__(self, catalog: Catalog, parent: QWidget | None = None) -> None:
+    def __init__(self, settings: Settings, catalog: Catalog, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle(self.tr("Catalog Info"))
@@ -148,7 +156,7 @@ class CatalogInfo(QDialog):
             self.setWindowIcon(parent.windowIcon())
         layout: QVBoxLayout = QVBoxLayout(self)
 
-        sources_list: SourcesList = SourcesList(self)
+        sources_list: SourcesList = SourcesList(settings=settings, parent=self)
         layout.addWidget(sources_list)
         sources_list.extend(catalog.sources_info)
         sources_list.catalogUpdated.connect(self._on_catalog_updated)

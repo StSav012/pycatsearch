@@ -12,6 +12,7 @@ from .catalog_wizard.download_confirmation_page import DownloadConfirmationPage
 from .catalog_wizard.progress_page import ProgressPage
 from .catalog_wizard.settings_page import SettingsPage
 from .catalog_wizard.summary_page import SummaryPage
+from .settings import Settings
 from ..catalog import Catalog
 
 __all__ = ["UpdateDialog"]
@@ -20,8 +21,13 @@ __all__ = ["UpdateDialog"]
 class UpdateDialog(SaveCatalogWizard):
     """GUI for `async_downloader.Downloader` or `downloader.Downloader`"""
 
-    def __init__(self, existing_catalog_location: str | PathLike[str], parent: QWidget | None = None) -> None:
-        super().__init__(parent=parent, default_save_location=Path(existing_catalog_location))
+    def __init__(
+        self,
+        settings: Settings,
+        existing_catalog_location: str | PathLike[str],
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(settings=settings, parent=parent, default_save_location=Path(existing_catalog_location))
 
         self._old_catalog: Catalog = Catalog(existing_catalog_location)
 
