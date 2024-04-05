@@ -6,8 +6,8 @@ from math import inf
 from pathlib import Path
 from typing import Any, final
 
-from qtpy.QtCore import QByteArray, QItemSelection, QMimeData, QModelIndex, QPoint, Qt, Slot
-from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPalette, QPixmap, QScreen
+from qtpy.QtCore import QItemSelection, QMimeData, QModelIndex, QPoint, Qt, Slot
+from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPalette, QPixmap
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QAbstractSpinBox,
@@ -68,11 +68,15 @@ def copy_to_clipboard(text: str, text_type: Qt.TextFormat | str = Qt.TextFormat.
 class UI(QMainWindow, FileDialogSource):
     def __init__(self, catalog: Catalog, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setObjectName("mainWindow")
+
         self.catalog: Catalog = catalog
         self.settings: Settings = Settings("SavSoft", "CatSearch", self)
 
         self._central_widget: QSplitter = QSplitter(Qt.Orientation.Vertical, self)
+        self._central_widget.setObjectName("horizontalSplitter")
         self._top_matter: QSplitter = QSplitter(Qt.Orientation.Horizontal, self._central_widget)
+        self._top_matter.setObjectName("verticalSplitter")
         self._right_matter: QWidget = QWidget(self._central_widget)
 
         self.spin_intensity: FloatSpinBox = FloatSpinBox(self._central_widget)
@@ -135,6 +139,7 @@ class UI(QMainWindow, FileDialogSource):
             self.results_table.setCornerButtonEnabled(False)
             self.results_table.setSortingEnabled(True)
             self.results_table.setAlternatingRowColors(True)
+            self.results_table.horizontalHeader().setObjectName("resultsTableHorizontalHeader")
             self.results_table.horizontalHeader().setDefaultSectionSize(180)
             self.results_table.horizontalHeader().setHighlightSections(False)
             self.results_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
@@ -592,76 +597,58 @@ class UI(QMainWindow, FileDialogSource):
         QMessageBox.aboutQt(self)
 
     def load_settings(self) -> None:
-        self.settings.beginGroup("search")
-        catalog_file_names: list[str] = []
-        for i in range(self.settings.beginReadArray("catalogFiles")):
-            self.settings.setArrayIndex(i)
-            path: str = self.settings.value("path", "", str)
-            if path:
-                catalog_file_names.append(path)
-        self.settings.endArray()
-        if not catalog_file_names:
-            catalog_file_names = ["catalog.json.gz", "catalog.json"]
-        self.temperature = self.settings.value("temperature", self.spin_temperature.value(), float)
-        self.minimal_intensity = self.settings.value("intensity", self.spin_intensity.value(), float)
-        self.settings.endGroup()
-        self.settings.beginGroup("displayedColumns")
-        self.menu_bar.action_show_substance.setChecked(self.settings.value("substance", True, bool))
-        self.toggle_results_table_column_visibility(0, self.menu_bar.action_show_substance.isChecked())
-        self.menu_bar.action_show_frequency.setChecked(self.settings.value("frequency", True, bool))
-        self.toggle_results_table_column_visibility(1, self.menu_bar.action_show_frequency.isChecked())
-        self.menu_bar.action_show_intensity.setChecked(self.settings.value("intensity", True, bool))
-        self.toggle_results_table_column_visibility(2, self.menu_bar.action_show_intensity.isChecked())
-        self.menu_bar.action_show_lower_state_energy.setChecked(self.settings.value("lowerStateEnergy", False, bool))
-        self.toggle_results_table_column_visibility(3, self.menu_bar.action_show_lower_state_energy.isChecked())
-        self.results_table.horizontalHeader().restoreState(self.settings.value("state", QByteArray()))
-        self.results_table.horizontalHeader().restoreGeometry(self.settings.value("geometry", QByteArray()))
-        self.settings.endGroup()
-        self.settings.beginGroup("window")
-        screens: list[QScreen] = QApplication.screens()
-        if screens:
+        with self.settings.section("search"):
+            self.temperature = self.settings.value("temperature", self.spin_temperature.value(), float)
+            self.minimal_intensity = self.settings.value("intensity", self.spin_intensity.value(), float)
+
+        with self.settings.section("displayedColumns"):
+            for column, (key, action) in enumerate(
+                zip(
+                    ["substance", "frequency", "intensity", "lowerStateEnergy"],
+                    [
+                        self.menu_bar.action_show_substance,
+                        self.menu_bar.action_show_frequency,
+                        self.menu_bar.action_show_intensity,
+                        self.menu_bar.action_show_lower_state_energy,
+                    ],
+                    strict=True,
+                )
+            ):
+                is_visible: bool = self.settings.value(key, True, bool)
+                action.setChecked(is_visible)
+                self.toggle_results_table_column_visibility(column, is_visible)
+
+        if screens := QApplication.screens():
             self.move(
                 round(0.5 * (screens[0].size().width() - self.size().width())),
                 round(0.5 * (screens[0].size().height() - self.size().height())),
             )  # Fallback: Center the window
-        self.restoreGeometry(self.settings.value("geometry", QByteArray()))
-        self.restoreState(self.settings.value("state", QByteArray()))
-        self._top_matter.restoreGeometry(self.settings.value("verticalSplitterGeometry", QByteArray()))
-        self._top_matter.restoreState(self.settings.value("verticalSplitterState", QByteArray()))
-        self._central_widget.restoreGeometry(self.settings.value("horizontalSplitterGeometry", QByteArray()))
-        self._central_widget.restoreState(self.settings.value("horizontalSplitterState", QByteArray()))
-        self.settings.endGroup()
+        self.settings.restore(self)
+        self.settings.restore(self._top_matter)
+        self.settings.restore(self._central_widget)
+        self.settings.restore(self.results_table.horizontalHeader())
         self.fill_parameters()
 
         if self.settings.load_last_catalogs:
-            self.load_catalog(*catalog_file_names)
+            self.load_catalog(*self.settings.catalog_file_names)
 
     def save_settings(self) -> None:
-        self.settings.beginGroup("search")
-        self.settings.beginWriteArray("catalogFiles", len(self.catalog.sources))
-        for i, s in enumerate(self.catalog.sources):
-            self.settings.setArrayIndex(i)
-            self.settings.setValue("path", str(s))
-        self.settings.endArray()
-        self.settings.setValue("temperature", self.temperature)
-        self.settings.setValue("intensity", self.minimal_intensity)
-        self.settings.endGroup()
-        self.settings.beginGroup("displayedColumns")
-        self.settings.setValue("substance", self.menu_bar.action_show_substance.isChecked())
-        self.settings.setValue("frequency", self.menu_bar.action_show_frequency.isChecked())
-        self.settings.setValue("intensity", self.menu_bar.action_show_intensity.isChecked())
-        self.settings.setValue("lowerStateEnergy", self.menu_bar.action_show_lower_state_energy.isChecked())
-        self.settings.setValue("geometry", self.results_table.horizontalHeader().saveGeometry())
-        self.settings.setValue("state", self.results_table.horizontalHeader().saveState())
-        self.settings.endGroup()
-        self.settings.beginGroup("window")
-        self.settings.setValue("geometry", self.saveGeometry())
-        self.settings.setValue("state", self.saveState())
-        self.settings.setValue("verticalSplitterGeometry", self._top_matter.saveGeometry())
-        self.settings.setValue("verticalSplitterState", self._top_matter.saveState())
-        self.settings.setValue("horizontalSplitterGeometry", self._central_widget.saveGeometry())
-        self.settings.setValue("horizontalSplitterState", self._central_widget.saveState())
-        self.settings.endGroup()
+        self.settings.catalog_file_names = self.catalog.sources
+        with self.settings.section("search"):
+            self.settings.setValue("temperature", self.temperature)
+            self.settings.setValue("intensity", self.minimal_intensity)
+
+        with self.settings.section("displayedColumns"):
+            self.settings.setValue("substance", self.menu_bar.action_show_substance.isChecked())
+            self.settings.setValue("frequency", self.menu_bar.action_show_frequency.isChecked())
+            self.settings.setValue("intensity", self.menu_bar.action_show_intensity.isChecked())
+            self.settings.setValue("lowerStateEnergy", self.menu_bar.action_show_lower_state_energy.isChecked())
+
+        self.settings.save(self)
+        self.settings.save(self._top_matter)
+        self.settings.save(self._central_widget)
+        self.settings.save(self.results_table.horizontalHeader())
+
         self.box_substance.save_settings()
         self.box_frequency.save_settings()
         self.settings.sync()

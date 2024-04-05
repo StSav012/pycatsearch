@@ -353,22 +353,16 @@ class SubstanceBox(QGroupBox):
         self._list_substance.blockSignals(False)
 
     def load_settings(self) -> None:
-        self._settings.beginGroup("search")
-        self._settings.beginGroup("selection")
-        self._text_substance.setText(self._settings.value("filter", self._text_substance.text(), str))
-        self._check_keep_selection.setChecked(self._settings.value("isPersistent", False, bool))
-        self.setChecked(self._settings.value("enabled", self.isChecked(), bool))
-        self._settings.endGroup()
-        self._settings.endGroup()
+        with self._settings.section("search"), self._settings.section("selection"):
+            self._text_substance.setText(self._settings.value("filter", self._text_substance.text(), str))
+            self._check_keep_selection.setChecked(self._settings.value("isPersistent", False, bool))
+            self.setChecked(self._settings.value("enabled", self.isChecked(), bool))
 
     def save_settings(self) -> None:
-        self._settings.beginGroup("search")
-        self._settings.beginGroup("selection")
-        self._settings.setValue("filter", self._text_substance.text())
-        self._settings.setValue("isPersistent", self._check_keep_selection.isChecked())
-        self._settings.setValue("enabled", self.isChecked())
-        self._settings.endGroup()
-        self._settings.endGroup()
+        with self._settings.section("search"), self._settings.section("selection"):
+            self._settings.setValue("filter", self._text_substance.text())
+            self._settings.setValue("isPersistent", self._check_keep_selection.isChecked())
+            self._settings.setValue("enabled", self.isChecked())
 
     @property
     def catalog(self) -> Catalog:

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import os
+from contextlib import contextmanager, suppress
+from os import PathLike, linesep
+from pathlib import Path
 from typing import Any, Callable, Final, Hashable, Iterable, NamedTuple, Sequence
 
-from qtpy.QtCore import QObject, QSettings
+from qtpy.QtCore import QByteArray, QObject, QSettings
 
 from ..utils import (
     cm_per_molecule_to_log10_sq_nm_mhz,
@@ -32,6 +34,9 @@ class Settings(QSettings):
     """convenient internal representation of the application settings"""
 
     class CallbackOnly(NamedTuple):
+        callback: str
+
+    class PathCallbackOnly(NamedTuple):
         callback: str
 
     class SpinboxAndCallback(NamedTuple):
@@ -118,26 +123,36 @@ class Settings(QSettings):
         self,
     ) -> dict[
         (str | tuple[str, tuple[str, ...]] | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]]),
-        dict[str, (CallbackOnly | SpinboxAndCallback | ComboboxAndCallback)],
+        dict[str, (CallbackOnly | PathCallbackOnly | SpinboxAndCallback | ComboboxAndCallback)],
     ]:
         return {
             (self.tr("When the program starts"), ("mdi6.rocket-launch",)): {
-                self.tr("Load catalogs"): Settings.CallbackOnly("load_last_catalogs"),
-                self.tr("Check for update"): Settings.CallbackOnly("check_updates"),
+                self.tr("Load catalogs"): Settings.CallbackOnly(Settings.load_last_catalogs.fset.__name__),
+                self.tr("Check for update"): Settings.CallbackOnly(Settings.check_updates.fset.__name__),
             },
             (self.tr("Display"), ("mdi6.binoculars",)): {
-                self.tr("Allow rich text in formulas"): Settings.CallbackOnly("rich_text_in_formulas"),
+                self.tr("Allow rich text in formulas"): Settings.CallbackOnly(
+                    Settings.rich_text_in_formulas.fset.__name__
+                ),
             },
             (self.tr("Units"), ("mdi6.pencil-ruler",)): {
-                self.tr("Frequency:"): Settings.ComboboxAndCallback(self.FREQUENCY_UNITS, "frequency_unit"),
-                self.tr("Intensity:"): Settings.ComboboxAndCallback(self.INTENSITY_UNITS, "intensity_unit"),
-                self.tr("Energy:"): Settings.ComboboxAndCallback(self.ENERGY_UNITS, "energy_unit"),
-                self.tr("Temperature:"): Settings.ComboboxAndCallback(self.TEMPERATURE_UNITS, "temperature_unit"),
+                self.tr("Frequency:"): Settings.ComboboxAndCallback(
+                    self.FREQUENCY_UNITS, Settings.frequency_unit.fset.__name__
+                ),
+                self.tr("Intensity:"): Settings.ComboboxAndCallback(
+                    self.INTENSITY_UNITS, Settings.intensity_unit.fset.__name__
+                ),
+                self.tr("Energy:"): Settings.ComboboxAndCallback(self.ENERGY_UNITS, Settings.energy_unit.fset.__name__),
+                self.tr("Temperature:"): Settings.ComboboxAndCallback(
+                    self.TEMPERATURE_UNITS, Settings.temperature_unit.fset.__name__
+                ),
             },
             (self.tr("Export"), ("mdi6.file-export",)): {
-                self.tr("With units"): Settings.CallbackOnly("with_units"),
-                self.tr("Line ending:"): Settings.ComboboxAndCallback(self.LINE_ENDS, "line_end"),
-                self.tr("CSV separator:"): Settings.ComboboxAndCallback(self.CSV_SEPARATORS, "csv_separator"),
+                self.tr("With units"): Settings.CallbackOnly(Settings.with_units.fset.__name__),
+                self.tr("Line ending:"): Settings.ComboboxAndCallback(self.LINE_ENDS, Settings.line_end.fset.__name__),
+                self.tr("CSV separator:"): Settings.ComboboxAndCallback(
+                    self.CSV_SEPARATORS, Settings.csv_separator.fset.__name__
+                ),
             },
             (
                 self.tr("Info"),
@@ -145,255 +160,281 @@ class Settings(QSettings):
                 (("options", ((), (("scale_factor", 0.5),))),),
             ): {
                 self.tr("InChI key search URL:"): Settings.EditableComboboxAndCallback(
-                    self.INCHI_KEY_SEARCH_PROVIDERS, "inchi_key_search_url_template"
+                    self.INCHI_KEY_SEARCH_PROVIDERS, Settings.inchi_key_search_url_template.fset.__name__
                 ),
             },
         }
 
+    @contextmanager
+    def section(self, section: str) -> None:
+        try:
+            self.beginGroup(section)
+            yield None
+        finally:
+            self.endGroup()
+
     @property
     def frequency_unit(self) -> int:
-        self.beginGroup("frequency")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return v
+        with self.section("frequency"):
+            return self.value("unit", 0, int)
 
     @frequency_unit.setter
     def frequency_unit(self, new_value: int | str) -> None:
-        self.beginGroup("frequency")
         if isinstance(new_value, str):
             new_value = self.FREQUENCY_UNITS.index(new_value)
-        self.setValue("unit", new_value)
-        self.endGroup()
+        with self.section("frequency"):
+            self.setValue("unit", new_value)
 
     @property
     def frequency_unit_str(self) -> str:
-        self.beginGroup("frequency")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.FREQUENCY_UNITS[v]
+        with self.section("frequency"):
+            return self.FREQUENCY_UNITS[self.value("unit", 0, int)]
 
     @property
     def to_mhz(self) -> Callable[[float], float]:
-        self.beginGroup("frequency")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.TO_MHZ[v]
+        with self.section("frequency"):
+            return self.TO_MHZ[self.value("unit", 0, int)]
 
     @property
     def from_mhz(self) -> Callable[[float], float]:
-        self.beginGroup("frequency")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.FROM_MHZ[v]
+        with self.section("frequency"):
+            return self.FROM_MHZ[self.value("unit", 0, int)]
 
     @property
     def intensity_unit(self) -> int:
-        self.beginGroup("intensity")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return v
+        with self.section("intensity"):
+            return self.value("unit", 0, int)
 
     @intensity_unit.setter
     def intensity_unit(self, new_value: int | str) -> None:
-        self.beginGroup("intensity")
         if isinstance(new_value, str):
             new_value = self.INTENSITY_UNITS.index(new_value)
-        self.setValue("unit", new_value)
-        self.endGroup()
+        with self.section("intensity"):
+            self.setValue("unit", new_value)
 
     @property
     def intensity_unit_str(self) -> str:
-        self.beginGroup("intensity")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.INTENSITY_UNITS[v]
+        with self.section("intensity"):
+            return self.INTENSITY_UNITS[self.value("unit", 0, int)]
 
     @property
     def to_log10_sq_nm_mhz(self) -> Callable[[float], float]:
-        self.beginGroup("intensity")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.TO_LOG10_SQ_NM_MHZ[v]
+        with self.section("intensity"):
+            return self.TO_LOG10_SQ_NM_MHZ[self.value("unit", 0, int)]
 
     @property
     def from_log10_sq_nm_mhz(self) -> Callable[[float], float]:
-        self.beginGroup("intensity")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.FROM_LOG10_SQ_NM_MHZ[v]
+        with self.section("intensity"):
+            return self.FROM_LOG10_SQ_NM_MHZ[self.value("unit", 0, int)]
 
     @property
     def energy_unit(self) -> int:
-        self.beginGroup("energy")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return v
+        with self.section("energy"):
+            return self.value("unit", 0, int)
 
     @energy_unit.setter
     def energy_unit(self, new_value: int | str) -> None:
-        self.beginGroup("energy")
         if isinstance(new_value, str):
             new_value = self.ENERGY_UNITS.index(new_value)
-        self.setValue("unit", new_value)
-        self.endGroup()
+        with self.section("energy"):
+            self.setValue("unit", new_value)
 
     @property
     def energy_unit_str(self) -> str:
-        self.beginGroup("energy")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.ENERGY_UNITS[v]
+        with self.section("energy"):
+            return self.ENERGY_UNITS[self.value("unit", 0, int)]
 
     @property
     def to_rec_cm(self) -> Callable[[float], float]:
-        self.beginGroup("energy")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.TO_REC_CM[v]
+        with self.section("energy"):
+            return self.TO_REC_CM[self.value("unit", 0, int)]
 
     @property
     def from_rec_cm(self) -> Callable[[float], float]:
-        self.beginGroup("energy")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.FROM_REC_CM[v]
+        with self.section("energy"):
+            return self.FROM_REC_CM[self.value("unit", 0, int)]
 
     @property
     def temperature_unit(self) -> int:
-        self.beginGroup("temperature")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return v
+        with self.section("temperature"):
+            return self.value("unit", 0, int)
 
     @temperature_unit.setter
     def temperature_unit(self, new_value: int | str) -> None:
-        self.beginGroup("temperature")
         if isinstance(new_value, str):
             new_value = self.TEMPERATURE_UNITS.index(new_value)
-        self.setValue("unit", new_value)
-        self.endGroup()
+        with self.section("temperature"):
+            self.setValue("unit", new_value)
 
     @property
     def temperature_unit_str(self) -> str:
-        self.beginGroup("temperature")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.TEMPERATURE_UNITS[v]
+        with self.section("temperature"):
+            return self.TEMPERATURE_UNITS[self.value("unit", 0, int)]
 
     @property
     def to_k(self) -> Callable[[float], float]:
-        self.beginGroup("temperature")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.TO_K[v]
+        with self.section("temperature"):
+            return self.TO_K[self.value("unit", 0, int)]
 
     @property
     def from_k(self) -> Callable[[float], float]:
-        self.beginGroup("temperature")
-        v: int = self.value("unit", 0, int)
-        self.endGroup()
-        return self.FROM_K[v]
+        with self.section("temperature"):
+            return self.FROM_K[self.value("unit", 0, int)]
 
     @property
     def load_last_catalogs(self) -> bool:
-        self.beginGroup("start")
-        v: bool = self.value("loadLastCatalogs", True, bool)
-        self.endGroup()
-        return v
+        with self.section("start"):
+            return self.value("loadLastCatalogs", True, bool)
 
     @load_last_catalogs.setter
     def load_last_catalogs(self, new_value: bool) -> None:
-        self.beginGroup("start")
-        self.setValue("loadLastCatalogs", new_value)
-        self.endGroup()
+        with self.section("start"):
+            self.setValue("loadLastCatalogs", new_value)
 
     @property
     def check_updates(self) -> bool:
-        self.beginGroup("start")
-        v: bool = self.value("checkUpdates", True, bool)
-        self.endGroup()
-        return v
+        with self.section("start"):
+            return self.value("checkUpdates", True, bool)
 
     @check_updates.setter
     def check_updates(self, new_value: bool) -> None:
-        self.beginGroup("start")
-        self.setValue("checkUpdates", new_value)
-        self.endGroup()
+        with self.section("start"):
+            self.setValue("checkUpdates", new_value)
 
     @property
     def rich_text_in_formulas(self) -> bool:
-        self.beginGroup("display")
-        v: bool = self.value("richTextInFormulas", True, bool)
-        self.endGroup()
-        return v
+        with self.section("display"):
+            return self.value("richTextInFormulas", True, bool)
 
     @rich_text_in_formulas.setter
     def rich_text_in_formulas(self, new_value: bool) -> None:
-        self.beginGroup("display")
-        self.setValue("richTextInFormulas", new_value)
-        self.endGroup()
+        with self.section("display"):
+            self.setValue("richTextInFormulas", new_value)
 
     @property
     def line_end(self) -> str:
-        self.beginGroup("export")
-        v: int = self.value("lineEnd", list(self.LINE_ENDS.keys()).index(os.linesep), int)
-        self.endGroup()
-        return list(self.LINE_ENDS.keys())[v]
+        with self.section("export"):
+            return list(self.LINE_ENDS.keys())[self.value("lineEnd", list(self.LINE_ENDS.keys()).index(linesep), int)]
 
     @line_end.setter
     def line_end(self, new_value: str) -> None:
-        self.beginGroup("export")
-        self.setValue("lineEnd", list(self.LINE_ENDS.keys()).index(new_value))
-        self.endGroup()
+        with self.section("export"):
+            self.setValue("lineEnd", list(self.LINE_ENDS.keys()).index(new_value))
 
     @property
     def csv_separator(self) -> str:
-        self.beginGroup("export")
-        v: int = self.value("csvSeparator", list(self.CSV_SEPARATORS.keys()).index("\t"), int)
-        self.endGroup()
-        return list(self.CSV_SEPARATORS.keys())[v]
+        with self.section("export"):
+            return list(self.CSV_SEPARATORS.keys())[
+                self.value("csvSeparator", list(self.CSV_SEPARATORS.keys()).index("\t"), int)
+            ]
 
     @csv_separator.setter
     def csv_separator(self, new_value: str) -> None:
-        self.beginGroup("export")
-        self.setValue("csvSeparator", list(self.CSV_SEPARATORS.keys()).index(new_value))
-        self.endGroup()
+        with self.section("export"):
+            self.setValue("csvSeparator", list(self.CSV_SEPARATORS.keys()).index(new_value))
 
     @property
     def with_units(self) -> bool:
-        self.beginGroup("export")
-        v: bool = self.value("withUnits", True, bool)
-        self.endGroup()
-        return v
+        with self.section("export"):
+            return self.value("withUnits", True, bool)
 
     @with_units.setter
     def with_units(self, new_value: bool) -> None:
-        self.beginGroup("export")
-        self.setValue("withUnits", new_value)
-        self.endGroup()
+        with self.section("export"):
+            self.setValue("withUnits", new_value)
 
     @property
     def ignored_version(self) -> str:
-        self.beginGroup("update")
-        v: str = self.value("ignoredVersion", "", str)
-        self.endGroup()
-        return v
+        with self.section("update"):
+            return self.value("ignoredVersion", "", str)
 
     @ignored_version.setter
     def ignored_version(self, new_value: str) -> None:
-        self.beginGroup("update")
-        self.setValue("ignoredVersion", new_value)
-        self.endGroup()
+        with self.section("update"):
+            self.setValue("ignoredVersion", new_value)
 
     @property
     def inchi_key_search_url_template(self) -> str:
-        self.beginGroup("info")
-        v: str = self.value("InChIKeySearchURLTemplate", "https://pubchem.ncbi.nlm.nih.gov/#query={InChIKey}", str)
-        self.endGroup()
-        return v
+        with self.section("info"):
+            return self.value("InChIKeySearchURLTemplate", "https://pubchem.ncbi.nlm.nih.gov/#query={InChIKey}", str)
 
     @inchi_key_search_url_template.setter
     def inchi_key_search_url_template(self, new_value: str) -> None:
-        self.beginGroup("info")
-        self.setValue("InChIKeySearchURLTemplate", new_value)
-        self.endGroup()
+        with self.section("info"):
+            self.setValue("InChIKeySearchURLTemplate", new_value)
+
+    @property
+    def catalog_file_names(self) -> list[str | PathLike[str]]:
+        catalog_file_names: list[str] = []
+        with self.section("search"):
+            for i in range(self.beginReadArray("catalogFiles")):
+                self.setArrayIndex(i)
+                path: str = self.value("path", "", str)
+                if path:
+                    catalog_file_names.append(path)
+            self.endArray()
+        return catalog_file_names or ["catalog.json.gz", "catalog.json"]
+
+    @catalog_file_names.setter
+    def catalog_file_names(self, filenames: Iterable[str | PathLike[str]]) -> None:
+        with self.section("search"):
+            self.beginWriteArray("catalogFiles")
+            for i, s in enumerate(filenames):
+                self.setArrayIndex(i)
+                self.setValue("path", str(s))
+            self.endArray()
+
+    @property
+    def translation_path(self) -> Path | None:
+        with self.section("translation"):
+            v: str = self.value("filePath", "", str)
+        return Path(v) if v else None
+
+    @translation_path.setter
+    def translation_path(self, new_value: str | PathLike[str] | None) -> None:
+        with self.section("translation"):
+            self.setValue("filePath", str(new_value or ""))
+
+    @property
+    def opened_file_name(self) -> Path | None:
+        with self.section("location"):
+            v: str = self.value("open", "", str)
+        return Path(v) if v else None
+
+    @opened_file_name.setter
+    def opened_file_name(self, filename: str | PathLike[str] | None) -> None:
+        with self.section("location"):
+            self.setValue("open", str(filename or ""))
+
+    @property
+    def saved_file_name(self) -> Path | None:
+        with self.section("location"):
+            v: str = self.value("save", "", str)
+        return Path(v) if v else None
+
+    @saved_file_name.setter
+    def saved_file_name(self, filename: str | PathLike[str] | None) -> None:
+        with self.section("location"):
+            self.setValue("save", str(filename or ""))
+
+    def save(self, o: QObject) -> None:
+        name: str = o.objectName()
+        if not name:
+            raise AttributeError(f"No name given for {o}")
+        with suppress(AttributeError), self.section("state"):
+            # noinspection PyUnresolvedReferences
+            self.setValue(name, o.saveState())
+        with suppress(AttributeError), self.section("geometry"):
+            # noinspection PyUnresolvedReferences
+            self.setValue(name, o.saveGeometry())
+
+    def restore(self, o: QObject) -> None:
+        name: str = o.objectName()
+        if not name:
+            raise AttributeError(f"No name given for {o}")
+        with suppress(AttributeError), self.section("state"):
+            # noinspection PyUnresolvedReferences
+            o.restoreState(self.value(name, QByteArray()))
+        with suppress(AttributeError), self.section("geometry"):
+            # noinspection PyUnresolvedReferences
+            o.restoreGeometry(self.value(name, QByteArray()))

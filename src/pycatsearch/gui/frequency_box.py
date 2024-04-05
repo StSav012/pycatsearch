@@ -74,24 +74,18 @@ class FrequencyBox(QTabWidget):
         self._spin_frequency_deviation.valueChanged.connect(self._on_spin_frequency_deviation_edited)
 
     def load_settings(self) -> None:
-        self._settings.beginGroup("search")
-        self._settings.beginGroup("frequency")
-        self._frequency_from = self._settings.value("from", self._spin_frequency_from.value(), float)
-        self._frequency_to = self._settings.value("to", self._spin_frequency_to.value(), float)
-        self._frequency_center = self._settings.value("center", self._spin_frequency_center.value(), float)
-        self._frequency_deviation = self._settings.value("deviation", self._spin_frequency_deviation.value(), float)
-        self._settings.endGroup()
-        self._settings.endGroup()
+        with self._settings.section("search"), self._settings.section("frequency"):
+            self._frequency_from = self._settings.value("from", self._spin_frequency_from.value(), float)
+            self._frequency_to = self._settings.value("to", self._spin_frequency_to.value(), float)
+            self._frequency_center = self._settings.value("center", self._spin_frequency_center.value(), float)
+            self._frequency_deviation = self._settings.value("deviation", self._spin_frequency_deviation.value(), float)
 
     def save_settings(self) -> None:
-        self._settings.beginGroup("search")
-        self._settings.beginGroup("frequency")
-        self._settings.setValue("from", self._frequency_from)
-        self._settings.setValue("to", self._frequency_to)
-        self._settings.setValue("center", self._frequency_center)
-        self._settings.setValue("deviation", self._frequency_deviation)
-        self._settings.endGroup()
-        self._settings.endGroup()
+        with self._settings.section("search"), self._settings.section("frequency"):
+            self._settings.setValue("from", self._frequency_from)
+            self._settings.setValue("to", self._frequency_to)
+            self._settings.setValue("center", self._frequency_center)
+            self._settings.setValue("deviation", self._frequency_deviation)
 
     @property
     def min_frequency(self) -> float:
