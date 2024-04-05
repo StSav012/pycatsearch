@@ -112,21 +112,31 @@ def main_cli() -> int:
 
 
 def _show_exception(ex: Exception) -> None:
-    error_message: str
+    from traceback import format_exception
+
+    error_message: str = ""
     if isinstance(ex, SyntaxError):
         error_message = "Python %s is not supported.\nGet a newer Python!" % platform.python_version()
     elif isinstance(ex, ImportError):
         if ex.name is not None:
-            error_message = (
-                "Module %s is either missing from the system or cannot be loaded for another reason.\n"
-                "Try to install or reinstall it." % repr(ex.name)
-            )
+            if "from" in ex.msg.split():
+                error_message = (
+                    "Module %s lacks a part, or the latter cannot be loaded for a reason.\n"
+                    "Try to update the module." % repr(ex.name)
+                )
+            elif ex.path is None:
+                error_message = "Module %s cannot be found.\nTry to install it." % repr(ex.name)
+            else:
+                error_message = (
+                    "Module %s cannot be loaded for an unspecified reason.\n"
+                    "Try to install or reinstall it." % repr(ex.name)
+                )
         else:
             error_message = str(ex)
-    else:
-        import traceback
+    if error_message:
+        error_message += "\n"
 
-        error_message = "".join(traceback.format_exception(type(ex), value=ex, tb=None))
+    error_message += "".join(format_exception(*sys.exc_info()))
 
     print(error_message, file=sys.stderr)
 
