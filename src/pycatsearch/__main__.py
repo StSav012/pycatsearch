@@ -4,4 +4,4 @@
 if __name__ == "__main__":
     from . import main_gui as main
 
-    main()
+    exit(main())
