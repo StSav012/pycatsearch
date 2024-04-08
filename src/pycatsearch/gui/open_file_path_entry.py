@@ -7,7 +7,6 @@ from typing import ClassVar
 from qtpy.QtCore import Signal, Slot
 from qtpy.QtWidgets import QFileDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget
 
-
 __all__ = ["OpenFilePathEntry"]
 
 
@@ -39,7 +38,8 @@ class OpenFilePathEntry(QWidget):
         self._dialog: QFileDialog = QFileDialog(self)
         self._dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
         self._dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        self._dialog.setNameFilter(self.tr("Translations") + " (*.qm)")
+        _space_before_extensions: str = " " * (not self._dialog.testOption(QFileDialog.Option.HideNameFilterDetails))
+        self._dialog.setNameFilter("".join((self.tr("Translations"), _space_before_extensions, "(*.qm)")))
         if self._path is not None:
             self._dialog.selectFile(str(self._path))
 
