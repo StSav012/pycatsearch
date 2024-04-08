@@ -7,14 +7,11 @@ from os import PathLike
 from pathlib import Path
 from typing import Collection, NamedTuple
 
-from qtpy.QtCore import QOperatingSystemVersion
 from qtpy.QtWidgets import QFileDialog, QWidget
 
 from .settings import Settings
 
 __all__ = ["OpenFileDialog", "SaveFileDialog"]
-
-_space_before_extensions: str = " " * (QOperatingSystemVersion.currentType() != QOperatingSystemVersion.OSType.Windows)
 
 
 class FileDialog(QFileDialog):
@@ -66,6 +63,8 @@ class OpenFileDialog(FileDialog):
 
     def _fill_filters(self) -> None:
         mimetypes.init()
+
+        _space_before_extensions: str = " " * (not self.testOption(QFileDialog.Option.HideNameFilterDetails))
 
         supported_name_filters: list[str] = []
         for supported_name_filter in self.supported_name_filters:
@@ -158,6 +157,8 @@ class SaveFileDialog(FileDialog):
 
     def get_save_filename(self) -> Path | None:
         mimetypes.init()
+
+        _space_before_extensions: str = " " * (not self.testOption(QFileDialog.Option.HideNameFilterDetails))
 
         filename: Path | None = self.settings.saved_file_name
         opened_filename: Path | None = self.settings.opened_file_name
