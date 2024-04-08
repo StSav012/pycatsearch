@@ -66,12 +66,13 @@ class OpenFileDialog(FileDialog):
 
         _space_before_extensions: str = " " * (not self.testOption(QFileDialog.Option.HideNameFilterDetails))
 
-        supported_name_filters: list[str] = []
+        supported_name_filters_names: list[str] = []
+        supported_name_filters: list[OpenFileDialog.SupportedNameFilterItem] = []
         for supported_name_filter in self.supported_name_filters:
             if not supported_name_filter.required_packages or any(
                 find_spec(package) for package in supported_name_filter.required_packages
             ):
-                supported_name_filters.append(
+                supported_name_filters_names.append(
                     "".join(
                         (
                             supported_name_filter.name,
@@ -82,6 +83,7 @@ class OpenFileDialog(FileDialog):
                         )
                     )
                 )
+                supported_name_filters.append(supported_name_filter)
 
         supported_mimetypes: list[str] = []
         mimetype: str | None
@@ -95,17 +97,19 @@ class OpenFileDialog(FileDialog):
         supported_mimetypes.append("application/octet-stream")
 
         self.setMimeTypeFilters(supported_mimetypes)
-        all_extensions: set[str] = set()
-        all_extensions.update(
+        all_extensions: list[str] = [
             "*" + ext for t in supported_mimetypes[:-1] for ext in mimetypes.guess_all_extensions(t, strict=False)
-        )
-        all_extensions.update("*" + ext for t in self.supported_name_filters for ext in t.file_extensions)
-        name_filters: list[str] = supported_name_filters + self.nameFilters()
-        if len(all_extensions) > 1:
+        ] + ["*" + ext for t in supported_name_filters for ext in t.file_extensions]
+        name_filters: list[str] = supported_name_filters_names + self.nameFilters()
+        all_extensions_unique: frozenset[str] = frozenset(all_extensions)
+        if len(all_extensions_unique) > 1:
             name_filters.insert(
                 0,
-                "".join((self.tr("All supported"), _space_before_extensions, "(", " ".join(all_extensions), ")")),
+                "".join(
+                    (self.tr("All supported"), _space_before_extensions, "(", " ".join(all_extensions_unique), ")")
+                ),
             )
+            self.setDefaultSuffix(all_extensions[0])
         self.setNameFilters(name_filters)
 
     def get_open_filename(self) -> Path | None:
@@ -222,6 +226,8 @@ class SaveFileDialog(FileDialog):
         self.settings.restore(self)
         self.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
         self.setFileMode(QFileDialog.FileMode.AnyFile)
+        if selected_ext:
+            self.setDefaultSuffix(selected_ext)
 
         expected_file: Path
         if expected_file := (filename or opened_filename):
