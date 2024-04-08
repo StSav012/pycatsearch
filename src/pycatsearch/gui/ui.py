@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, final
 
 from qtpy.QtCore import QItemSelection, QMimeData, QModelIndex, QPoint, Qt, Slot
-from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPalette, QPixmap
+from qtpy.QtGui import QClipboard, QCloseEvent, QCursor, QIcon, QPalette, QPixmap, QScreen
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QAbstractSpinBox,
@@ -620,11 +620,13 @@ class UI(QMainWindow):
                 action.setChecked(is_visible)
                 self.toggle_results_table_column_visibility(column, is_visible)
 
-        if screens := QApplication.screens():
-            self.move(
-                round(0.5 * (screens[0].size().width() - self.size().width())),
-                round(0.5 * (screens[0].size().height() - self.size().height())),
-            )  # Fallback: Center the window
+        # Fallback: Center the window
+        screen: QScreen = QApplication.primaryScreen()
+        self.move(
+            round(0.5 * (screen.size().width() - self.size().width())),
+            round(0.5 * (screen.size().height() - self.size().height())),
+        )
+
         self.settings.restore(self)
         self.settings.restore(self._top_matter)
         self.settings.restore(self._central_widget)
