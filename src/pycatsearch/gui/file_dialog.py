@@ -2,17 +2,19 @@
 from __future__ import annotations
 
 import mimetypes
-from functools import reduce
 from importlib.util import find_spec
 from os import PathLike
 from pathlib import Path
-from typing import Collection, NamedTuple, final
+from typing import Collection, NamedTuple
 
+from qtpy.QtCore import QOperatingSystemVersion
 from qtpy.QtWidgets import QFileDialog, QWidget
 
 from .settings import Settings
 
 __all__ = ["OpenFileDialog", "SaveFileDialog"]
+
+_space_before_extensions: str = " " * (QOperatingSystemVersion.currentType() != QOperatingSystemVersion.OSType.Windows)
 
 
 class FileDialog(QFileDialog):
@@ -50,7 +52,6 @@ class FileDialog(QFileDialog):
             return None
 
 
-@final
 class OpenFileDialog(FileDialog):
     def __init__(
         self,
@@ -75,7 +76,8 @@ class OpenFileDialog(FileDialog):
                     "".join(
                         (
                             supported_name_filter.name,
-                            " (",
+                            _space_before_extensions,
+                            "(",
                             " ".join("*" + ext for ext in supported_name_filter.file_extensions),
                             ")",
                         )
@@ -94,17 +96,16 @@ class OpenFileDialog(FileDialog):
         supported_mimetypes.append("application/octet-stream")
 
         self.setMimeTypeFilters(supported_mimetypes)
-        all_extensions: set[str] = reduce(
-            set.union,
-            ({"*" + ext for ext in mimetypes.guess_all_extensions(t, strict=False)} for t in supported_mimetypes[:-1]),
-            set(),
+        all_extensions: set[str] = set()
+        all_extensions.update(
+            "*" + ext for t in supported_mimetypes[:-1] for ext in mimetypes.guess_all_extensions(t, strict=False)
         )
-        all_extensions.update(*(reduce(set.union, t.file_extensions, set()) for t in self.supported_name_filters))
+        all_extensions.update("*" + ext for t in self.supported_name_filters for ext in t.file_extensions)
         name_filters: list[str] = supported_name_filters + self.nameFilters()
         if len(all_extensions) > 1:
             name_filters.insert(
                 0,
-                "".join((self.tr("All supported"), " (", " ".join(all_extensions), ")")),
+                "".join((self.tr("All supported"), _space_before_extensions, "(", " ".join(all_extensions), ")")),
             )
         self.setNameFilters(name_filters)
 
@@ -143,7 +144,6 @@ class OpenFileDialog(FileDialog):
         return []
 
 
-@final
 class SaveFileDialog(FileDialog):
     def __init__(
         self,
@@ -181,7 +181,8 @@ class SaveFileDialog(FileDialog):
                 filter_: str = "".join(
                     (
                         supported_name_filter.name,
-                        " (",
+                        _space_before_extensions,
+                        "(",
                         " ".join("*" + ext for ext in supported_name_filter.file_extensions),
                         ")",
                     )

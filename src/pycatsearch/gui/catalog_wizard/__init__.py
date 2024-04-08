@@ -6,7 +6,7 @@ from pathlib import Path
 
 from qtpy.QtWidgets import QDialog, QMessageBox, QWidget, QWizard
 
-from ..file_dialog import SaveFileDialog
+from ..catalog_file_dialog import CatalogSaveFileDialog
 from ..save_catalog_waiting_screen import SaveCatalogWaitingScreen
 from ..settings import Settings
 from ...catalog import CatalogType
@@ -26,32 +26,7 @@ class SaveCatalogWizard(QWizard):
         self.catalog: CatalogType = dict()
         self.default_save_location: Path | None = default_save_location
 
-        self.save_dialog: SaveFileDialog = SaveFileDialog(
-            settings=settings,
-            supported_name_filters=[
-                SaveFileDialog.SupportedNameFilterItem(
-                    required_packages=["gzip"],
-                    name=self.tr("JSON with GZip compression", "file type"),
-                    file_extensions=[".json.gz"],
-                ),
-                SaveFileDialog.SupportedNameFilterItem(
-                    required_packages=["bz2"],
-                    name=self.tr("JSON with Bzip2 compression", "file type"),
-                    file_extensions=[".json.bz2"],
-                ),
-                SaveFileDialog.SupportedNameFilterItem(
-                    required_packages=["lzma"],
-                    name=self.tr("JSON with LZMA2 compression", "file type"),
-                    file_extensions=[".json.xz", ".json.lzma"],
-                ),
-                SaveFileDialog.SupportedNameFilterItem(
-                    required_packages=[],
-                    name=self.tr("JSON", "file type"),
-                    file_extensions=[".json"],
-                ),
-            ],
-            parent=self,
-        )
+        self.save_dialog: CatalogSaveFileDialog = CatalogSaveFileDialog(settings=settings, parent=self)
 
         self.setModal(True)
         if parent is not None:

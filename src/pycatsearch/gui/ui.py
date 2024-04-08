@@ -28,7 +28,7 @@ from qtpy.QtWidgets import (
 from .about_dialog import about
 from .catalog_info import CatalogInfo
 from .download_dialog import DownloadDialog
-from .file_dialog import OpenFileDialog, SaveFileDialog
+from .catalog_file_dialog import CatalogOpenFileDialog, CatalogSaveFileDialog
 from .float_spinbox import FloatSpinBox
 from .found_lines_model import FoundLinesModel
 from .frequency_box import FrequencyBox
@@ -73,59 +73,8 @@ class UI(QMainWindow):
         self.catalog: Catalog = catalog
         self.settings: Settings = Settings("SavSoft", "CatSearch", self)
 
-        self.open_dialog: OpenFileDialog = OpenFileDialog(
-            settings=self.settings,
-            supported_name_filters=[
-                OpenFileDialog.SupportedNameFilterItem(
-                    required_packages=["gzip"],
-                    name=self.tr("JSON with GZip compression", "file type"),
-                    file_extensions=[".json.gz"],
-                ),
-                OpenFileDialog.SupportedNameFilterItem(
-                    required_packages=["bz2"],
-                    name=self.tr("JSON with Bzip2 compression", "file type"),
-                    file_extensions=[".json.bz2"],
-                ),
-                OpenFileDialog.SupportedNameFilterItem(
-                    required_packages=["lzma"],
-                    name=self.tr("JSON with LZMA2 compression", "file type"),
-                    file_extensions=[".json.xz", ".json.lzma"],
-                ),
-            ],
-            supported_mimetype_filters=[
-                OpenFileDialog.SupportedMimetypeItem(
-                    required_packages=[],
-                    file_extension=".json",
-                ),
-            ],
-            parent=self,
-        )
-        self.save_dialog: SaveFileDialog = SaveFileDialog(
-            settings=self.settings,
-            supported_name_filters=[
-                SaveFileDialog.SupportedNameFilterItem(
-                    required_packages=["gzip"],
-                    name=self.tr("JSON with GZip compression", "file type"),
-                    file_extensions=[".json.gz"],
-                ),
-                SaveFileDialog.SupportedNameFilterItem(
-                    required_packages=["bz2"],
-                    name=self.tr("JSON with Bzip2 compression", "file type"),
-                    file_extensions=[".json.bz2"],
-                ),
-                SaveFileDialog.SupportedNameFilterItem(
-                    required_packages=["lzma"],
-                    name=self.tr("JSON with LZMA2 compression", "file type"),
-                    file_extensions=[".json.xz", ".json.lzma"],
-                ),
-                SaveFileDialog.SupportedNameFilterItem(
-                    required_packages=[],
-                    name=self.tr("JSON", "file type"),
-                    file_extensions=[".json"],
-                ),
-            ],
-            parent=self,
-        )
+        self.open_dialog: CatalogOpenFileDialog = CatalogOpenFileDialog(settings=self.settings, parent=self)
+        self.save_dialog: CatalogSaveFileDialog = CatalogSaveFileDialog(settings=self.settings, parent=self)
 
         self._central_widget: QSplitter = QSplitter(Qt.Orientation.Vertical, self)
         self._central_widget.setObjectName("horizontalSplitter")
