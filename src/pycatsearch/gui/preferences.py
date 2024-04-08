@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any, ClassVar, Hashable, TYPE_CHECKING, cast
 
 from qtpy.QtCore import Qt
-from qtpy.QtGui import QCloseEvent
 from qtpy.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -193,6 +192,7 @@ class PreferencesBody(BaseLogger, QSplitter):
 
         BaseLogger.__init__(self)
         QSplitter.__init__(self, parent)
+        self.setObjectName("preferencesBody")
 
         self.setOrientation(Qt.Orientation.Horizontal)
         self.setChildrenCollapsible(False)
@@ -277,11 +277,17 @@ class Preferences(QDialog):
         self.resize(self.width() + 4, self.height())
 
         self._settings.restore(self)
+        self._settings.restore(self._preferences_body)
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    def reject(self) -> None:
         self._settings.save(self)
+        self._settings.save(self._preferences_body)
+        return super().reject()
 
     def accept(self) -> None:
+        self._settings.save(self)
+        self._settings.save(self._preferences_body)
+
         for key, value in self._preferences_body.changed_settings.items():
             setattr(self._settings, key, value)
         return super().accept()
