@@ -2,37 +2,111 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="ru_RU" sourcelanguage="_US">
 <context>
+    <name>FileDialogSource</name>
+    <message>
+        <location filename="../file_dialog_source.py" line="26"/>
+        <source>All supported</source>
+        <comment>file type</comment>
+        <translation type="obsolete">Все поддерживаемые</translation>
+    </message>
+    <message>
+        <location filename="../file_dialog_source.py" line="36"/>
+        <source>All files</source>
+        <comment>file type</comment>
+        <translation type="obsolete">Все файлы</translation>
+    </message>
+    <message>
+        <location filename="../file_dialog_source.py" line="41"/>
+        <source>Compressed JSON</source>
+        <comment>file type</comment>
+        <translation type="obsolete">JSON со сжатием</translation>
+    </message>
+    <message>
+        <location filename="../file_dialog_source.py" line="42"/>
+        <location filename="../file_dialog_source.py" line="63"/>
+        <source>JSON</source>
+        <comment>file type</comment>
+        <translation type="obsolete">JSON</translation>
+    </message>
+    <message>
+        <location filename="../file_dialog_source.py" line="49"/>
+        <source>Load Catalog</source>
+        <translation type="obsolete">Загрузить каталог</translation>
+    </message>
+    <message>
+        <location filename="../file_dialog_source.py" line="57"/>
+        <source>JSON with GZip compression</source>
+        <comment>file type</comment>
+        <translation type="obsolete">JSON со сжатием GZip</translation>
+    </message>
+    <message>
+        <location filename="../file_dialog_source.py" line="58"/>
+        <source>JSON with Bzip2 compression</source>
+        <comment>file type</comment>
+        <translation type="obsolete">JSON со сжатием Bzip2</translation>
+    </message>
+    <message>
+        <location filename="../file_dialog_source.py" line="62"/>
+        <source>JSON with LZMA2 compression</source>
+        <comment>file type</comment>
+        <translation type="obsolete">JSON со сжатием LZMA2</translation>
+    </message>
+    <message>
+        <location filename="../file_dialog_source.py" line="70"/>
+        <source>Save As…</source>
+        <translation type="obsolete">Сохранить как…</translation>
+    </message>
+</context>
+<context>
     <name>AboutBox</name>
     <message>
-        <location filename="../about_dialog.py" line="49"/>
+        <location filename="../about_dialog.py" line="51"/>
         <source>About</source>
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../about_dialog.py" line="65"/>
+        <location filename="../about_dialog.py" line="67"/>
         <source>The app uses the following third-party modules:</source>
         <translation>Приложение использует следующие сторонние компоненты:</translation>
     </message>
 </context>
 <context>
+    <name>file type</name>
+    <message>
+        <location filename="../catalog_file_dialog.py" line="19"/>
+        <source>JSON with GZip compression</source>
+        <translation>JSON со сжатием GZip</translation>
+    </message>
+    <message>
+        <location filename="../catalog_file_dialog.py" line="24"/>
+        <source>JSON with Bzip2 compression</source>
+        <translation>JSON со сжатием Bzip2</translation>
+    </message>
+    <message>
+        <location filename="../catalog_file_dialog.py" line="29"/>
+        <source>JSON with LZMA2 compression</source>
+        <translation>JSON со сжатием LZMA2</translation>
+    </message>
+</context>
+<context>
     <name>SourcesList</name>
     <message>
-        <location filename="../catalog_info.py" line="47"/>
+        <location filename="../catalog_info.py" line="51"/>
         <source>Filename</source>
         <translation>Файл</translation>
     </message>
     <message>
-        <location filename="../catalog_info.py" line="47"/>
+        <location filename="../catalog_info.py" line="51"/>
         <source>Build Time</source>
         <translation>Дата создания</translation>
     </message>
     <message>
-        <location filename="../catalog_info.py" line="59"/>
+        <location filename="../catalog_info.py" line="63"/>
         <source>Open File &amp;Location</source>
         <translation>&amp;Расположение файла</translation>
     </message>
     <message>
-        <location filename="../catalog_info.py" line="64"/>
+        <location filename="../catalog_info.py" line="69"/>
         <source>&amp;Update Catalog</source>
         <translation>&amp;Обновить каталог</translation>
     </message>
@@ -40,22 +114,22 @@
 <context>
     <name>CatalogInfo</name>
     <message>
-        <location filename="../catalog_info.py" line="145"/>
+        <location filename="../catalog_info.py" line="154"/>
         <source>Catalog Info</source>
         <translation>Информация о каталоге</translation>
     </message>
     <message>
-        <location filename="../catalog_info.py" line="156"/>
+        <location filename="../catalog_info.py" line="165"/>
         <source>Frequency limits:</source>
         <translation>Частота:</translation>
     </message>
     <message>
-        <location filename="../catalog_info.py" line="161"/>
+        <location filename="../catalog_info.py" line="170"/>
         <source>{min_frequency} to {max_frequency}&#xa0;MHz</source>
         <translation>от {min_frequency} до {max_frequency}&#xa0;МГц</translation>
     </message>
     <message>
-        <location filename="../catalog_info.py" line="170"/>
+        <location filename="../catalog_info.py" line="179"/>
         <source>Total number of substances:</source>
         <translation>Всего веществ:</translation>
     </message>
@@ -63,65 +137,17 @@
 <context>
     <name>DownloadDialog</name>
     <message>
-        <location filename="../download_dialog.py" line="27"/>
+        <location filename="../download_dialog.py" line="29"/>
         <source>Download Catalog</source>
         <translation>Скачать каталог</translation>
     </message>
 </context>
 <context>
-    <name>FileDialogSource</name>
+    <name>OpenFileDialog</name>
     <message>
-        <location filename="../file_dialog_source.py" line="26"/>
+        <location filename="../file_dialog.py" line="108"/>
         <source>All supported</source>
-        <comment>file type</comment>
         <translation>Все поддерживаемые</translation>
-    </message>
-    <message>
-        <location filename="../file_dialog_source.py" line="36"/>
-        <source>All files</source>
-        <comment>file type</comment>
-        <translation>Все файлы</translation>
-    </message>
-    <message>
-        <location filename="../file_dialog_source.py" line="41"/>
-        <source>Compressed JSON</source>
-        <comment>file type</comment>
-        <translation>JSON со сжатием</translation>
-    </message>
-    <message>
-        <location filename="../file_dialog_source.py" line="42"/>
-        <location filename="../file_dialog_source.py" line="63"/>
-        <source>JSON</source>
-        <comment>file type</comment>
-        <translation>JSON</translation>
-    </message>
-    <message>
-        <location filename="../file_dialog_source.py" line="49"/>
-        <source>Load Catalog</source>
-        <translation>Загрузить каталог</translation>
-    </message>
-    <message>
-        <location filename="../file_dialog_source.py" line="57"/>
-        <source>JSON with GZip compression</source>
-        <comment>file type</comment>
-        <translation>JSON со сжатием GZip</translation>
-    </message>
-    <message>
-        <location filename="../file_dialog_source.py" line="58"/>
-        <source>JSON with Bzip2 compression</source>
-        <comment>file type</comment>
-        <translation>JSON со сжатием Bzip2</translation>
-    </message>
-    <message>
-        <location filename="../file_dialog_source.py" line="62"/>
-        <source>JSON with LZMA2 compression</source>
-        <comment>file type</comment>
-        <translation>JSON со сжатием LZMA2</translation>
-    </message>
-    <message>
-        <location filename="../file_dialog_source.py" line="70"/>
-        <source>Save As…</source>
-        <translation>Сохранить как…</translation>
     </message>
 </context>
 <context>
@@ -330,9 +356,22 @@
     </message>
 </context>
 <context>
+    <name>OpenFilePathEntry</name>
+    <message>
+        <location filename="../open_file_path_entry.py" line="35"/>
+        <source>&amp;Browse…</source>
+        <translation>&amp;Обзор…</translation>
+    </message>
+    <message>
+        <location filename="../open_file_path_entry.py" line="42"/>
+        <source>Translations</source>
+        <translation>Файлы перевода</translation>
+    </message>
+</context>
+<context>
     <name>Preferences</name>
     <message>
-        <location filename="../preferences.py" line="204"/>
+        <location filename="../preferences.py" line="261"/>
         <source>Preferences</source>
         <translation>Настройки</translation>
     </message>
@@ -348,183 +387,183 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../settings.py" line="95"/>
+        <location filename="../settings.py" line="100"/>
         <source>Line Feed (\n)</source>
         <translation>подача строки (\n)</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="96"/>
+        <location filename="../settings.py" line="101"/>
         <source>Carriage Return (\r)</source>
         <translation>возврат каретки (\r)</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="97"/>
+        <location filename="../settings.py" line="102"/>
         <source>CR+LF (\r\n)</source>
         <translation>ВК+ПС (\r\n)</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="98"/>
+        <location filename="../settings.py" line="103"/>
         <source>LF+CR (\n\r)</source>
         <translation>ПС+ВК (\n\r)</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="101"/>
+        <location filename="../settings.py" line="106"/>
         <source>comma (,)</source>
         <translation>запятая (,)</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="102"/>
+        <location filename="../settings.py" line="107"/>
         <source>tab (\t)</source>
         <translation>табуляция (\t)</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="103"/>
+        <location filename="../settings.py" line="108"/>
         <source>semicolon (;)</source>
         <translation>точка с запятой (;)</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="104"/>
+        <location filename="../settings.py" line="109"/>
         <source>space ( )</source>
         <translation>пробел ( )</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="106"/>
+        <location filename="../settings.py" line="111"/>
         <source>MHz</source>
         <translation>МГц</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="106"/>
+        <location filename="../settings.py" line="111"/>
         <source>GHz</source>
         <translation>ГГц</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="106"/>
-        <location filename="../settings.py" line="113"/>
+        <location filename="../settings.py" line="111"/>
+        <location filename="../settings.py" line="118"/>
         <source>cm⁻¹</source>
         <translation>см⁻¹</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="106"/>
+        <location filename="../settings.py" line="111"/>
         <source>nm</source>
         <translation>нм</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="108"/>
+        <location filename="../settings.py" line="113"/>
         <source>lg(nm² × MHz)</source>
         <translation>lg(нм² · МГц)</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="109"/>
+        <location filename="../settings.py" line="114"/>
         <source>nm² × MHz</source>
         <translation>нм² · МГц</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="110"/>
+        <location filename="../settings.py" line="115"/>
         <source>lg(cm / molecule)</source>
         <translation>lg(см / молекула)</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="111"/>
+        <location filename="../settings.py" line="116"/>
         <source>cm / molecule</source>
         <translation>см / молекула</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="113"/>
+        <location filename="../settings.py" line="118"/>
         <source>meV</source>
         <translation>мэВ</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="113"/>
+        <location filename="../settings.py" line="118"/>
         <source>J</source>
         <translation>Дж</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="114"/>
+        <location filename="../settings.py" line="119"/>
         <source>K</source>
         <translation>К</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="114"/>
+        <location filename="../settings.py" line="119"/>
         <source>°C</source>
         <translation>°C</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="124"/>
+        <location filename="../settings.py" line="129"/>
         <source>When the program starts</source>
         <translation>При запуске приложения</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="128"/>
+        <location filename="../settings.py" line="133"/>
         <source>Display</source>
         <translation>Отображение</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="131"/>
+        <location filename="../settings.py" line="138"/>
         <source>Units</source>
         <translation>Единицы измерения</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="137"/>
+        <location filename="../settings.py" line="150"/>
         <source>Export</source>
         <translation>Экспорт</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="143"/>
+        <location filename="../settings.py" line="158"/>
         <source>Info</source>
         <translation>Информация</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="125"/>
+        <location filename="../settings.py" line="130"/>
         <source>Load catalogs</source>
         <translation>Загружать каталоги</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="126"/>
+        <location filename="../settings.py" line="131"/>
         <source>Check for update</source>
         <translation>Проверять обновления</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="129"/>
+        <location filename="../settings.py" line="134"/>
         <source>Allow rich text in formulas</source>
         <translation>Разрешить форматирование в формулах</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="132"/>
+        <location filename="../settings.py" line="139"/>
         <source>Frequency:</source>
         <translation>Частота:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="133"/>
+        <location filename="../settings.py" line="142"/>
         <source>Intensity:</source>
         <translation>Интенсивность:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="134"/>
+        <location filename="../settings.py" line="145"/>
         <source>Energy:</source>
         <translation>Энергия:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="135"/>
+        <location filename="../settings.py" line="146"/>
         <source>Temperature:</source>
         <translation>Температура:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="138"/>
+        <location filename="../settings.py" line="151"/>
         <source>With units</source>
         <translation>С единицами измерения</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="139"/>
+        <location filename="../settings.py" line="152"/>
         <source>Line ending:</source>
         <translation>Окончание строки:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="140"/>
+        <location filename="../settings.py" line="153"/>
         <source>CSV separator:</source>
         <translation>Разделитель в CSV:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="147"/>
+        <location filename="../settings.py" line="162"/>
         <source>InChI key search URL:</source>
         <translation>Адрес для поиска по ключу InChI:</translation>
     </message>
@@ -711,181 +750,181 @@
 <context>
     <name>UI</name>
     <message>
-        <location filename="../ui.py" line="119"/>
+        <location filename="../ui.py" line="126"/>
         <source>PyCatSearch (version {0})</source>
         <translation>PyCatSearch (версия {0})</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="121"/>
+        <location filename="../ui.py" line="128"/>
         <source>PyCatSearch</source>
         <translation>PyCatSearch</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="162"/>
+        <location filename="../ui.py" line="170"/>
         <source>Limit shown spectral lines</source>
         <translation>Ограничить показанные спектральные линии</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="163"/>
+        <location filename="../ui.py" line="171"/>
         <source>Minimal Intensity:</source>
         <translation>Мин. интенсивность:</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="170"/>
+        <location filename="../ui.py" line="178"/>
         <source>Temperature to calculate intensity</source>
         <translation>Температура, при которой считать интенсивность</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="171"/>
+        <location filename="../ui.py" line="179"/>
         <source>&#xa0;K</source>
         <translation>&#xa0;К</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="172"/>
+        <location filename="../ui.py" line="180"/>
         <source>Temperature:</source>
         <translation>Температура:</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="175"/>
+        <location filename="../ui.py" line="183"/>
         <source>Show</source>
         <translation>Показать</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="256"/>
-        <location filename="../ui.py" line="530"/>
-        <location filename="../ui.py" line="534"/>
-        <location filename="../ui.py" line="547"/>
+        <location filename="../ui.py" line="264"/>
+        <location filename="../ui.py" line="537"/>
+        <location filename="../ui.py" line="541"/>
+        <location filename="../ui.py" line="554"/>
         <source>Release Info</source>
         <translation>Информация о выпуске</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="257"/>
-        <location filename="../ui.py" line="535"/>
+        <location filename="../ui.py" line="265"/>
+        <location filename="../ui.py" line="542"/>
         <source>Version {release.version} published {release.pub_date} is available. Would you like to get the update? The app will try to restart.</source>
         <translation>Доступна версия {release.version}, опубликованная {release.pub_date}. Загрузить обновление? Программа попробует перезапуститься.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="309"/>
+        <location filename="../ui.py" line="317"/>
         <source>Select a catalog file to load.</source>
         <translation>Выберите файл каталога для загрузки.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="314"/>
-        <location filename="../ui.py" line="326"/>
+        <location filename="../ui.py" line="321"/>
+        <location filename="../ui.py" line="333"/>
         <source>Loading…</source>
         <translation>Загрузка…</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="316"/>
-        <location filename="../ui.py" line="328"/>
+        <location filename="../ui.py" line="323"/>
+        <location filename="../ui.py" line="335"/>
         <source>Catalogs loaded.</source>
         <translation>Каталоги загружены.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="318"/>
-        <location filename="../ui.py" line="330"/>
+        <location filename="../ui.py" line="325"/>
+        <location filename="../ui.py" line="337"/>
         <source>Failed to load a catalog.</source>
         <translation>Не удалось загрузить каталог.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="355"/>
+        <location filename="../ui.py" line="361"/>
         <source>Unable to save the catalog</source>
         <translation>Не удаётся сохранить каталог</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="356"/>
+        <location filename="../ui.py" line="362"/>
         <source>Error {exception} occurred while saving {filename}. Try another location.</source>
         <translation>При сохранении {filename} произошла ошибка {exception}. Попробуйте другое местоположение.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="384"/>
+        <location filename="../ui.py" line="390"/>
         <source>{value} {unit}</source>
         <comment>format value in html</comment>
         <translation>{value} {unit}</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="386"/>
+        <location filename="../ui.py" line="392"/>
         <source>{value}</source>
         <comment>format value in html</comment>
         <translation>{value}</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="530"/>
+        <location filename="../ui.py" line="537"/>
         <source>Update check failed.</source>
         <translation>Ошибка при проверке наличия обновлений.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="547"/>
+        <location filename="../ui.py" line="554"/>
         <source>You are using the latest version.</source>
         <translation>Вы используете новейшую версию.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="556"/>
+        <location filename="../ui.py" line="563"/>
         <source>Catalog Info</source>
         <translation>Информация о каталоге</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="556"/>
+        <location filename="../ui.py" line="563"/>
         <source>No catalogs loaded</source>
         <translation>Нет загруженных каталогов</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="561"/>
+        <location filename="../ui.py" line="568"/>
         <source>CatSearch is a means of searching through spectroscopy lines catalogs. It&apos;s an offline application.</source>
         <translation>CatSearch&#xa0;— это средство поиска по каталогам спектральных линий. Это приложение не требует доступа в Интернет для работы.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="564"/>
+        <location filename="../ui.py" line="571"/>
         <source>It relies on the data stored in JSON files.</source>
         <translation>Оно полагается на данные, хранящиеся в файлах JSON.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="565"/>
+        <location filename="../ui.py" line="572"/>
         <source>One can use their own catalogs as well as download data from &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; and &lt;a href=&quot;https://cdms.astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt; spectroscopy databases available on the Internet.</source>
         <translation>Можно использовать свои каталоги или загрузить данные из баз спектральных линий &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; и &lt;a href=&quot;https://astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt;, доступных в Интернете.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="571"/>
+        <location filename="../ui.py" line="578"/>
         <source>Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported.</source>
         <translation>Поддерживаются файлы JSON и файлы JSON, сжатые GZip, BZip2 или LZMA.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="572"/>
+        <location filename="../ui.py" line="579"/>
         <source>See {readme_link} for more info.</source>
         <translation>Больше информации&#xa0;— в {readme_link}.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="574"/>
+        <location filename="../ui.py" line="581"/>
         <source>readme</source>
         <translation>описании</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="577"/>
+        <location filename="../ui.py" line="584"/>
         <source>CatSearch is licensed under the {license_link}.</source>
         <translation>CatSearch поставляется под лицензией {license_link}.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="578"/>
+        <location filename="../ui.py" line="585"/>
         <source>GNU LGPL version 3</source>
         <translation>GNU LGPL версии 3</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="580"/>
+        <location filename="../ui.py" line="587"/>
         <source>The source code is available on {repo_link}.</source>
         <translation>Исходный код доступен на {repo_link}.</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="586"/>
+        <location filename="../ui.py" line="593"/>
         <source>About CatSearch</source>
         <translation>О CatSearch</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="726"/>
+        <location filename="../ui.py" line="715"/>
         <source>Searching…</source>
         <translation>Поиск…</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="734"/>
+        <location filename="../ui.py" line="723"/>
         <source>Ready.</source>
         <translation>Готово.</translation>
     </message>
@@ -893,7 +932,7 @@
 <context>
     <name>UpdateDialog</name>
     <message>
-        <location filename="../update_dialog.py" line="28"/>
+        <location filename="../update_dialog.py" line="34"/>
         <source>Update Catalog</source>
         <translation>Обновить каталог</translation>
     </message>
@@ -919,14 +958,14 @@
 <context>
     <name>SaveCatalogWizard</name>
     <message>
-        <location filename="../catalog_wizard/__init__.py" line="50"/>
-        <location filename="../catalog_wizard/__init__.py" line="76"/>
+        <location filename="../catalog_wizard/__init__.py" line="53"/>
+        <location filename="../catalog_wizard/__init__.py" line="78"/>
         <source>Unable to save the catalog</source>
         <translation>Не удаётся сохранить каталог</translation>
     </message>
     <message>
-        <location filename="../catalog_wizard/__init__.py" line="51"/>
-        <location filename="../catalog_wizard/__init__.py" line="77"/>
+        <location filename="../catalog_wizard/__init__.py" line="54"/>
+        <location filename="../catalog_wizard/__init__.py" line="79"/>
         <source>Error {exception} occurred while saving {filename}. Try another location.</source>
         <translation>При сохранении {filename} произошла ошибка {exception}. Попробуйте другое местоположение.</translation>
     </message>
