@@ -64,5 +64,6 @@ line-length = 120
 line-length = 120
 
 [tool.ruff.lint]
-fixable = ['ALL']
+fixable = ["ALL"]
 unfixable = []
+select = ["NPY201"]
