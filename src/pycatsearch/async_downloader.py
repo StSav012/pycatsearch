@@ -6,6 +6,7 @@ import logging
 import random
 from contextlib import suppress
 from math import inf
+from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 from typing import Any, Final, Mapping, cast
@@ -144,7 +145,15 @@ class Downloader(Thread):
                         headers={"Content-Type": "application/x-www-form-urlencoded"},
                     )
                     if not species_list:
-                        return []
+                        import gzip
+
+                        try:
+                            # try using a local copy of the data
+                            with gzip.open(Path(__file__).parent / "species.json.gz", "rb") as f_in:
+                                species_list = f_in.read()
+                        except (OSError, EOFError, Exception):
+                            return []
+
                     data: dict[str, int | str | list[dict[str, None | int | str]]] = json.loads(species_list)
                     return ensure_unique_species_tags(
                         [purge_null_data(trim_strings(s)) for s in data.get("species", [])]
