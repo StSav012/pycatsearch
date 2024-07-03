@@ -111,8 +111,6 @@ class MenuBar(QMenuBar):
         self.action_about_qt.setMenuRole(QAction.MenuRole.AboutQtRole)
 
         self.action_save_as.setDisabled(True)
-        # the downloading is broken; until fixed, disable the functions
-        self.action_download_catalog.setDisabled(True)
 
         self.action_show_substance.setCheckable(True)
         self.action_show_frequency.setCheckable(True)

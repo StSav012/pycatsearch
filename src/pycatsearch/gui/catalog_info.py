@@ -64,10 +64,9 @@ class SourcesList(QTableWidget):
             )
         )
         self._context_menu.addSeparator()
-        # the downloading is broken; until fixed, disable the functions
         self._context_menu.addAction(
             qta_icon("mdi6.update"), self.tr("&Update Catalog"), self._on_update_catalog_triggered
-        ).setDisabled(True)
+        )
 
         self.cellDoubleClicked.connect(self._on_item_double_clicked)
 
