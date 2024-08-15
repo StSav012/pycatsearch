@@ -198,7 +198,11 @@ class Catalog:
 
         @contextmanager
         def open(
-            self, mode: str, encoding: str | None = None, errors: str | None = None, newline: str | None = None
+            self,
+            mode: str,
+            encoding: str | None = None,
+            errors: str | None = None,
+            newline: str | None = None,
         ) -> TextIO | BinaryIO:
             """
             Open a file in a safe way. Create a temporary file when writing.
@@ -209,17 +213,21 @@ class Catalog:
             if encoding is None and "b" not in mode.casefold():
                 encoding = "utf-8"
             tmp_path: Path = self._path.with_name(self._path.name + ".part")
-            file: TextIO | BinaryIO
-            with self._opener(
-                tmp_path if writing else self._path, mode=mode, encoding=encoding, errors=errors, newline=newline
-            ) as file:
-                try:
-                    yield file
-                finally:
-                    if writing:
-                        file.flush()
-                        fsync(file.fileno())
-                        tmp_path.replace(self._path)
+
+            # manually open and close the file here to close it before replacing if writing
+            file: TextIO | BinaryIO = self._opener(
+                tmp_path if writing else self._path,
+                mode=mode,
+                encoding=encoding,
+                errors=errors,
+                newline=newline,
+            )
+            try:
+                yield file
+            finally:
+                file.close()
+                if writing:
+                    tmp_path.replace(self._path)
 
     def __init__(self, *catalog_file_names: str | PathLike[str]) -> None:
         self._data: CatalogData = CatalogData()
