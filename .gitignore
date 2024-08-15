@@ -8,6 +8,12 @@
 *.json.xz
 *.json.lzma
 
+# CDMS provides databases at https://cdms.astro.uni-koeln.de/cdms/portal/cdms_lite__official.db.gz
+# and https://cdms.astro.uni-koeln.de/cdms/portal/cdms_lite.db.gz,
+# which are in the SQLite format 3 and are equal in size (as of 2024-03-26).
+cdms_lite*.db
+cdms_lite*.db.gz
+
 typograph.py
 
 /dist/
