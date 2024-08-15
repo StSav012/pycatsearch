@@ -7,7 +7,9 @@ import random
 from contextlib import suppress
 from math import inf
 from pathlib import Path
+from platform import system
 from queue import Empty, Queue
+from ssl import SSLCertVerificationError
 from threading import Thread
 from typing import Any, Final, Mapping, cast
 from urllib.error import HTTPError
@@ -81,10 +83,11 @@ class Downloader(Thread):
             ) as session:
 
                 async def get(url: str, headers: Mapping[str, str] | None = None) -> bytes:
+                    ssl: bool | None = None
                     response: aiohttp.ClientResponse
                     while self._run:
                         try:
-                            async with session.get(url, headers=headers) as response:
+                            async with session.get(url, headers=headers, ssl=ssl) as response:
                                 return await response.read()
                         except asyncio.exceptions.CancelledError as ex:
                             if self._run:
@@ -93,6 +96,9 @@ class Downloader(Thread):
                             logger.warning(f"{url}: {str(ex.message)}")
                         except aiohttp.client_exceptions.ClientConnectorError as ex:
                             logger.warning(f"{str(ex.args[1])} to {url}")
+                            if isinstance(ex.args[1], SSLCertVerificationError) and system() == "Windows":
+                                logger.critical("Disabling the SSL Certificate validation for the URL!")
+                                ssl = False
                         except aiohttp.client_exceptions.ClientOSError as ex:
                             logger.warning(f"{url}: {str(ex)}")
                         except aiohttp.client_exceptions.ClientPayloadError as ex:
