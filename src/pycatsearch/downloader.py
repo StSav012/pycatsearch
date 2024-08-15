@@ -153,7 +153,11 @@ class Downloader(Thread):
                 else:
                     return entries
 
-            species_list: bytes = b""
+            species_list: bytes = post(
+                "https://cdms.astro.uni-koeln.de/cdms/portal/json_list/species/",
+                {"database": -1},
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+            )
             if not species_list:
                 import gzip
 
