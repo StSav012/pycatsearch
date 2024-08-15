@@ -133,7 +133,7 @@ class SourcesList(QTableWidget):
             if info_item.build_datetime is not None:
                 qt_datetime: QDateTime = QDateTime(info_item.build_datetime)
                 qt_datetime.setTimeZone(QTimeZone(round(info_item.build_datetime.utcoffset().total_seconds())))
-                item = QTableWidgetItem(QLocale().toString(qt_datetime))
+                item = QTableWidgetItem(qt_datetime.toLocalTime().toString())
                 self.setItem(row, SourcesList.Columns.BuildTime, item)
         self.setColumnHidden(
             SourcesList.Columns.BuildTime,
@@ -163,7 +163,7 @@ class CatalogInfo(QDialog):
         frequency_limits_list: TitledListWidget = TitledListWidget(self)
         frequency_limits_list.setTitle(self.tr("Frequency limits:"))
         layout.addWidget(frequency_limits_list)
-        locale: QLocale = QLocale()
+        locale: QLocale = self.locale()
         frequency_limits_list.addItems(
             [
                 self.tr("{min_frequency} to {max_frequency} MHz").format(
