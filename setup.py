@@ -25,11 +25,10 @@ def required_packages() -> list[str]:
         blacklisted_versions: Collection[str] = ()
 
         def __str__(self) -> str:
-            if self.min_version:
-                return self.package_name + ", ".join(
-                    [" >= " + self.min_version] + [("!= " + blv) for blv in self.blacklisted_versions]
-                )
-            return self.package_name
+            return self.package_name + ",".join(
+                ([" >= " + self.min_version] if self.min_version else [])
+                + [(" != " + blv) for blv in self.blacklisted_versions]
+            )
 
     def is_package_importable(package_requirement: PackageRequirement) -> bool:
         from importlib.metadata import version, PackageNotFoundError
