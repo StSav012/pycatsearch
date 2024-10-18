@@ -11,4 +11,6 @@ orjson
 qtawesome
 
 # to build a package and install it
-setuptools
+setuptools>=45
+packaging>=20
+setuptools_scm[toml]>=6.2
