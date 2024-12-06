@@ -131,9 +131,9 @@ class PreferencePage(BaseLogger, QScrollArea):
                 else:
                     PreferencePage.logger.error(f"The type of {value2.callback!r} is not supported")
                     continue
-                spin_box.setValue(current_value)
                 spin_box.setRange(value2.range.start, value2.range.stop)
                 spin_box.setSingleStep(value2.range.step or 1)
+                spin_box.setValue(current_value)
                 spin_box.setPrefix(value2.prefix_and_suffix[0])
                 spin_box.setSuffix(value2.prefix_and_suffix[1])
                 spin_box.valueChanged.connect(partial(_on_event, callback=value2.callback))
