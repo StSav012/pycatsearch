@@ -29,7 +29,7 @@ if __name__ == "__main__":
         from pycatsearch import main
     except ImportError:
         __author__ = "StSav012"
-        __original_name__ = "py" "cat" "search"
+        __original_name__ = "pycatsearch"
 
         try:
             from updater import update_with_pip

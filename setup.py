@@ -67,8 +67,7 @@ def required_packages() -> list[str]:
     uname: platform.uname_result = platform.uname()
     if (
         # Windows 10 21H2 or later required
-        uname.system == "Windows"
-        and Version(uname.version) < Version("10.0.19044")
+        uname.system == "Windows" and Version(uname.version) < Version("10.0.19044")
     ) or uname.machine not in ("x86_64", "AMD64"):
         # Qt6 does not support the OSes
         qt_list = [

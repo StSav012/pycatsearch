@@ -9,7 +9,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 
 __author__ = "StSav012"
-__original_name__ = "py" "cat" "search"
+__original_name__ = "pycatsearch"
 
 try:
     from ._version import __version__
@@ -99,16 +99,16 @@ def _argument_parser() -> ArgumentParser:
 
 def _cli_argument_parser() -> ArgumentParser:
     ap: ArgumentParser = _argument_parser()
-    ap.add_argument("-f" "min", "--min-frequency", type=float, help="the lower frequency [MHz] to take")
-    ap.add_argument("-f" "max", "--max-frequency", type=float, help="the upper frequency [MHz] to take")
+    ap.add_argument("-fmin", "--min-frequency", type=float, help="the lower frequency [MHz] to take")
+    ap.add_argument("-fmax", "--max-frequency", type=float, help="the upper frequency [MHz] to take")
     ap.add_argument(
-        "-i" "min",
+        "-imin",
         "--min-intensity",
         type=float,
         help="the minimal intensity [log10(nm²×MHz)] to take",
     )
     ap.add_argument(
-        "-i" "max",
+        "-imax",
         "--max-intensity",
         type=float,
         help="the maximal intensity [log10(nm²×MHz)] to take",

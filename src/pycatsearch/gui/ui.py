@@ -23,9 +23,9 @@ from qtpy.QtWidgets import (
 )
 
 from .about_dialog import about
+from .catalog_file_dialog import CatalogOpenFileDialog, CatalogSaveFileDialog
 from .catalog_info import CatalogInfo
 from .download_dialog import DownloadDialog
-from .catalog_file_dialog import CatalogOpenFileDialog, CatalogSaveFileDialog
 from .float_spinbox import FloatSpinBox
 from .found_lines_model import FoundLinesModel
 from .frequency_box import FrequencyBox
@@ -41,6 +41,7 @@ from ..catalog import Catalog, CatalogType
 from ..utils import ReleaseInfo, a_tag, latest_release, p_tag, remove_html, tag, update_with_pip, wrap_in_html
 
 if sys.version_info < (3, 10):
+    # noinspection PyUnresolvedReferences
     from ..utils import zip
 
 __all__ = ["UI"]

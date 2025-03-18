@@ -565,17 +565,17 @@ def best_name(entry: dict[str, int | str | list[dict[str, float]]], allow_html: 
                 ):
                     if state_html := cast(str, entry.get(STATE_HTML, "")):
                         # span tags are needed when the molecule symbol is malformed
-                        return f"<span>{molecule_symbol}</span>, " f"{chem_html(tex_to_html_entity(str(state_html)))}"
+                        return f"<span>{molecule_symbol}</span>, {chem_html(tex_to_html_entity(str(state_html)))}"
                     return str(molecule_symbol)
                 else:
                     if state_html := cast(str, entry.get(STATE_HTML, "")):
-                        return f"{chem_html(str(isotopolog))}, " f"{chem_html(tex_to_html_entity(str(state_html)))}"
+                        return f"{chem_html(str(isotopolog))}, {chem_html(tex_to_html_entity(str(state_html)))}"
                     return chem_html(str(isotopolog))
             else:
                 if state_html := cast(str, entry.get(STATE_HTML, "")):
                     return f"{isotopolog}, {remove_html(tex_to_html_entity(state_html))}"
                 if state := cast(str, entry.get(STATE, "")):
-                    return f'{isotopolog}, {remove_html(tex_to_html_entity(state.strip("$")))}'
+                    return f"{isotopolog}, {remove_html(tex_to_html_entity(state.strip('$')))}"
                 return isotopolog
 
         for key in (NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA):

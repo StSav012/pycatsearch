@@ -344,8 +344,8 @@ def download() -> None:
         "Find more at https://github.com/StSav012/pycatsearch.",
     )
     ap.add_argument("catalog", type=Path, help="the catalog location to save into (required)")
-    ap.add_argument("-f" "min", "--min-frequency", type=float, help="the lower frequency [MHz] to take", default=-inf)
-    ap.add_argument("-f" "max", "--max-frequency", type=float, help="the upper frequency [MHz] to take", default=+inf)
+    ap.add_argument("-fmin", "--min-frequency", type=float, help="the lower frequency [MHz] to take", default=-inf)
+    ap.add_argument("-fmax", "--max-frequency", type=float, help="the upper frequency [MHz] to take", default=+inf)
     ap.add_argument("-b", "--base", type=Path, help="an existing catalog to base the data on", default=None)
     args: argparse.Namespace = ap.parse_intermixed_args()
 

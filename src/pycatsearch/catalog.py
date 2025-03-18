@@ -4,7 +4,7 @@ import lzma
 import math
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from os import PathLike, fsync
+from os import PathLike
 from pathlib import Path
 from typing import AnyStr, BinaryIO, Callable, Dict, Iterable, List, NamedTuple, TextIO, Union, cast
 
@@ -164,9 +164,9 @@ class Catalog:
 
         OPENERS_BY_SIGNATURE: dict[str, Callable] = {
             b"{": open,
-            b"\x1F\x8B": gzip.open,
+            b"\x1f\x8b": gzip.open,
             b"BZh": bz2.open,
-            b"\xFD\x37\x7A\x58\x5A\x00": lzma.open,
+            b"\xfd\x37\x7a\x58\x5a\x00": lzma.open,
         }
 
         def __init__(self, path: str | PathLike[str]) -> None:

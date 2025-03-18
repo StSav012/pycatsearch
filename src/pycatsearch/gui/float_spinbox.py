@@ -36,7 +36,7 @@ class FloatSpinBox(QDoubleSpinBox):
         ok: bool
         value, ok = locale.toDouble(text[len(self.prefix()) : -len(self.suffix())])
         if not ok:
-            raise ValueError(f"could not convert string to float: {text[len(self.prefix()):-len(self.suffix())]!r}")
+            raise ValueError(f"could not convert string to float: {text[len(self.prefix()) : -len(self.suffix())]!r}")
         return value
 
     def textFromValue(self, v: float) -> str:

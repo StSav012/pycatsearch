@@ -37,6 +37,7 @@ def _warn_about_outdated_package(package_name: str, package_version: str, releas
 
 
 def _make_old_qt_compatible_again() -> None:
+    # noinspection PyUnresolvedReferences
     def to_iso_format(s: str) -> str:
         if sys.version_info < (3, 11):
             import re
@@ -54,6 +55,7 @@ def _make_old_qt_compatible_again() -> None:
                 )
                 return date + "T" + time + groups["offset"]
 
+            # noinspection PyUnresolvedReferences
             def from_iso_calendar(m: re.Match[str]) -> str:
                 from datetime import date
 
