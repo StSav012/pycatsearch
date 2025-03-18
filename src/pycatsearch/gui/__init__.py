@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 import sys
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone

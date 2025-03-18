@@ -1,11 +1,8 @@
-# coding=utf-8
-from __future__ import annotations
-
 from abc import abstractmethod
 from functools import partial
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Any, ClassVar, Hashable, TYPE_CHECKING, cast
+from typing import Any, ClassVar, Hashable, cast
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -33,10 +30,9 @@ __all__ = ["Preferences"]
 
 class BaseLogger:
     logger: ClassVar[Logger]
-    if TYPE_CHECKING:
-        from typing import ParamSpec
+    from typing import ParamSpec
 
-        _P = ParamSpec("_P")
+    _P = ParamSpec("_P")
 
     def __new__(cls, *args: _P.args, **kwargs: _P.kwargs):
         cls.logger = getLogger(cls.__name__)

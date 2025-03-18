@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 import sys
 from math import inf
 from pathlib import Path

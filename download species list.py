@@ -1,6 +1,5 @@
-# coding=utf-8
 """
-Download the species list and save it to ./species.json 
+Download the species list and save it to ./species.json
 and to ./src/pycatsearch/species.json.gz if the ./src/pycatsearch/ path exists.
 
 Backup the existing files.
@@ -9,8 +8,6 @@ The JSON is prepended with the copyright notice and appended with the timestamp 
 
 The code will crash unless the operations are permitted.
 """
-
-from __future__ import annotations
 
 import gzip
 import json

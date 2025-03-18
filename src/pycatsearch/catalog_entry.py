@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from math import inf, log10, nan
 
 from .utils import FREQUENCY, INTENSITY, LOWER_STATE_ENERGY, M_LOG10E, T0, c, h, k

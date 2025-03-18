@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 import sys
 
 if sys.version_info < (3, 8):

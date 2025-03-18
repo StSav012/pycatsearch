@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from qtpy.QtCore import QModelIndex, QPersistentModelIndex, QRect, QSize
 from qtpy.QtGui import QAbstractTextDocumentLayout, QPainter, QTextDocument
 from qtpy.QtWidgets import QApplication, QStyle, QStyleOptionViewItem, QStyledItemDelegate

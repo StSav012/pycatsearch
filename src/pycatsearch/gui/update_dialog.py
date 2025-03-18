@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from math import nan
 from os import PathLike
 from pathlib import Path

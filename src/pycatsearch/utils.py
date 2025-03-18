@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 import html
 import html.entities
 import itertools
@@ -661,7 +658,9 @@ class ReleaseInfo:
     def __bool__(self) -> bool:
         return bool(self.version) and bool(self.pub_date)
 
-    def __lt__(self, other: str | ReleaseInfo) -> bool:
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, (str, ReleaseInfo)):
+            raise TypeError("The argument must be a string or ReleaseInfo")
         if isinstance(other, str):
             other = ReleaseInfo(version=other)
         i: str
@@ -684,9 +683,9 @@ class ReleaseInfo:
                 return i < j
         return False
 
-    def __eq__(self, other: str | ReleaseInfo) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, (str, ReleaseInfo)):
-            return NotImplemented
+            raise TypeError("The argument must be a string or ReleaseInfo")
         if isinstance(other, str):
             other = ReleaseInfo(version=other)
         return self.version == other.version
@@ -772,6 +771,7 @@ def a_tag(text: str, url: str) -> str:
 
 
 if sys.version_info < (3, 10):
+    # noinspection PyUnresolvedReferences
     import builtins
 
     # noinspection PyShadowingBuiltins, PyUnusedLocal

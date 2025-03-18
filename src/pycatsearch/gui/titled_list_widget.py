@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from typing import Sequence
 
 from qtpy.QtWidgets import QAbstractScrollArea, QLabel, QListWidget, QVBoxLayout, QWidget

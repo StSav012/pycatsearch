@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from qtpy.QtWidgets import QWidget
 
 from .selectable_label import SelectableLabel

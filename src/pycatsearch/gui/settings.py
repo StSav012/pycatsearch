@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from contextlib import contextmanager, suppress
 from os import PathLike, linesep
 from pathlib import Path

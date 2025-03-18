@@ -1,10 +1,12 @@
-# coding=utf-8
-from __future__ import annotations
-
+import atexit
+import enum
+import http
 import platform
+import shutil
 import sys
 from argparse import ArgumentParser, Namespace, ZERO_OR_MORE
 from pathlib import Path
+from tempfile import mkdtemp
 
 __author__ = "StSav012"
 __original_name__ = "py" "cat" "search"
@@ -13,6 +15,76 @@ try:
     from ._version import __version__
 except ImportError:
     __version__ = ""
+
+
+if sys.version_info < (3, 10):
+
+    def list_files(path: Path, *, suffix: "str | None" = None) -> "list[Path]":
+        files: "list[Path]" = []
+        if path.is_dir():
+            for file in path.iterdir():
+                files.extend(list_files(file, suffix=suffix))
+        elif path.is_file() and (suffix in (None, path.suffix)):
+            files.append(path.absolute())
+        return files
+
+    me: Path = Path(__file__)
+    my_parent: Path = me.parent
+
+    annotations_needed: bool = False
+    for f in list_files(my_parent):
+        if f.is_file():
+            if f.suffix == me.suffix:
+                lines: "list[str]" = f.read_text().splitlines()
+                if not any(line.startswith("from __future__ import annotations") for line in lines):
+                    annotations_needed = True
+
+    if annotations_needed:
+        tmp_dir: Path = Path(mkdtemp())
+        sys.path.insert(0, str(tmp_dir))
+
+        annotations_added: bool = False
+
+        for f in list_files(my_parent):
+            if f.is_file():
+                (tmp_dir / __original_name__ / f.relative_to(my_parent)).parent.mkdir(parents=True, exist_ok=True)
+                if f.suffix == me.suffix:
+                    lines: "list[str]" = f.read_text().splitlines()
+                    if not any(line.startswith("from __future__ import annotations") for line in lines):
+                        lines.insert(0, "from __future__ import annotations")
+                        annotations_added = True
+                    new_text: str = "\n".join(lines)
+                    new_text = new_text.replace("ParamSpec", "TypeVar")
+                    (tmp_dir / __original_name__ / f.relative_to(my_parent)).write_text(new_text)
+                else:
+                    (tmp_dir / __original_name__ / f.relative_to(my_parent)).write_bytes(f.read_bytes())
+            elif f.is_dir():
+                (tmp_dir / __original_name__ / f.relative_to(my_parent)).mkdir()
+
+        if annotations_added:
+            for m in list(sys.modules):
+                if m.startswith(my_parent.name):
+                    if m in sys.modules:  # check again in case the module's gone midway
+                        sys.modules.pop(m)
+
+            import pycatsearch
+
+        atexit.register(shutil.rmtree, tmp_dir, ignore_errors=True)
+
+if sys.version_info < (3, 11):
+
+    class HTTPMethod(enum.Enum):
+        CONNECT = "CONNECT"
+        DELETE = "DELETE"
+        GET = "GET"
+        HEAD = "HEAD"
+        OPTIONS = "OPTIONS"
+        PATCH = "PATCH"
+        POST = "POST"
+        PUT = "PUT"
+        TRACE = "TRACE"
+
+    http.HTTPMethod = HTTPMethod
 
 
 def _argument_parser() -> ArgumentParser:

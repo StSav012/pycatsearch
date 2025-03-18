@@ -1,6 +1,3 @@
-# coding=utf-8
-from __future__ import annotations
-
 import site
 import sys
 from typing import cast

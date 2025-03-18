@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from qtpy.QtCore import QLocale
 from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget, QWizard, QWizardPage
 

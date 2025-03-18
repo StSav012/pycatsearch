@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-from __future__ import annotations
 
 
 def _third_party_modules() -> list[str]:

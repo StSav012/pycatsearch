@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from math import inf
 
 from qtpy.QtWidgets import QDialog, QWidget

@@ -42,7 +42,6 @@ python3 -m pycatsearch --min-frequency 118749 --max-frequency 118751 catalog.jso
 In a code:
 
 ```python
-# coding=utf-8
 from pycatsearch.catalog import Catalog
 
 c = Catalog('catalog.json.gz')
@@ -140,7 +139,6 @@ pycatsearch-downloader --min-frequency 115000 --max-frequency 178000 catalog.jso
 In a code:
 
 ```python
-# coding=utf-8
 from pycatsearch import downloader
 
 downloader.save_catalog('catalog.json.gz', (115000, 178000))
@@ -184,7 +182,6 @@ pycatsearch-async-downloader --min-frequency 115000 --max-frequency 178000 catal
 In a code:
 
 ```python
-# coding=utf-8
 from pycatsearch import async_downloader
 
 async_downloader.save_catalog('catalog.json.gz', (115000, 178000))
