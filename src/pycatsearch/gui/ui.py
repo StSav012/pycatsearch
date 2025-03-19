@@ -307,8 +307,8 @@ class UI(QMainWindow):
 
     @Slot(QItemSelection, QItemSelection)
     def _on_table_item_selection_changed(self, _selected: QItemSelection, _deselected: QItemSelection) -> None:
-        self.menu_bar.action_copy.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
-        self.menu_bar.action_substance_info.setEnabled(bool(self.results_table.selectionModel().selectedRows()))
+        self.menu_bar.action_copy.setEnabled(self.results_table.selectionModel().hasSelection())
+        self.menu_bar.action_substance_info.setEnabled(self.results_table.selectionModel().hasSelection())
 
     @Slot()
     def _on_action_load_triggered(self) -> None:
@@ -370,7 +370,7 @@ class UI(QMainWindow):
         Convert selected rows to string for copying as rich text
         :return: the rich text representation of the selected table lines
         """
-        if not self.results_table.selectionModel().selectedRows():
+        if not self.results_table.selectionModel().hasSelection():
             return ""
 
         units: list[str] = [
@@ -495,7 +495,7 @@ class UI(QMainWindow):
 
     @Slot()
     def _on_action_substance_info_triggered(self) -> None:
-        if self.results_table.selectionModel().selectedRows():
+        if self.results_table.selectionModel().hasSelection():
             syn: SubstanceInfo = SubstanceInfo(
                 self.catalog,
                 self.results_model.row(self.results_table.selectionModel().selectedRows()[0].row()).species_tag,
