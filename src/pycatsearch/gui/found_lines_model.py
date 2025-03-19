@@ -1,5 +1,5 @@
 import enum
-from typing import Callable, Final
+from typing import Any, Callable, Final
 
 from qtpy.QtCore import QAbstractTableModel, QLocale, QModelIndex, QPersistentModelIndex, Qt
 from qtpy.QtWidgets import QWidget
@@ -46,9 +46,9 @@ class FoundLinesModel(QAbstractTableModel):
             self.lower_state_energy_str: str = lower_state_energy_str
             self.lower_state_energy: float = lower_state_energy
 
-        def __eq__(self, other: "FoundLinesModel.DataType") -> int:
+        def __eq__(self, other: Any) -> bool:
             if not isinstance(other, FoundLinesModel.DataType):
-                return NotImplemented
+                raise NotImplementedError(f"Comparison with {type(other)} is not supported")
             return (
                 self.species_tag == other.species_tag
                 and self.frequency == other.frequency
