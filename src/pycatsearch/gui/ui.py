@@ -430,7 +430,6 @@ class UI(QMainWindow):
         if self.preferences_dialog.exec() == Preferences.DialogCode.Accepted:
             self.fill_parameters()
             if self.results_model.rowCount():
-                self.preset_table()
                 self.fill_table()
             else:
                 self.preset_table()
