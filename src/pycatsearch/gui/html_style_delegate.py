@@ -1,5 +1,5 @@
 from qtpy.QtCore import QModelIndex, QPersistentModelIndex, QRect, QSize
-from qtpy.QtGui import QAbstractTextDocumentLayout, QPainter, QTextDocument
+from qtpy.QtGui import QAbstractTextDocumentLayout, QPainter, QPalette, QTextDocument
 from qtpy.QtWidgets import QApplication, QStyle, QStyleOptionViewItem, QStyledItemDelegate
 
 __all__ = ["HTMLDelegate"]
@@ -23,6 +23,8 @@ class HTMLDelegate(QStyledItemDelegate):
         option.text = ""
         style.drawControl(QStyle.ControlElement.CE_ItemViewItem, option, painter)
         ctx: QAbstractTextDocumentLayout.PaintContext = QAbstractTextDocumentLayout.PaintContext()
+        if option.state & QStyle.StateFlag.State_Selected:
+            ctx.palette.setBrush(QPalette.ColorRole.Text, option.palette.highlightedText())
         text_rect: QRect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, option)
         painter.save()
         painter.translate(text_rect.topLeft())
