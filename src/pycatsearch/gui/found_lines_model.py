@@ -102,7 +102,7 @@ class FoundLinesModel(QAbstractTableModel):
         super().__init__(parent)
         self._settings: Settings = settings
         self._data: list[FoundLinesModel.DataType] = []
-        self._rows_loaded: int = FoundLinesModel.ROW_BATCH_COUNT
+        self._rows_loaded: int = 0
 
         unit_format: Final[str] = self.tr("{value} [{unit}]", "unit format")
         self._header: Final[list[str]] = [
@@ -195,7 +195,7 @@ class FoundLinesModel(QAbstractTableModel):
                 for line in entries[species_tag][LINES]
             )
         )
-        self._rows_loaded = FoundLinesModel.ROW_BATCH_COUNT
+        self._rows_loaded = 0
         self.endResetModel()
 
     def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
