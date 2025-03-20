@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from functools import partialmethod
 from os import PathLike
 from pathlib import Path
-from typing import Any, AnyStr
+from typing import Any
 
 from qtpy import PYSIDE2, QT6
 from qtpy.QtCore import QLibraryInfo, QLocale, QTranslator, Qt, qVersion
@@ -14,9 +14,9 @@ from qtpy.QtWidgets import QAbstractSpinBox, QApplication, QDialog, QMenu
 __all__ = ["qta_icon", "run"]
 
 
-def _version_tuple(version_string: AnyStr) -> tuple[int | AnyStr, ...]:
-    result: tuple[int | AnyStr, ...] = tuple()
-    part: AnyStr
+def _version_tuple(version_string: bytes | str) -> tuple[int | bytes | str, ...]:
+    result: tuple[int | bytes | str, ...] = tuple()
+    part: bytes | str
     for part in version_string.split("." if isinstance(version_string, str) else b"."):
         try:
             result += (int(part),)
