@@ -1,5 +1,6 @@
 import site
 import sys
+from pathlib import Path
 from typing import cast
 
 from qtpy.QtGui import QTextDocument
@@ -48,7 +49,9 @@ class AboutBox(QMessageBox):
             tabs.addTab(about_text, self.tr("About"))
 
             third_party_modules: list[str] = []
-            prefixes: list[str] = site.getsitepackages([sys.exec_prefix, sys.prefix])
+            prefixes: list[Path] = [
+                Path(prefix).resolve() for prefix in site.getsitepackages([sys.exec_prefix, sys.prefix])
+            ]
             for module_name, module in sys.modules.copy().items():
                 paths = getattr(module, "__path__", [])
                 if (
@@ -56,7 +59,7 @@ class AboutBox(QMessageBox):
                     and module_name != "_distutils_hack"
                     and paths
                     and getattr(module, "__package__", "")
-                    and any(p.startswith(prefix) for p in paths for prefix in prefixes)
+                    and any(prefix in Path(p).resolve().parents for p in paths for prefix in prefixes)
                 ):
                     third_party_modules.append(module_name)
             if third_party_modules:
