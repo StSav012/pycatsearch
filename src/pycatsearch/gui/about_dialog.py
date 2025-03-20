@@ -75,7 +75,7 @@ class AboutBox(QMessageBox):
                 third_party_label: QTextBrowser = QTextBrowser(self)
                 third_party_label.setText(tag("html", "".join(map(p_tag, lines))))
                 tabs.addTab(third_party_label, "Third-Party")
-                layout.addWidget(tabs, 0, 2, 1, 1)
+            layout.addWidget(tabs, 0, 2, 1, 1)
 
 
 def about(parent: QWidget | None = None, title: str = "", text: str = "") -> int:
