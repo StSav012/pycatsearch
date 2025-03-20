@@ -116,22 +116,26 @@ class FrequencyBox(QTabWidget):
     @Slot(float)
     def _on_spin_frequency_from_edited(self, value: float) -> None:
         self._frequency_from = self._settings.to_mhz(value)
-        self.frequencyLimitsChanged.emit()
+        if not self.signalsBlocked():
+            self.frequencyLimitsChanged.emit()
 
     @Slot(float)
     def _on_spin_frequency_to_edited(self, value: float) -> None:
         self._frequency_to = self._settings.to_mhz(value)
-        self.frequencyLimitsChanged.emit()
+        if not self.signalsBlocked():
+            self.frequencyLimitsChanged.emit()
 
     @Slot(float)
     def _on_spin_frequency_center_edited(self, value: float) -> None:
         self._frequency_center = self._settings.to_mhz(value)
-        self.frequencyLimitsChanged.emit()
+        if not self.signalsBlocked():
+            self.frequencyLimitsChanged.emit()
 
     @Slot(float)
     def _on_spin_frequency_deviation_edited(self, value: float) -> None:
         self._frequency_deviation = self._settings.to_mhz(value)
-        self.frequencyLimitsChanged.emit()
+        if not self.signalsBlocked():
+            self.frequencyLimitsChanged.emit()
 
     def fill_parameters(self) -> None:
         frequency_suffix: int = self._settings.frequency_unit
