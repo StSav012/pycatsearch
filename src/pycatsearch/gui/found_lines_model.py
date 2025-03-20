@@ -16,35 +16,68 @@ class FoundLinesModel(QAbstractTableModel):
 
     class DataType:
         __slots__ = [
+            "precision",
+            "decimal_point",
             "species_tag",
             "name",
-            "frequency_str",
             "frequency",
-            "intensity_str",
             "intensity",
-            "lower_state_energy_str",
             "lower_state_energy",
+            "_frequency_str",
+            "_intensity_str",
+            "_lower_state_energy_str",
         ]
 
         def __init__(
             self,
+            precision: int,
+            decimal_point: str,
             species_tag: int,
             name: str,
-            frequency_str: str,
             frequency: float,
-            intensity_str: str,
             intensity: float,
-            lower_state_energy_str: str,
             lower_state_energy: float,
         ) -> None:
+            self.precision: int = precision
+            self.decimal_point: str = decimal_point
+
             self.species_tag: int = species_tag
             self.name: str = name
-            self.frequency_str: str = frequency_str
             self.frequency: float = frequency
-            self.intensity_str: str = intensity_str
             self.intensity: float = intensity
-            self.lower_state_energy_str: str = lower_state_energy_str
             self.lower_state_energy: float = lower_state_energy
+
+            self._frequency_str: str | None = None
+            self._intensity_str: str | None = None
+            self._lower_state_energy_str: str | None = None
+
+        @property
+        def frequency_str(self) -> str:
+            if self._frequency_str is None:
+                self._frequency_str = f"{self.frequency:.{self.precision}f}".replace(".", self.decimal_point)
+            return self._frequency_str
+
+        @property
+        def intensity_str(self) -> str:
+            if self._intensity_str is None:
+                if self.intensity == 0.0:
+                    self._intensity_str = "0"
+                elif abs(self.intensity) < 0.1:
+                    self._intensity_str = f"{self.intensity:.4e}".replace(".", self.decimal_point)
+                else:
+                    self._intensity_str = f"{self.intensity:.4f}".replace(".", self.decimal_point)
+            return self._intensity_str
+
+        @property
+        def lower_state_energy_str(self) -> str:
+            if self._lower_state_energy_str is None:
+                if self.lower_state_energy == 0.0:
+                    self._lower_state_energy_str = "0"
+                elif abs(self.lower_state_energy) < 0.1:
+                    self._lower_state_energy_str = f"{self.lower_state_energy:.4e}".replace(".", self.decimal_point)
+                else:
+                    self._lower_state_energy_str = f"{self.lower_state_energy:.4f}".replace(".", self.decimal_point)
+            return self._lower_state_energy_str
 
         def __eq__(self, other: Any) -> bool:
             if not isinstance(other, FoundLinesModel.DataType):
@@ -145,38 +178,18 @@ class FoundLinesModel(QAbstractTableModel):
         locale: QLocale = QLocale()
         decimal_point: str = locale.decimalPoint()
 
-        def frequency_str(frequency: float) -> tuple[str, float]:
-            frequency = from_mhz(frequency)
-            return f"{frequency:.{precision}f}".replace(".", decimal_point), frequency
-
-        def intensity_str(intensity: float) -> tuple[str, float]:
-            intensity = from_log10_sq_nm_mhz(intensity)
-            if intensity == 0.0:
-                return "0", intensity
-            elif abs(intensity) < 0.1:
-                return f"{intensity:.4e}".replace(".", decimal_point), intensity
-            else:
-                return f"{intensity:.4f}".replace(".", decimal_point), intensity
-
-        def lower_state_energy_str(lower_state_energy: float) -> tuple[str, float]:
-            lower_state_energy = from_rec_cm(lower_state_energy)
-            if lower_state_energy == 0.0:
-                return "0", lower_state_energy
-            elif abs(lower_state_energy) < 0.1:
-                return f"{lower_state_energy:.4e}".replace(".", decimal_point), lower_state_energy
-            else:
-                return f"{lower_state_energy:.4f}".replace(".", decimal_point), lower_state_energy
-
         self.beginResetModel()
         rich_text_in_formulas: bool = self._settings.rich_text_in_formulas
         self._data = list(
             set(
                 FoundLinesModel.DataType(
-                    species_tag,
-                    best_name(entries[species_tag], rich_text_in_formulas),
-                    *frequency_str(line[FREQUENCY]),
-                    *intensity_str(line[INTENSITY]),
-                    *lower_state_energy_str(line[LOWER_STATE_ENERGY]),
+                    precision=precision,
+                    decimal_point=decimal_point,
+                    species_tag=species_tag,
+                    name=best_name(entries[species_tag], rich_text_in_formulas),
+                    frequency=from_mhz(line[FREQUENCY]),
+                    intensity=from_log10_sq_nm_mhz(line[INTENSITY]),
+                    lower_state_energy=from_rec_cm(line[LOWER_STATE_ENERGY]),
                 )
                 for species_tag in entries
                 for line in entries[species_tag][LINES]
