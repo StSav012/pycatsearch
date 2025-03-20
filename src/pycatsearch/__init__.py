@@ -28,7 +28,7 @@ if sys.version_info < (3, 10):
             files.append(path.absolute())
         return files
 
-    me: Path = Path(__file__)
+    me: Path = Path(__file__).resolve()
     my_parent: Path = me.parent
 
     annotations_needed: bool = False
