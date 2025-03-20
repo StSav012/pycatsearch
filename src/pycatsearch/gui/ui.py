@@ -428,7 +428,18 @@ class UI(QMainWindow):
     @Slot()
     def _on_action_preferences_triggered(self) -> None:
         if self.preferences_dialog.exec() == Preferences.DialogCode.Accepted:
-            self.fill_parameters()
+            self.box_frequency.blockSignals(True)
+            self.spin_intensity.blockSignals(True)
+            self.spin_temperature.blockSignals(True)
+            try:
+                self.fill_parameters()
+            except LookupError:
+                raise
+            finally:
+                self.box_frequency.blockSignals(False)
+                self.spin_intensity.blockSignals(False)
+                self.spin_temperature.blockSignals(False)
+
             if self.results_model.rowCount():
                 self.fill_table()
             else:
