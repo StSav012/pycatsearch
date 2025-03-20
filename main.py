@@ -36,11 +36,11 @@ if __name__ == "__main__":
 
             update_with_pip(__original_name__)
 
-            from pycatsearch import main
+            from pycatsearch import main_gui as main
         except ImportError:
             from updater import update_with_pip, update_from_github, update_with_git
 
             update_with_git() or update_from_github(__author__, __original_name__)
 
-            from src.pycatsearch import main
+            from src.pycatsearch import main_gui as main
     main()
