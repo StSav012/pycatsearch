@@ -122,7 +122,7 @@ class CatalogData:
         if (
             isinstance(frequency_limits, (list, tuple))
             and len(frequency_limits) == 2
-            and all(isinstance(fl, float) for fl in frequency_limits)
+            and all(isinstance(fl, float) or fl is None for fl in frequency_limits)
         ):
             frequency_limits = (frequency_limits,)
         catalog: CatalogType
@@ -152,7 +152,10 @@ class CatalogData:
                 if skip > 0:
                     skip -= 1
                     continue
-                current_range: tuple[float, float] = (float(args[i][0]), float(args[i][-1]))
+                current_range: tuple[float, float] = (
+                    float(args[i][0]) if args[i][0] is not None else -math.inf,
+                    float(args[i][-1]) if args[i][-1] is not None else math.inf,
+                )
                 current_min: float = min(current_range)
                 current_max: float = max(current_range)
                 for r in args[1 + i :]:
