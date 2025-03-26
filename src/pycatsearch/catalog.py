@@ -2,6 +2,7 @@ import bz2
 import gzip
 import lzma
 import math
+import sys
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from os import PathLike
@@ -241,19 +242,23 @@ class Catalog:
                             content
                         )
                     except (json.JSONDecodeError, UnicodeDecodeError):
-                        pass
+                        print(f"{filename} doesn't contain UTF-8 data or is corrupted", file=sys.stderr)
                     else:
-                        self._data.append(
-                            new_catalog=json_data[CATALOG],
-                            frequency_limits=(
-                                json_data[FREQUENCY][0],
-                                (math.inf if json_data[FREQUENCY][1] is None else json_data[FREQUENCY][1]),
-                            ),
-                        )
-                        build_datetime: datetime | None = None
-                        if BUILD_TIME in json_data:
-                            build_datetime = datetime.fromisoformat(cast(str, json_data[BUILD_TIME]))
-                        self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
+                        try:
+                            self._data.append(
+                                new_catalog=json_data[CATALOG],
+                                frequency_limits=(
+                                    json_data[FREQUENCY][0],
+                                    (math.inf if json_data[FREQUENCY][1] is None else json_data[FREQUENCY][1]),
+                                ),
+                            )
+                            build_datetime: datetime | None = None
+                            if BUILD_TIME in json_data:
+                                build_datetime = datetime.fromisoformat(cast(str, json_data[BUILD_TIME]))
+                        except LookupError:
+                            print(f"{filename} is corrupted", file=sys.stderr)
+                        else:
+                            self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
 
     def __bool__(self) -> bool:
         return bool(self._data.catalog)
