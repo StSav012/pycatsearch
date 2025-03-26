@@ -48,7 +48,6 @@ class FrequencyBox(QTabWidget):
         self._spin_frequency_center: FrequencySpinBox = FrequencySpinBox(self._page_by_center)
         self._spin_frequency_deviation: FrequencySpinBox = FrequencySpinBox(self._page_by_center)
 
-        self._layout_by_range.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
         self._spin_frequency_from.setValue(118747.341)
         self._layout_by_range.addRow(self.tr("From:"), self._spin_frequency_from)
         self._spin_frequency_to.setValue(118753.341)
