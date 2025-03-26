@@ -201,7 +201,7 @@ class Catalog:
             encoding: str | None = None,
             errors: str | None = None,
             newline: str | None = None,
-        ) -> TextIO | BinaryIO:
+        ) -> Iterator[TextIO | BinaryIO]:
             """
             Open a file in a safe way. Create a temporary file when writing.
 
