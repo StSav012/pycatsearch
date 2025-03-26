@@ -15,6 +15,7 @@ from qtpy.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QSizePolicy,
     QSplitter,
     QStatusBar,
     QTableView,
@@ -165,6 +166,9 @@ class UI(QMainWindow):
             self.spin_intensity.setRange(-inf, inf)
             self.spin_intensity.setSingleStep(0.1)
             self.spin_intensity.setValue(-6.54)
+            self.spin_intensity.setSizePolicy(
+                QSizePolicy.Policy.Expanding, self.spin_intensity.sizePolicy().verticalPolicy()
+            )
             self.spin_intensity.setStatusTip(self.tr("Limit shown spectral lines"))
             layout_options.addRow(self.tr("Minimal Intensity:"), self.spin_intensity)
             self.spin_temperature.setAlignment(
@@ -173,6 +177,9 @@ class UI(QMainWindow):
             self.spin_temperature.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
             self.spin_temperature.setMaximum(999.99)
             self.spin_temperature.setValue(300.0)
+            self.spin_temperature.setSizePolicy(
+                QSizePolicy.Policy.Expanding, self.spin_temperature.sizePolicy().verticalPolicy()
+            )
             self.spin_temperature.setStatusTip(self.tr("Temperature to calculate intensity"))
             self.spin_temperature.setSuffix(self.tr(" K"))
             layout_options.addRow(self.tr("Temperature:"), self.spin_temperature)

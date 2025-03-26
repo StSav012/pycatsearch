@@ -2,7 +2,7 @@ from math import inf
 from typing import Callable
 
 from qtpy.QtCore import Qt, Signal, Slot
-from qtpy.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QTabWidget, QWidget
+from qtpy.QtWidgets import QAbstractSpinBox, QDoubleSpinBox, QFormLayout, QSizePolicy, QTabWidget, QWidget
 
 from .settings import Settings
 
@@ -22,6 +22,7 @@ class FrequencySpinBox(QDoubleSpinBox):
         self.setSuffix(self.tr(" MHz"))
         self.setCorrectionMode(QAbstractSpinBox.CorrectionMode.CorrectToNearestValue)
         self.setKeyboardTracking(False)  # not to emit signals while typing
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, self.sizePolicy().verticalPolicy())
 
 
 class FrequencyBox(QTabWidget):
