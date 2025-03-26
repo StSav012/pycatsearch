@@ -7,7 +7,20 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from os import PathLike
 from pathlib import Path
-from typing import AnyStr, BinaryIO, Callable, Dict, Iterable, List, NamedTuple, TextIO, Union, cast
+from typing import (
+    AnyStr,
+    BinaryIO,
+    Callable,
+    Collection,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    NamedTuple,
+    TextIO,
+    Union,
+    cast,
+)
 
 try:
     import orjson as json
@@ -101,7 +114,17 @@ class CatalogData:
         self.catalog: CatalogType = dict()
         self.frequency_limits: tuple[tuple[float, float], ...] = ()
 
-    def append(self, new_catalog: CatalogJSONType | OldCatalogJSONType, frequency_limits: tuple[float, float]) -> None:
+    def append(
+        self,
+        new_catalog: CatalogJSONType | OldCatalogJSONType,
+        frequency_limits: Collection[tuple[float, float] | list[float]],
+    ) -> None:
+        if (
+            isinstance(frequency_limits, (list, tuple))
+            and len(frequency_limits) == 2
+            and all(isinstance(fl, float) for fl in frequency_limits)
+        ):
+            frequency_limits = (frequency_limits,)
         catalog: CatalogType
         if isinstance(new_catalog, list):
             catalog = dict((entry[SPECIES_TAG], entry) for entry in new_catalog)
@@ -148,7 +171,7 @@ class CatalogData:
                     self.catalog[species_tag] = catalog[species_tag]
                 else:
                     squash_same_species_tag_entries()
-        self.frequency_limits = merge_frequency_tuples(*self.frequency_limits, frequency_limits)
+        self.frequency_limits = merge_frequency_tuples(*self.frequency_limits, *frequency_limits)
 
 
 class Catalog:
@@ -247,10 +270,7 @@ class Catalog:
                         try:
                             self._data.append(
                                 new_catalog=json_data[CATALOG],
-                                frequency_limits=(
-                                    json_data[FREQUENCY][0],
-                                    (math.inf if json_data[FREQUENCY][1] is None else json_data[FREQUENCY][1]),
-                                ),
+                                frequency_limits=json_data.get(FREQUENCY, ((0.0, math.inf),)),
                             )
                             build_datetime: datetime | None = None
                             if BUILD_TIME in json_data:
@@ -562,7 +582,7 @@ class Catalog:
     ) -> "Catalog":
         catalog: Catalog = Catalog()
         catalog._data.catalog = catalog_data
-        catalog._data.frequency_limits = frequency_limits
+        catalog._data.frequency_limits = (frequency_limits,)
         return catalog
 
     def save(self, filename: str | PathLike[str], build_time: datetime = datetime.now(tz=timezone.utc)) -> None:
