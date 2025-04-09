@@ -32,12 +32,10 @@ if sys.version_info < (3, 10):
     my_parent: Path = me.parent
 
     annotations_needed: bool = False
-    for f in list_files(my_parent):
-        if f.is_file():
-            if f.suffix == me.suffix:
-                lines: "list[str]" = f.read_text(encoding="utf-8").splitlines()
-                if not any(line.startswith("from __future__ import annotations") for line in lines):
-                    annotations_needed = True
+    for f in list_files(my_parent, suffix=me.suffix):
+        lines: "list[str]" = f.read_text(encoding="utf-8").splitlines()
+        if not any(line.startswith("from __future__ import annotations") for line in lines):
+            annotations_needed = True
 
     if annotations_needed:
         tmp_dir: Path = Path(mkdtemp())
@@ -45,21 +43,15 @@ if sys.version_info < (3, 10):
 
         annotations_added: bool = False
 
-        for f in list_files(my_parent):
-            if f.is_file():
-                (tmp_dir / __original_name__ / f.relative_to(my_parent)).parent.mkdir(parents=True, exist_ok=True)
-                if f.suffix == me.suffix:
-                    lines: "list[str]" = f.read_text(encoding="utf-8").splitlines()
-                    if not any(line.startswith("from __future__ import annotations") for line in lines):
-                        lines.insert(0, "from __future__ import annotations")
-                        annotations_added = True
-                    new_text: str = "\n".join(lines)
-                    new_text = new_text.replace("ParamSpec", "TypeVar")
-                    (tmp_dir / __original_name__ / f.relative_to(my_parent)).write_text(new_text, encoding="utf-8")
-                else:
-                    (tmp_dir / __original_name__ / f.relative_to(my_parent)).write_bytes(f.read_bytes())
-            elif f.is_dir():
-                (tmp_dir / __original_name__ / f.relative_to(my_parent)).mkdir()
+        for f in list_files(my_parent, suffix=me.suffix):
+            (tmp_dir / __original_name__ / f.relative_to(my_parent)).parent.mkdir(parents=True, exist_ok=True)
+            lines: "list[str]" = f.read_text(encoding="utf-8").splitlines()
+            if not any(line.startswith("from __future__ import annotations") for line in lines):
+                lines.insert(0, "from __future__ import annotations")
+                annotations_added = True
+            new_text: str = "\n".join(lines)
+            new_text = new_text.replace("ParamSpec", "TypeVar")
+            (tmp_dir / __original_name__ / f.relative_to(my_parent)).write_text(new_text, encoding="utf-8")
 
         if annotations_added:
             for m in list(sys.modules):
