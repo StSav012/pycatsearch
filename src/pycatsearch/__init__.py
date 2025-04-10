@@ -1,23 +1,71 @@
-import atexit
 import enum
 import http
 import platform
-import shutil
 import sys
 from argparse import ArgumentParser, Namespace, ZERO_OR_MORE
+from importlib import import_module
+from importlib.abc import Loader, MetaPathFinder
+from importlib.machinery import ModuleSpec
+from importlib.util import spec_from_file_location
 from pathlib import Path
-from tempfile import mkdtemp
+from types import ModuleType
 
 __author__ = "StSav012"
 __original_name__ = "pycatsearch"
+
 
 try:
     from ._version import __version__
 except ImportError:
     __version__ = ""
 
+if sys.version_info < (3, 10) and __file__ != "<string>":
 
-if sys.version_info < (3, 10):
+    class StringImporter(MetaPathFinder):
+        class Loader(Loader):
+            def __init__(self, modules: "dict[str, str | dict]") -> None:
+                self._modules: "dict[str, str | dict]" = modules
+
+            # noinspection PyMethodMayBeStatic
+            def is_package(self, module_name: str) -> bool:
+                return isinstance(self._modules[module_name], dict)
+
+            # noinspection PyMethodMayBeStatic
+            def get_code(self, module_name: str):
+                return compile(self._modules[module_name], filename="<string>", mode="exec")
+
+            def create_module(self, spec: ModuleSpec) -> "ModuleType | None":
+                return ModuleType(spec.name)
+
+            def exec_module(self, module: ModuleType) -> None:
+                if module.__name__ not in self._modules:
+                    raise ImportError(module.__name__)
+
+                sys.modules[module.__name__] = module
+                if not self.is_package(module.__name__):
+                    exec(self._modules[module.__name__], module.__dict__)
+                else:
+                    for sub_module in self._modules[module.__name__]:
+                        self._modules[".".join((module.__name__, sub_module))] = self._modules[module.__name__][
+                            sub_module
+                        ]
+                    exec(self._modules[module.__name__].get("__init__", ""), module.__dict__)
+
+        def __init__(self, **modules: "str | dict") -> None:
+            self._modules: "dict[str, str | dict]" = modules
+            self._loader = StringImporter.Loader(modules)
+
+        def find_spec(
+            self,
+            fullname: str,
+            path: "str | None",
+            target: "ModuleType | None" = None,
+        ) -> "ModuleSpec | None":
+            if fullname in self._modules:
+                spec: ModuleSpec = spec_from_file_location(fullname, loader=self._loader)
+                spec.origin = "<string>"
+                return spec
+            return None
 
     def list_files(path: Path, *, suffix: "str | None" = None) -> "list[Path]":
         files: "list[Path]" = []
@@ -31,37 +79,31 @@ if sys.version_info < (3, 10):
     me: Path = Path(__file__).resolve()
     my_parent: Path = me.parent
 
-    annotations_needed: bool = False
+    py38_modules: "dict[str, str | dict]" = {}
+
     for f in list_files(my_parent, suffix=me.suffix):
         lines: "list[str]" = f.read_text(encoding="utf-8").splitlines()
         if not any(line.startswith("from __future__ import annotations") for line in lines):
-            annotations_needed = True
-
-    if annotations_needed:
-        tmp_dir: Path = Path(mkdtemp())
-        sys.path.insert(0, str(tmp_dir))
-
-        annotations_added: bool = False
-
-        for f in list_files(my_parent, suffix=me.suffix):
-            (tmp_dir / __original_name__ / f.relative_to(my_parent)).parent.mkdir(parents=True, exist_ok=True)
-            lines: "list[str]" = f.read_text(encoding="utf-8").splitlines()
-            if not any(line.startswith("from __future__ import annotations") for line in lines):
-                lines.insert(0, "from __future__ import annotations")
-                annotations_added = True
+            lines.insert(0, "from __future__ import annotations")
             new_text: str = "\n".join(lines)
             new_text = new_text.replace("ParamSpec", "TypeVar")
-            (tmp_dir / __original_name__ / f.relative_to(my_parent)).write_text(new_text, encoding="utf-8")
+            parts: "tuple[str, ...]" = f.relative_to(my_parent).parts
+            p: "dict[str, str | dict]" = py38_modules
+            for part in parts[:-1]:
+                if part not in p:
+                    p[part] = {}
+                p = p[part]
+            p[parts[-1][: -len(me.suffix)]] = new_text
 
-        if annotations_added:
-            for m in list(sys.modules):
-                if m.startswith(my_parent.name):
-                    if m in sys.modules:  # check again in case the module's gone midway
-                        sys.modules.pop(m)
+    if py38_modules:
+        for m in list(sys.modules):
+            if m.startswith(__original_name__):
+                if m in sys.modules:  # check again in case the module's gone midway
+                    sys.modules.pop(m)
 
-            import pycatsearch
-
-        atexit.register(shutil.rmtree, tmp_dir, ignore_errors=True)
+        sys.meta_path.insert(0, StringImporter(**{__original_name__: py38_modules}))
+        if __original_name__ not in sys.modules:
+            sys.modules[__original_name__] = import_module(__original_name__)
 
 if sys.version_info < (3, 11):
 
