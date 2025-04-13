@@ -1,4 +1,5 @@
 import bz2
+import copy
 import gzip
 import lzma
 import math
@@ -8,7 +9,6 @@ from datetime import datetime, timezone
 from os import PathLike
 from pathlib import Path
 from typing import (
-    AnyStr,
     BinaryIO,
     Callable,
     Collection,
@@ -28,8 +28,13 @@ except ImportError:
     import json
 
 from .utils import (
+    CONTRIBUTOR,
+    DATE_OF_ENTRY,
+    ID,
+    MOLECULE,
     M_LOG10E,
     T0,
+    VERSION,
     c,
     h,
     k,
@@ -56,12 +61,104 @@ from .utils import (
 
 __all__ = ["Catalog", "CatalogSourceInfo", "LineType", "LinesType", "CatalogEntryType", "CatalogType"]
 
-LineType = Dict[str, float]
+
+class LineType:
+    __slots__ = [FREQUENCY, INTENSITY, LOWER_STATE_ENERGY]
+
+    def __init__(
+        self,
+        frequency: float = math.nan,
+        intensity: float = math.nan,
+        lowerstateenergy: float = math.nan,
+    ) -> None:
+        self.frequency: float = frequency
+        self.intensity: float = intensity
+        self.lowerstateenergy: float = lowerstateenergy
+
+    def __getitem__(self, item: str) -> float:
+        return getattr(self, item)
+
+
 LinesType = List[LineType]
-CatalogEntryType = Dict[str, Union[int, str, LinesType]]
+
+
+# noinspection PyShadowingBuiltins
+class CatalogEntryType:
+    __slots__ = [
+        ID,
+        MOLECULE,
+        STRUCTURAL_FORMULA,
+        STOICHIOMETRIC_FORMULA,
+        MOLECULE_SYMBOL,
+        SPECIES_TAG,
+        NAME,
+        TRIVIAL_NAME,
+        ISOTOPOLOG,
+        STATE,
+        STATE_HTML,
+        INCHI_KEY,
+        CONTRIBUTOR,
+        VERSION,
+        DATE_OF_ENTRY,
+        DEGREES_OF_FREEDOM,
+        LINES,
+    ]
+
+    def __init__(
+        self,
+        id: int = int(),
+        molecule: int = int(),
+        structuralformula: str = str(),
+        stoichiometricformula: str = str(),
+        moleculesymbol: str = str(),
+        speciestag: int = int(),
+        name: str = str(),
+        trivialname: str = str(),
+        isotopolog: str = str(),
+        state: str = str(),
+        state_html: str = str(),
+        inchikey: str = str(),
+        contributor: str = str(),
+        version: str = str(),
+        dateofentry: str = str(),
+        degreesoffreedom: int = int(),
+        lines: LinesType = (),
+    ) -> None:
+        self.id: int = id
+        self.molecule: int = molecule
+        self.structuralformula: str = structuralformula
+        self.stoichiometricformula: str = stoichiometricformula
+        self.moleculesymbol: str = moleculesymbol
+        self.speciestag: int = speciestag
+        self.name: str = name
+        self.trivialname: str = trivialname
+        self.isotopolog: str = isotopolog
+        self.state: str = state
+        self.state_html: str = state_html
+        self.inchikey: str = inchikey
+        self.contributor: str = contributor
+        self.version: str = version
+        self.dateofentry: str = dateofentry
+        self.degreesoffreedom: int = degreesoffreedom
+        self.lines: LinesType = lines
+
+    def __getitem__(self, item: str) -> int | str | LinesType:
+        return getattr(self, item)
+
+    def __setitem__(self, item: str, value: int | str | LinesType) -> None:
+        setattr(self, item, value)
+
+    def get(self, item: str, fallback: int | str | LinesType) -> int | str | LinesType:
+        return getattr(self, item, fallback)
+
+    def copy(self) -> "CatalogEntryType":
+        return copy.copy(self)
+
+
 CatalogType = Dict[int, CatalogEntryType]
-CatalogJSONType = Dict[str, CatalogEntryType]
-OldCatalogJSONType = List[CatalogEntryType]
+CatalogJSONEntryType = Dict[str, Union[int, str, List[Dict[str, float]]]]
+CatalogJSONType = Dict[str, CatalogJSONEntryType]
+OldCatalogJSONType = List[CatalogJSONEntryType]
 
 
 def filter_by_frequency_and_intensity(
@@ -87,7 +184,7 @@ def filter_by_frequency_and_intensity(
             return _line[INTENSITY]
 
     new_catalog_entry: CatalogEntryType = catalog_entry.copy()
-    if LINES in new_catalog_entry and new_catalog_entry[LINES]:
+    if new_catalog_entry.get(LINES, []):
         min_frequency_index: int = (
             search_sorted(min_frequency, new_catalog_entry[LINES], key=lambda line: line[FREQUENCY]) + 1
         )
@@ -99,8 +196,6 @@ def filter_by_frequency_and_intensity(
             for line in new_catalog_entry[LINES][min_frequency_index : (max_frequency_index + 1)]
             if min_intensity <= intensity(line) <= max_intensity
         ]
-    else:
-        new_catalog_entry[LINES] = []
     return new_catalog_entry
 
 
@@ -127,11 +222,17 @@ class CatalogData:
             frequency_limits = (frequency_limits,)
         catalog: CatalogType
         if isinstance(new_catalog, list):
-            catalog = dict((entry[SPECIES_TAG], entry) for entry in new_catalog)
+            catalog = dict((entry[SPECIES_TAG], CatalogEntryType(**entry)) for entry in new_catalog)
         elif isinstance(new_catalog, dict):
-            catalog = dict((int(species_tag_str), new_catalog[species_tag_str]) for species_tag_str in new_catalog)
+            catalog = dict(
+                (int(species_tag_str), CatalogEntryType(**new_catalog[species_tag_str]))
+                for species_tag_str in new_catalog
+            )
         else:
             raise TypeError("Unsupported data type")
+
+        for species_tag in catalog:
+            catalog[species_tag][LINES] = [LineType(**line) for line in catalog[species_tag][LINES]]
 
         def squash_same_species_tag_entries() -> None:
             self.catalog[species_tag][LINES] = cast(
@@ -166,7 +267,7 @@ class CatalogData:
             return ranges
 
         if not self.catalog:
-            self.catalog = catalog.copy()
+            self.catalog = catalog
         else:
             species_tag: int
             for species_tag in catalog:
@@ -264,8 +365,8 @@ class Catalog:
                 with Catalog.Opener(filename).open("rb") as f_in:
                     content: bytes = f_in.read()
                     try:
-                        json_data: dict[str, list[float | None] | CatalogJSONType | OldCatalogJSONType] = json.loads(
-                            content
+                        json_data: dict[str, str | list[float | None] | CatalogJSONType | OldCatalogJSONType] = (
+                            json.loads(content)
                         )
                     except (json.JSONDecodeError, UnicodeDecodeError):
                         print(f"{filename} doesn't contain UTF-8 data or is corrupted", file=sys.stderr)
@@ -601,7 +702,7 @@ class Catalog:
             filename = Path(filename)
             opener = Catalog.Opener(filename.with_name(filename.name + Catalog.DEFAULT_SUFFIX))
 
-        def ensure_bytes(data: AnyStr) -> bytes:
+        def ensure_bytes(data: bytes | str) -> bytes:
             if isinstance(data, str):
                 return data.encode("utf-8")
             if isinstance(data, bytes):
