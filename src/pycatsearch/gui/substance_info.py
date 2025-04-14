@@ -18,8 +18,8 @@ from qtpy.QtWidgets import (
 from .html_style_delegate import HTMLDelegate
 from .selectable_label import SelectableLabel
 from .url_label import URLLabel
-from ..catalog import Catalog, CatalogEntryType
-from ..utils import HUMAN_READABLE, ID, INCHI_KEY, LINES, STATE_HTML, best_name, chem_html
+from ..catalog import Catalog
+from ..utils import CatalogEntryType, HUMAN_READABLE, ID, INCHI_KEY, LINES, STATE_HTML, best_name, chem_html
 
 __all__ = ["SubstanceInfoSelector", "SubstanceInfo"]
 
@@ -135,27 +135,29 @@ class SubstanceInfo(QDialog):
         layout: QFormLayout = QFormLayout(self)
         label: SelectableLabel
         entry: CatalogEntryType = catalog.catalog[species_tag]
-        for key in entry:
+        for key in entry.__slots__:
             if key == LINES:
                 continue
             elif key == ID:
                 label = URLLabel(
-                    url=f"https://cdms.astro.uni-koeln.de/cdms/portal/catalog/{entry[key]}/",
-                    text=f"{entry[key]}",
+                    url=f"https://cdms.astro.uni-koeln.de/cdms/portal/catalog/{getattr(entry, key)}/",
+                    text=f"{getattr(entry, key)}",
                     parent=self,
                 )
                 label.setOpenExternalLinks(True)
             elif key == STATE_HTML:
-                label = SelectableLabel(chem_html(str(entry[key])), self)
+                label = SelectableLabel(chem_html(str(getattr(entry, key))), self)
             elif key == INCHI_KEY and inchi_key_search_url_template:
                 label = URLLabel(
-                    url=inchi_key_search_url_template.format(InChIKey=entry[key]), text=entry[key], parent=self
+                    url=inchi_key_search_url_template.format(InChIKey=getattr(entry, key)),
+                    text=getattr(entry, key),
+                    parent=self,
                 )
                 label.setOpenExternalLinks(True)
             else:
-                label = SelectableLabel(str(entry[key]), self)
+                label = SelectableLabel(str(getattr(entry, key)), self)
             layout.addRow(self.tr(HUMAN_READABLE[key]), label)
-        label = SelectableLabel(str(len(entry[LINES])), self)
+        label = SelectableLabel(str(len(entry.lines)), self)
         layout.addRow(self.tr("Number of spectral lines"), label)
         buttons: QDialogButtonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         buttons.rejected.connect(self.reject)

@@ -22,9 +22,9 @@ from qtpy.QtWidgets import (
 from .html_style_delegate import HTMLDelegate
 from .settings import Settings
 from .substance_info import SubstanceInfo, SubstanceInfoSelector
-from ..catalog import Catalog, CatalogEntryType
+from ..catalog import Catalog
 from ..utils import (
-    INCHI_KEY,
+    CatalogEntryType,
     ISOTOPOLOG,
     NAME,
     STOICHIOMETRIC_FORMULA,
@@ -153,7 +153,7 @@ class SubstanceBox(QGroupBox):
                         for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                             for species_tag, entry in self._catalog.catalog.items():
                                 with suppress(LookupError):
-                                    plain_text_name = remove_html(str(entry[name_key]))
+                                    plain_text_name = remove_html(str(getattr(entry, name_key)))
                                     if match_function(plain_text_name):
                                         if plain_text_name not in list_items:
                                             list_items[plain_text_name] = set()
@@ -170,7 +170,7 @@ class SubstanceBox(QGroupBox):
                     for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                         for species_tag, entry in self._catalog.catalog.items():
                             with suppress(LookupError):
-                                plain_text_name = remove_html(str(entry[name_key]))
+                                plain_text_name = remove_html(str(getattr(entry, name_key)))
                                 if cmp_function(plain_text_name, filter_text) or (
                                     name_key in (NAME, TRIVIAL_NAME)
                                     and cmp_function(plain_text_name.casefold(), filter_text_lowercase)
@@ -199,7 +199,7 @@ class SubstanceBox(QGroupBox):
                 and filter_text.count("-") == 2
             ):
                 for species_tag, entry in self._catalog.catalog.items():
-                    plain_text_name = str(entry.get(INCHI_KEY, ""))
+                    plain_text_name = str(entry.inchikey)
                     if plain_text_name == filter_text:
                         if plain_text_name not in list_items:
                             list_items[plain_text_name] = set()
@@ -207,7 +207,7 @@ class SubstanceBox(QGroupBox):
         else:
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
                 for species_tag, entry in self._catalog.catalog.items():
-                    plain_text_name = remove_html(str(entry[name_key]))
+                    plain_text_name = remove_html(str(getattr(entry, name_key)))
                     if plain_text_name not in list_items:
                         list_items[plain_text_name] = set()
                     list_items[plain_text_name].add(species_tag)

@@ -8,19 +8,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from os import PathLike
 from pathlib import Path
-from typing import (
-    BinaryIO,
-    Callable,
-    Collection,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    NamedTuple,
-    TextIO,
-    Union,
-    cast,
-)
+from typing import BinaryIO, Callable, Collection, Iterable, Iterator, Mapping, NamedTuple, TextIO, cast
 
 try:
     import orjson as json
@@ -28,13 +16,13 @@ except ImportError:
     import json
 
 from .utils import (
-    CONTRIBUTOR,
-    DATE_OF_ENTRY,
-    ID,
-    MOLECULE,
+    CatalogEntryType,
+    CatalogJSONType,
+    CatalogType,
+    LineType,
     M_LOG10E,
+    OldCatalogJSONType,
     T0,
-    VERSION,
     c,
     h,
     k,
@@ -42,123 +30,12 @@ from .utils import (
     BUILD_TIME,
     LINES,
     FREQUENCY,
-    INTENSITY,
-    STRUCTURAL_FORMULA,
-    STOICHIOMETRIC_FORMULA,
-    MOLECULE_SYMBOL,
     SPECIES_TAG,
-    NAME,
-    TRIVIAL_NAME,
-    ISOTOPOLOG,
-    STATE,
-    STATE_HTML,
-    INCHI_KEY,
-    DEGREES_OF_FREEDOM,
-    LOWER_STATE_ENERGY,
     merge_sorted,
     search_sorted,
 )
 
-__all__ = ["Catalog", "CatalogSourceInfo", "LineType", "LinesType", "CatalogEntryType", "CatalogType"]
-
-
-class LineType:
-    __slots__ = [FREQUENCY, INTENSITY, LOWER_STATE_ENERGY]
-
-    def __init__(
-        self,
-        frequency: float = math.nan,
-        intensity: float = math.nan,
-        lowerstateenergy: float = math.nan,
-    ) -> None:
-        self.frequency: float = frequency
-        self.intensity: float = intensity
-        self.lowerstateenergy: float = lowerstateenergy
-
-    def __getitem__(self, item: str) -> float:
-        return getattr(self, item)
-
-
-LinesType = List[LineType]
-
-
-# noinspection PyShadowingBuiltins
-class CatalogEntryType:
-    __slots__ = [
-        ID,
-        MOLECULE,
-        STRUCTURAL_FORMULA,
-        STOICHIOMETRIC_FORMULA,
-        MOLECULE_SYMBOL,
-        SPECIES_TAG,
-        NAME,
-        TRIVIAL_NAME,
-        ISOTOPOLOG,
-        STATE,
-        STATE_HTML,
-        INCHI_KEY,
-        CONTRIBUTOR,
-        VERSION,
-        DATE_OF_ENTRY,
-        DEGREES_OF_FREEDOM,
-        LINES,
-    ]
-
-    def __init__(
-        self,
-        id: int = int(),
-        molecule: int = int(),
-        structuralformula: str = str(),
-        stoichiometricformula: str = str(),
-        moleculesymbol: str = str(),
-        speciestag: int = int(),
-        name: str = str(),
-        trivialname: str = str(),
-        isotopolog: str = str(),
-        state: str = str(),
-        state_html: str = str(),
-        inchikey: str = str(),
-        contributor: str = str(),
-        version: str = str(),
-        dateofentry: str = str(),
-        degreesoffreedom: int = int(),
-        lines: LinesType = (),
-    ) -> None:
-        self.id: int = id
-        self.molecule: int = molecule
-        self.structuralformula: str = structuralformula
-        self.stoichiometricformula: str = stoichiometricformula
-        self.moleculesymbol: str = moleculesymbol
-        self.speciestag: int = speciestag
-        self.name: str = name
-        self.trivialname: str = trivialname
-        self.isotopolog: str = isotopolog
-        self.state: str = state
-        self.state_html: str = state_html
-        self.inchikey: str = inchikey
-        self.contributor: str = contributor
-        self.version: str = version
-        self.dateofentry: str = dateofentry
-        self.degreesoffreedom: int = degreesoffreedom
-        self.lines: LinesType = lines
-
-    def __getitem__(self, item: str) -> int | str | LinesType:
-        return getattr(self, item)
-
-    def __setitem__(self, item: str, value: int | str | LinesType) -> None:
-        setattr(self, item, value)
-
-    def get(self, item: str, fallback: int | str | LinesType) -> int | str | LinesType:
-        return getattr(self, item, fallback)
-
-    def copy(self) -> "CatalogEntryType":
-        return copy.copy(self)
-
-
-CatalogType = Dict[int, CatalogEntryType]
-CatalogJSONEntryType = Dict[str, Union[int, str, List[Dict[str, float]]]]
-CatalogJSONType = Dict[str, CatalogJSONEntryType]
-OldCatalogJSONType = List[CatalogJSONEntryType]
+__all__ = ["Catalog", "CatalogSourceInfo"]
 
 
 def filter_by_frequency_and_intensity(
@@ -171,29 +48,29 @@ def filter_by_frequency_and_intensity(
     temperature: float = -math.inf,
 ) -> CatalogEntryType:
     def intensity(_line: LineType) -> float:
-        if catalog_entry[DEGREES_OF_FREEDOM] >= 0 and temperature > 0.0 and temperature != T0:
+        if catalog_entry.degreesoffreedom >= 0 and temperature > 0.0 and temperature != T0:
             return (
-                _line[INTENSITY]
+                _line.intensity
                 + (
-                    (0.5 * catalog_entry[DEGREES_OF_FREEDOM] + 1.0) * math.log(T0 / temperature)
-                    - ((1 / temperature - 1 / T0) * _line[LOWER_STATE_ENERGY] * 100.0 * h * c / k)
+                    (0.5 * catalog_entry.degreesoffreedom + 1.0) * math.log(T0 / temperature)
+                    - ((1 / temperature - 1 / T0) * _line.lowerstateenergy * 100.0 * h * c / k)
                 )
                 / M_LOG10E
             )
         else:
-            return _line[INTENSITY]
+            return _line.intensity
 
-    new_catalog_entry: CatalogEntryType = catalog_entry.copy()
-    if new_catalog_entry.get(LINES, []):
+    new_catalog_entry: CatalogEntryType = copy.copy(catalog_entry)
+    if new_catalog_entry.lines:
         min_frequency_index: int = (
-            search_sorted(min_frequency, new_catalog_entry[LINES], key=lambda line: line[FREQUENCY]) + 1
+            search_sorted(min_frequency, new_catalog_entry.lines, key=lambda line: line.frequency) + 1
         )
         max_frequency_index: int = search_sorted(
-            max_frequency, new_catalog_entry[LINES], key=lambda line: line[FREQUENCY], maybe_equal=True
+            max_frequency, new_catalog_entry.lines, key=lambda line: line.frequency, maybe_equal=True
         )
-        new_catalog_entry[LINES] = [
+        new_catalog_entry.lines = [
             line
-            for line in new_catalog_entry[LINES][min_frequency_index : (max_frequency_index + 1)]
+            for line in new_catalog_entry.lines[min_frequency_index : (max_frequency_index + 1)]
             if min_intensity <= intensity(line) <= max_intensity
         ]
     return new_catalog_entry
@@ -232,16 +109,13 @@ class CatalogData:
             raise TypeError("Unsupported data type")
 
         for species_tag in catalog:
-            catalog[species_tag][LINES] = [LineType(**line) for line in catalog[species_tag][LINES]]
+            catalog[species_tag].lines = [LineType(**line) for line in catalog[species_tag].lines]
 
         def squash_same_species_tag_entries() -> None:
-            self.catalog[species_tag][LINES] = cast(
-                LinesType,
-                merge_sorted(
-                    self.catalog[species_tag][LINES],
-                    catalog[species_tag][LINES],
-                    key=lambda line: (line[FREQUENCY], line[INTENSITY], line[LOWER_STATE_ENERGY]),
-                ),
+            self.catalog[species_tag].lines = merge_sorted(
+                self.catalog[species_tag].lines,
+                catalog[species_tag].lines,
+                key=lambda line: (line.frequency, line.intensity, line.lowerstateenergy),
             )
 
         def merge_frequency_tuples(*args: tuple[float, float] | list[float]) -> tuple[tuple[float, float], ...]:
@@ -509,48 +383,48 @@ class Catalog:
                     continue
                 if all(
                     (
-                        check_str(inchi_key, entry.get(INCHI_KEY, "")),
-                        check_str(trivial_name, entry.get(TRIVIAL_NAME, "").casefold()),
-                        check_str(structural_formula, entry.get(STRUCTURAL_FORMULA, "")),
-                        check_str(name, entry.get(NAME, "").casefold()),
-                        check_str(stoichiometric_formula, entry.get(STOICHIOMETRIC_FORMULA, "")),
-                        check_str(isotopolog, entry.get(ISOTOPOLOG, "")),
-                        check_str(state, entry.get(STATE, ""), entry.get(STATE_HTML, "")),
-                        (degrees_of_freedom is None or entry.get(DEGREES_OF_FREEDOM, -1) == degrees_of_freedom),
+                        check_str(inchi_key, entry.inchikey),
+                        check_str(trivial_name, entry.trivialname.casefold()),
+                        check_str(structural_formula, entry.structuralformula),
+                        check_str(name, entry.name.casefold()),
+                        check_str(stoichiometric_formula, entry.stoichiometricformula),
+                        check_str(isotopolog, entry.isotopolog),
+                        check_str(state, entry.state, entry.state_html),
+                        (degrees_of_freedom is None or entry.degreesoffreedom == degrees_of_freedom),
                         check_str(
                             any_name,
-                            entry.get(TRIVIAL_NAME, "").casefold(),
-                            entry.get(NAME, "").casefold(),
+                            entry.trivialname.casefold(),
+                            entry.name.casefold(),
                         ),
                         check_str(
                             any_formula,
-                            entry.get(STRUCTURAL_FORMULA, ""),
-                            entry.get(MOLECULE_SYMBOL, ""),
-                            entry.get(STOICHIOMETRIC_FORMULA, ""),
-                            entry.get(ISOTOPOLOG, ""),
+                            entry.structuralformula,
+                            entry.moleculesymbol,
+                            entry.stoichiometricformula,
+                            entry.isotopolog,
                         ),
                         (
                             not any_name_or_formula
                             or check_str(
                                 any_name_or_formula_lowercase,
-                                entry.get(TRIVIAL_NAME, "").casefold(),
-                                entry.get(NAME, "").casefold(),
+                                entry.trivialname.casefold(),
+                                entry.name.casefold(),
                             )
                             or check_str(
                                 any_name_or_formula,
-                                entry.get(STRUCTURAL_FORMULA, ""),
-                                entry.get(MOLECULE_SYMBOL, ""),
-                                entry.get(STOICHIOMETRIC_FORMULA, ""),
-                                entry.get(ISOTOPOLOG, ""),
+                                entry.structuralformula,
+                                entry.moleculesymbol,
+                                entry.stoichiometricformula,
+                                entry.isotopolog,
                             )
                         ),
                         (
                             not anything
-                            or anything in (str(entry[key]) for key in entry if key != LINES)
+                            or anything in (str(getattr(entry, key)) for key in entry.__slots__ if key != LINES)
                             or check_str(
                                 anything_lowercase,
-                                entry.get(TRIVIAL_NAME, "").casefold(),
-                                entry.get(NAME, "").casefold(),
+                                entry.trivialname.casefold(),
+                                entry.name.casefold(),
                             )
                         ),
                     )
@@ -563,7 +437,7 @@ class Catalog:
                         min_intensity=min_intensity,
                         max_intensity=max_intensity,
                     )
-                    if filtered_entry[LINES]:
+                    if filtered_entry.lines:
                         selected_entries[st] = filtered_entry
         else:
             for st in self._data.catalog:
@@ -578,7 +452,7 @@ class Catalog:
                     min_intensity=min_intensity,
                     max_intensity=max_intensity,
                 )
-                if filtered_entry[LINES]:
+                if filtered_entry.lines:
                     selected_entries[st] = filtered_entry
         return selected_entries
 
@@ -627,7 +501,7 @@ class Catalog:
                 min_intensity=min_intensity,
                 max_intensity=max_intensity,
             )
-            if filtered_entry[LINES]:
+            if filtered_entry.lines:
                 selected_entries[species_tag] = filtered_entry
         return selected_entries
 
@@ -649,10 +523,10 @@ class Catalog:
         entry: CatalogEntryType
         for species_tag in entries:
             entry = entries[species_tag]
-            for line in cast(LinesType, entry[LINES]):
-                names.append(entry[NAME])
-                frequencies.append(line[FREQUENCY])
-                intensities.append(line[INTENSITY])
+            for line in entry.lines:
+                names.append(entry.name)
+                frequencies.append(line.frequency)
+                intensities.append(line.intensity)
 
         def max_width(items: list[str]) -> int:
             return max(len(item) for item in items)
@@ -690,11 +564,6 @@ class Catalog:
         return catalog
 
     def save(self, filename: str | PathLike[str], build_time: datetime = datetime.now(tz=timezone.utc)) -> None:
-        data_to_save: dict[str, CatalogJSONType | tuple[float, float] | str] = {
-            CATALOG: dict((str(species_tag), self._data.catalog[species_tag]) for species_tag in self._data.catalog),
-            FREQUENCY: list(self._data.frequency_limits),
-            BUILD_TIME: build_time.isoformat(),
-        }
         opener: Catalog.Opener
         try:
             opener = Catalog.Opener(filename)
@@ -702,13 +571,37 @@ class Catalog:
             filename = Path(filename)
             opener = Catalog.Opener(filename.with_name(filename.name + Catalog.DEFAULT_SUFFIX))
 
-        def ensure_bytes(data: bytes | str) -> bytes:
-            if isinstance(data, str):
-                return data.encode("utf-8")
-            if isinstance(data, bytes):
-                return data
-            raise TypeError("Unknown conversion to bytes")
+        def _repr(o: object) -> str:
+            if isinstance(o, str):
+                return '"' + o.replace('"', r"\"") + '"'
+            if isinstance(o, Iterable):
+                return "[" + ",".join(_repr(sub_o) for sub_o in o) + "]"
+            if isinstance(o, Mapping):
+                return "{" + ",".join(":".join((_repr(key), _repr(value))) for key, value in o.items()) + "}"
+            if isinstance(o, (CatalogEntryType, LineType)):
+                return "{" + ",".join(":".join((_repr(key), _repr(getattr(o, key)))) for key in o.__slots__) + "}"
+            return repr(o)
 
-        f: BinaryIO
-        with opener.open("wb") as f:
-            f.write(ensure_bytes(json.dumps(data_to_save)))
+        f: TextIO
+        with opener.open("wt") as f:
+            f.write("{")
+            f.write(_repr(CATALOG))
+            f.write(":{")
+            is_not_first_item: bool = False
+            for species_tag in self._data.catalog:
+                if is_not_first_item:
+                    f.write(",")
+                else:
+                    is_not_first_item = True
+                f.write(_repr(str(species_tag)))
+                f.write(":")
+                f.write(_repr(self._data.catalog[species_tag]))
+            f.write("},")
+            f.write(_repr(FREQUENCY))
+            f.write(":")
+            f.write(_repr(self._data.frequency_limits))
+            f.write(",")
+            f.write(_repr(BUILD_TIME))
+            f.write(":")
+            f.write(_repr(build_time.isoformat()))
+            f.write("}")

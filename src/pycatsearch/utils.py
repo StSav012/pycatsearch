@@ -5,7 +5,7 @@ import os
 import sys
 from math import e as _e, inf, log10, nan, pow
 from numbers import Real
-from typing import Any, Callable, Final, Iterable, Protocol, Sequence, TypeVar, cast, overload
+from typing import Any, Callable, Dict, Final, Iterable, List, Protocol, Sequence, TypeVar, Union, overload
 
 __all__ = [
     "M_LOG10E",
@@ -75,6 +75,12 @@ __all__ = [
     "tag",
     "p_tag",
     "a_tag",
+    "LineType",
+    "LinesType",
+    "CatalogEntryType",
+    "CatalogType",
+    "CatalogJSONType",
+    "OldCatalogJSONType",
 ]
 
 M_LOG10E: Final[float] = log10(_e)
@@ -131,6 +137,90 @@ HUMAN_READABLE: Final[dict[str, str]] = {
     DEGREES_OF_FREEDOM: "Degrees of freedom",
     LOWER_STATE_ENERGY: "Lower state energy",
 }
+
+
+class LineType:
+    __slots__ = [FREQUENCY, INTENSITY, LOWER_STATE_ENERGY]
+
+    def __init__(
+        self,
+        frequency: float = nan,
+        intensity: float = nan,
+        lowerstateenergy: float = nan,
+    ) -> None:
+        self.frequency: float = frequency
+        self.intensity: float = intensity
+        self.lowerstateenergy: float = lowerstateenergy
+
+
+LinesType = List[LineType]
+
+
+# noinspection PyShadowingBuiltins
+class CatalogEntryType:
+    __slots__ = [
+        ID,
+        MOLECULE,
+        STRUCTURAL_FORMULA,
+        STOICHIOMETRIC_FORMULA,
+        MOLECULE_SYMBOL,
+        SPECIES_TAG,
+        NAME,
+        TRIVIAL_NAME,
+        ISOTOPOLOG,
+        STATE,
+        STATE_HTML,
+        INCHI_KEY,
+        CONTRIBUTOR,
+        VERSION,
+        DATE_OF_ENTRY,
+        DEGREES_OF_FREEDOM,
+        LINES,
+    ]
+
+    def __init__(
+        self,
+        id: int = 0,
+        molecule: int = 0,
+        structuralformula: str = "",
+        stoichiometricformula: str = "",
+        moleculesymbol: str = "",
+        speciestag: int = 0,
+        name: str = "",
+        trivialname: str = "",
+        isotopolog: str = "",
+        state: str = "",
+        state_html: str = "",
+        inchikey: str = "",
+        contributor: str = "",
+        version: str = "",
+        dateofentry: str = "",
+        degreesoffreedom: int = -1,
+        lines: LinesType = (),
+    ) -> None:
+        self.id: int = id
+        self.molecule: int = molecule
+        self.structuralformula: str = structuralformula
+        self.stoichiometricformula: str = stoichiometricformula
+        self.moleculesymbol: str = moleculesymbol
+        self.speciestag: int = speciestag
+        self.name: str = name
+        self.trivialname: str = trivialname
+        self.isotopolog: str = isotopolog
+        self.state: str = state
+        self.state_html: str = state_html
+        self.inchikey: str = inchikey
+        self.contributor: str = contributor
+        self.version: str = version
+        self.dateofentry: str = dateofentry
+        self.degreesoffreedom: int = degreesoffreedom
+        self.lines: LinesType = lines
+
+
+CatalogType = Dict[int, CatalogEntryType]
+CatalogJSONEntryType = Dict[str, Union[int, str, List[Dict[str, float]]]]
+CatalogJSONType = Dict[str, CatalogJSONEntryType]
+OldCatalogJSONType = List[CatalogJSONEntryType]
 
 
 def within(x: float, limits: tuple[float, float] | tuple[tuple[float, float], ...]) -> bool:
@@ -550,38 +640,37 @@ def is_good_html(text: str) -> bool:
     return _1 == _2 and _1 == _3
 
 
-def best_name(entry: dict[str, int | str | list[dict[str, float]]], allow_html: bool = True) -> str:
-    species_tag: int = cast(int, entry.get(SPECIES_TAG, 0))
+def best_name(entry: CatalogEntryType, allow_html: bool = True) -> str:
+    species_tag: int = entry.speciestag
     last: str = best_name.__dict__.get("last", dict()).get(species_tag, dict()).get(allow_html, "")
     if last:
         return last
 
     def _best_name() -> str:
-        if isotopolog := entry.get(ISOTOPOLOG, ""):
+        if isotopolog := entry.isotopolog:
             if allow_html:
-                if is_good_html(str(molecule_symbol := entry[MOLECULE_SYMBOL])) and (
-                    entry.get(STRUCTURAL_FORMULA, "") == isotopolog
-                    or entry.get(STOICHIOMETRIC_FORMULA, "") == isotopolog
+                if is_good_html(str(molecule_symbol := entry.moleculesymbol)) and (
+                    entry.structuralformula == isotopolog or entry.stoichiometricformula == isotopolog
                 ):
-                    if state_html := cast(str, entry.get(STATE_HTML, "")):
+                    if state_html := entry.state_html:
                         # span tags are needed when the molecule symbol is malformed
                         return f"<span>{molecule_symbol}</span>, {chem_html(tex_to_html_entity(str(state_html)))}"
                     return str(molecule_symbol)
                 else:
-                    if state_html := cast(str, entry.get(STATE_HTML, "")):
+                    if state_html := entry.state_html:
                         return f"{chem_html(str(isotopolog))}, {chem_html(tex_to_html_entity(str(state_html)))}"
                     return chem_html(str(isotopolog))
             else:
-                if state_html := cast(str, entry.get(STATE_HTML, "")):
+                if state_html := entry.state_html:
                     return f"{isotopolog}, {remove_html(tex_to_html_entity(state_html))}"
-                if state := cast(str, entry.get(STATE, "")):
+                if state := entry.state:
                     return f"{isotopolog}, {remove_html(tex_to_html_entity(state.strip('$')))}"
                 return isotopolog
 
         for key in (NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA):
-            if candidate := entry.get(key, ""):
+            if candidate := getattr(entry, key, ""):
                 return chem_html(str(candidate)) if allow_html else str(candidate)
-        if trivial_name := entry.get(TRIVIAL_NAME, ""):
+        if trivial_name := entry.trivialname:
             return str(trivial_name)
         if species_tag:
             return str(species_tag)
@@ -639,7 +728,7 @@ def ensure_prefix(text: str, prefix: str) -> str:
 
 def save_catalog_to_file(
     filename: str | os.PathLike[str],
-    catalog: dict[int, dict[str, int | str | list[dict[str, float]]]],
+    catalog: CatalogType,
     frequency_limits: tuple[float, float],
 ) -> bool:
     from .catalog import Catalog

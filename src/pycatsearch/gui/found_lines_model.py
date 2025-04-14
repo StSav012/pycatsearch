@@ -5,8 +5,7 @@ from qtpy.QtCore import QAbstractTableModel, QLocale, QModelIndex, QPersistentMo
 from qtpy.QtWidgets import QWidget
 
 from .settings import Settings
-from ..catalog import CatalogType
-from ..utils import FREQUENCY, INTENSITY, LINES, LOWER_STATE_ENERGY, best_name
+from ..utils import CatalogType, best_name
 
 __all__ = ["FoundLinesModel"]
 
@@ -187,12 +186,12 @@ class FoundLinesModel(QAbstractTableModel):
                     decimal_point=decimal_point,
                     species_tag=species_tag,
                     name=best_name(entries[species_tag], rich_text_in_formulas),
-                    frequency=from_mhz(line[FREQUENCY]),
-                    intensity=from_log10_sq_nm_mhz(line[INTENSITY]),
-                    lower_state_energy=from_rec_cm(line[LOWER_STATE_ENERGY]),
+                    frequency=from_mhz(line.frequency),
+                    intensity=from_log10_sq_nm_mhz(line.intensity),
+                    lower_state_energy=from_rec_cm(line.lowerstateenergy),
                 )
                 for species_tag in entries
-                for line in entries[species_tag][LINES]
+                for line in entries[species_tag].lines
             )
         )
         self._rows_loaded = 0
