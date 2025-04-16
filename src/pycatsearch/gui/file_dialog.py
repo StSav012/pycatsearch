@@ -1,16 +1,26 @@
 import mimetypes
+import re
 from importlib.util import find_spec
 from os import PathLike
 from pathlib import Path
-from typing import Collection, NamedTuple
+from typing import Collection, NamedTuple, Sequence, cast
 
-from qtpy.QtWidgets import QFileDialog, QWidget
+from qtpy.QtCore import QObject, Slot
+from qtpy.QtWidgets import QComboBox, QFileDialog, QWidget
 
 from .settings import Settings
 
 __all__ = ["OpenFileDialog", "SaveFileDialog"]
 
 
+def remove_suffixes(string: str, suffixes: Collection[str]) -> str:
+    for suf in sorted(suffixes, key=lambda s: (len(s), s), reverse=True):
+        if string.endswith(suf):
+            return string[: -len(suf)]
+    return string
+
+
+# noinspection PyPep8Naming
 class FileDialog(QFileDialog):
     class SupportedMimetypeItem(NamedTuple):
         required_packages: Collection[str]
@@ -36,6 +46,35 @@ class FileDialog(QFileDialog):
         )
         self.supported_name_filters: Collection[FileDialog.SupportedNameFilterItem] = tuple(supported_name_filters)
 
+        self._selected_filter: str = ""
+
+        @Slot(str)
+        def on_filter_selected(selected_filter: str) -> None:
+            new_selected_filter_suffixes: tuple[str, ...] = self._extensions_from_filter(selected_filter)
+            if not new_selected_filter_suffixes:
+                return
+            selected_filter_suffixes: tuple[str, ...] = self._extensions_from_filter(self._selected_filter)
+            selected_file: Path | None = self.selectedFile()
+            if selected_file is None:
+                return
+            if not selected_file.name.endswith(new_selected_filter_suffixes):
+                new_selected_filter_suffix: str = new_selected_filter_suffixes[0]
+                new_selected_file = selected_file.with_name(
+                    remove_suffixes(selected_file.name, selected_filter_suffixes) + new_selected_filter_suffix
+                )
+                self.selectFile(new_selected_file)
+            self._selected_filter = selected_filter
+
+        def find_widget(name: str) -> QObject | None:
+            for child in self.children():
+                if child.objectName() == name:
+                    return child
+
+        fileTypeCombo: QObject | None = find_widget("fileTypeCombo")
+        if fileTypeCombo is not None:
+            cast(QComboBox, fileTypeCombo).activated.disconnect()
+        self.filterSelected.connect(on_filter_selected)
+
     def selectFile(self, filename: str | PathLike[str]) -> None:
         return super().selectFile(str(filename))
 
@@ -44,6 +83,25 @@ class FileDialog(QFileDialog):
             return Path(self.selectedFiles()[0])
         except IndexError:
             return None
+
+    def setNameFilters(self, filters: Sequence[str]) -> None:
+        super().setNameFilters(filters)
+        if filters:
+            self._selected_filter = filters[0]
+
+    def _extensions_from_filter(self, filter_string: str) -> tuple[str, ...]:
+        if self.testOption(QFileDialog.Option.HideNameFilterDetails):
+            for f in self.nameFilters():
+                if f.startswith(filter_string):
+                    filter_string = f
+                    break
+        m: re.Match[str] | None = re.fullmatch(
+            r"^.*\(" + r"(?:\*(\.\S+)\s*)" * filter_string.count("*.") + r"\)$",
+            filter_string,
+        )
+        if m is None:
+            return ()
+        return m.groups()
 
 
 class OpenFileDialog(FileDialog):
@@ -176,6 +234,7 @@ class SaveFileDialog(FileDialog):
         ext: str | None
 
         supported_name_filters: list[str] = []
+        all_extensions: set[str] = set()
         for supported_name_filter in self.supported_name_filters:
             if not supported_name_filter.required_packages or any(
                 find_spec(package) for package in supported_name_filter.required_packages
@@ -190,9 +249,10 @@ class SaveFileDialog(FileDialog):
                     )
                 )
                 supported_name_filters.append(filter_)
+                all_extensions.update(supported_name_filter.file_extensions)
                 if any(filename_suffixes.endswith(ext) for ext in supported_name_filter.file_extensions):
                     selected_filter = filter_
-                    if supported_name_filter.file_extensions:
+                    if not selected_ext and supported_name_filter.file_extensions:
                         selected_ext = list(supported_name_filter.file_extensions)[0]
 
         supported_mimetypes: list[str] = []
@@ -203,9 +263,10 @@ class SaveFileDialog(FileDialog):
             ):
                 if mimetype := mimetypes.types_map.get(supported_mimetype_filter.file_extension):
                     supported_mimetypes.append(mimetype)
+                    all_extensions.add(supported_mimetype_filter.file_extension)
                     if filename_mimetype is not None and filename_mimetype == mimetype:
                         selected_mimetype = mimetype
-                        if ext := mimetypes.guess_extension(selected_mimetype, strict=False):
+                        if not selected_ext and (ext := mimetypes.guess_extension(selected_mimetype, strict=False)):
                             selected_ext = ext
 
         if not supported_name_filters and not supported_mimetypes:
@@ -223,8 +284,11 @@ class SaveFileDialog(FileDialog):
         self.settings.restore(self)
         self.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
         self.setFileMode(QFileDialog.FileMode.AnyFile)
-        if selected_ext:
-            self.setDefaultSuffix(selected_ext)
+        if selected_filter := self.selectedNameFilter():
+            selected_filter_ext: tuple[str, ...] = self._extensions_from_filter(selected_filter)
+            if selected_filter_ext:
+                selected_ext = selected_filter_ext[0]
+                self.setDefaultSuffix(selected_ext)
 
         expected_file: Path
         if expected_file := (filename or opened_filename):
@@ -232,8 +296,10 @@ class SaveFileDialog(FileDialog):
             if opened_filename:
                 expected_file = expected_file.with_name(opened_filename.name)
             if selected_ext:
-                expected_file = expected_file.with_suffix(selected_ext)
-            self.selectFile(str(expected_file))
+                expected_file = expected_file.with_name(
+                    remove_suffixes(expected_file.name, all_extensions) + selected_ext
+                )
+            self.selectFile(expected_file)
 
         if self.exec() and self.selectedFiles():
             self.settings.save(self)
