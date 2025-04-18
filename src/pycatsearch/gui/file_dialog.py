@@ -75,14 +75,26 @@ class FileDialog(QFileDialog):
             cast(QComboBox, fileTypeCombo).activated.disconnect()
         self.filterSelected.connect(on_filter_selected)
 
+    def __bool__(self) -> bool:
+        return bool(super().selectedFiles())
+
     def selectFile(self, filename: str | PathLike[str]) -> None:
         return super().selectFile(str(filename))
 
     def selectedFile(self) -> Path | None:
-        try:
-            return Path(self.selectedFiles()[0])
-        except IndexError:
-            return None
+        if selected_files := super().selectedFiles():
+            sf: Path = Path(selected_files[0])
+            expected_suffixes: tuple[str, ...] = self._extensions_from_filter(self.selectedNameFilter())
+            if expected_suffixes and not sf.name.endswith(expected_suffixes):
+                sf = sf.with_name(sf.name + expected_suffixes[0])
+            return sf
+
+    def selectedFiles(self) -> list[str]:
+        expected_suffixes: tuple[str, ...] = self._extensions_from_filter(self.selectedNameFilter())
+        if not expected_suffixes:
+            return super().selectedFiles()
+        expected_suffix: str = expected_suffixes[0]
+        return [(sf if sf.endswith(expected_suffixes) else sf + expected_suffix) for sf in super().selectedFiles()]
 
     def setNameFilters(self, filters: Sequence[str]) -> None:
         super().setNameFilters(filters)
@@ -301,7 +313,7 @@ class SaveFileDialog(FileDialog):
                 )
             self.selectFile(expected_file)
 
-        if self.exec() and self.selectedFiles():
+        if self.exec() and bool(self):
             self.settings.save(self)
             if not (filename := self.selectedFile()):
                 return None
