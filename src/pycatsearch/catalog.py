@@ -571,7 +571,7 @@ class Catalog:
 
         def _repr(o: object) -> str:
             if isinstance(o, str):
-                return '"' + o.replace('"', r"\"") + '"'
+                return '"' + o.replace("\\", r"\\").replace('"', r"\"") + '"'
             if isinstance(o, Mapping):
                 return "{" + ",".join(":".join((_repr(key), _repr(value))) for key, value in o.items()) + "}"
             if isinstance(o, Iterable):
