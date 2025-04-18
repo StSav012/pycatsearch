@@ -6,6 +6,8 @@ __all__ = ["CatalogEntry"]
 
 
 class CatalogEntry:
+    __slots__ = ["FREQ", "INT", "DR", "ELO", "FREQ", "INT", "DR", "ELO"]
+
     def __init__(
         self,
         spcat_line: str = "",
