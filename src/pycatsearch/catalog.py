@@ -108,9 +108,6 @@ class CatalogData:
         else:
             raise TypeError("Unsupported data type")
 
-        for species_tag in catalog:
-            catalog[species_tag].lines = [LineType(**line) for line in catalog[species_tag].lines]
-
         def squash_same_species_tag_entries() -> None:
             self.catalog[species_tag].lines = merge_sorted(
                 self.catalog[species_tag].lines,

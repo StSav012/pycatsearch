@@ -196,7 +196,7 @@ class CatalogEntryType:
         version: str = "",
         dateofentry: str = "",
         degreesoffreedom: int = -1,
-        lines: LinesType = (),
+        lines: Iterable[dict[str, float]] = (),
     ) -> None:
         self.id: int = id
         self.molecule: int = molecule
@@ -214,7 +214,7 @@ class CatalogEntryType:
         self.version: str = version
         self.dateofentry: str = dateofentry
         self.degreesoffreedom: int = degreesoffreedom
-        self.lines: LinesType = lines
+        self.lines: LinesType = [LineType(**line) for line in lines]
 
 
 CatalogType = Dict[int, CatalogEntryType]
