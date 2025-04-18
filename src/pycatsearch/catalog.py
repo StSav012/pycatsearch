@@ -4,7 +4,7 @@ import gzip
 import lzma
 import math
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from datetime import datetime, timezone
 from os import PathLike
 from pathlib import Path
@@ -249,8 +249,9 @@ class Catalog:
                             )
                             build_datetime: datetime | None = None
                             if BUILD_TIME in json_data:
-                                build_datetime = datetime.fromisoformat(cast(str, json_data[BUILD_TIME]))
-                        except LookupError:
+                                with suppress(TypeError, ValueError):
+                                    build_datetime = datetime.fromisoformat(cast(str, json_data[BUILD_TIME]))
+                        except (LookupError, TypeError, ValueError):
                             print(f"{filename} is corrupted", file=sys.stderr)
                         else:
                             self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
