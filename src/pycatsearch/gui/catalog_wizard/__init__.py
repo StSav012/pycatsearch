@@ -6,7 +6,7 @@ from qtpy.QtWidgets import QDialog, QMessageBox, QWidget, QWizard
 from ..catalog_file_dialog import CatalogSaveFileDialog
 from ..save_catalog_waiting_screen import SaveCatalogWaitingScreen
 from ..settings import Settings
-from ...catalog import CatalogType
+from ...utils import CatalogType
 
 __all__ = ["SaveCatalogWizard"]
 

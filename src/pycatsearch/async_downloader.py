@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import logging
 import random
 from contextlib import suppress
@@ -7,7 +8,7 @@ from pathlib import Path
 from platform import system
 from queue import Empty, Queue
 from ssl import SSLCertVerificationError
-from threading import Thread
+from threading import Event, Thread
 from typing import Any, Final, Mapping, cast
 from urllib.error import HTTPError
 from urllib.parse import urlencode
@@ -20,9 +21,16 @@ try:
 except ImportError:
     import json
 
-from .catalog import Catalog, CatalogEntryType, CatalogType
+from .catalog import Catalog
 from .catalog_entry import CatalogEntry
-from .utils import FREQUENCY, LINES, SPECIES_TAG, DEGREES_OF_FREEDOM, VERSION, within, save_catalog_to_file
+from .utils import (
+    SPECIES_TAG,
+    VERSION,
+    CatalogEntryType,
+    CatalogType,
+    save_catalog_to_file,
+    within,
+)
 
 __all__ = ["Downloader", "get_catalog", "save_catalog", "download"]
 
@@ -43,7 +51,7 @@ class Downloader(Thread):
         self._catalog: CatalogType = dict()
         self._existing_catalog: Catalog | None = existing_catalog
 
-        self._run: bool = False
+        self._clear_to_run: Event = Event()
         self._tasks: list[asyncio.Task] = []
 
     def __del__(self) -> None:
@@ -54,7 +62,7 @@ class Downloader(Thread):
         return self._catalog.copy()
 
     def stop(self) -> None:
-        self._run = False
+        self._clear_to_run.clear()
 
     def join(self, timeout: float | None = None) -> None:
         self.stop()
@@ -70,7 +78,7 @@ class Downloader(Thread):
                 task.cancel()
 
     def run(self) -> None:
-        self._run = True
+        self._clear_to_run.set()
 
         async def async_get_catalog() -> CatalogType:
             session: aiohttp.ClientSession
@@ -82,28 +90,30 @@ class Downloader(Thread):
                 async def get(url: str, headers: Mapping[str, str] | None = None) -> bytes:
                     ssl: bool | None = None
                     response: aiohttp.ClientResponse
-                    while self._run:
+                    while self._clear_to_run.is_set():
                         try:
-                            async with session.get(url, headers=headers, ssl=ssl) as response:
+                            async with session.get(url, headers=headers, ssl=ssl, compress=True) as response:
                                 return await response.read()
-                        except asyncio.exceptions.CancelledError as ex:
-                            if self._run:
-                                logger.error(str(ex), exc_info=ex)
                         except aiohttp.client_exceptions.ServerDisconnectedError as ex:
-                            logger.warning(f"{url}: {str(ex.message)}")
+                            logger.warning(f"{url}: {ex.message!s}")
                         except aiohttp.client_exceptions.ClientConnectorError as ex:
-                            logger.warning(f"{str(ex.args[1])} to {url}")
+                            if str(ex.args[1]):
+                                logger.warning(f"{ex.args[1]!s} to {url}")
+                            else:
+                                if not ex.strerror:
+                                    ex.strerror = ex.args[1].__class__.__name__
+                                logger.warning(f"{ex!s} when getting {url}")
                             if isinstance(ex.args[1], SSLCertVerificationError) and system() == "Windows":
                                 logger.critical("Disabling the SSL Certificate validation for the URL!")
                                 ssl = False
                         except aiohttp.client_exceptions.ClientOSError as ex:
-                            logger.warning(f"{url}: {str(ex)}")
+                            logger.warning(f"{url}: {ex!s}")
                         except aiohttp.client_exceptions.ClientPayloadError as ex:
-                            logger.warning(f"{url}: {str(ex)}")
+                            logger.warning(f"{url}: {ex!s}")
                         except aiohttp.client_exceptions.ClientError as ex:
-                            logger.error(f"{url}: {str(ex)}", exc_info=ex)
+                            logger.error(f"{url}: {ex!s}", exc_info=ex)
                         with suppress(asyncio.exceptions.CancelledError):
-                            await asyncio.sleep(random.random())
+                            await asyncio.sleep(random.random() * 20)
                     return bytes()
 
                 async def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> bytes:
@@ -162,7 +172,10 @@ class Downloader(Thread):
                         [purge_null_data(trim_strings(s)) for s in data.get("species", [])]
                     )
 
-                async def get_substance_catalog(species_entry: dict[str, int | str]) -> CatalogEntryType:
+                async def get_substance_catalog(species_entry: dict[str, int | str]) -> CatalogEntryType | None:
+                    if not self._clear_to_run.is_set():
+                        return None  # quickly exit the function
+
                     def entry_url(_species_tag: int) -> str:
                         entry_filename: str = f"c{_species_tag:06}.cat"
 
@@ -176,7 +189,7 @@ class Downloader(Thread):
                     if SPECIES_TAG not in species_entry:
                         # nothing to go on with
                         logger.error(f"{SPECIES_TAG!r} not in the species entry: {species_entry!r}")
-                        return dict()
+                        return None
 
                     if (
                         self._existing_catalog is not None
@@ -187,41 +200,41 @@ class Downloader(Thread):
                         existing_catalog_entry: CatalogEntryType
                         for species_tag, existing_catalog_entry in self._existing_catalog.catalog.items():
                             if all(
-                                existing_catalog_entry.get(key, type(value)()) == value
+                                getattr(existing_catalog_entry, key, type(value)()) == value
                                 for key, value in species_entry.items()
                             ):
                                 logger.debug(f"using existing entry for species tag {species_tag}")
-                                _catalog_entry = existing_catalog_entry.copy()
-                                _catalog_entry[LINES] = [
+                                _catalog_entry = copy.copy(existing_catalog_entry)
+                                _catalog_entry.lines = [
                                     _line
-                                    for _line in existing_catalog_entry.get(LINES, [])
-                                    if within(_line[FREQUENCY], self._frequency_limits)
+                                    for _line in existing_catalog_entry.lines
+                                    if within(_line.frequency, self._frequency_limits)
                                 ]
                                 return _catalog_entry
 
                     fn: str = entry_url(cast(int, species_entry[SPECIES_TAG]))
                     if not fn:  # no need to download a file for the species tag
                         logger.debug(f"skipping species tag {species_entry[SPECIES_TAG]}")
-                        return dict()
+                        return None
                     try:
                         lines = (await get(fn)).decode().splitlines()
                     except HTTPError as ex:
                         logger.error(fn, exc_info=ex)
-                        return dict()
+                        return None
                     catalog_entries = [CatalogEntry(line) for line in lines]
                     if not catalog_entries:
-                        if self._run:
+                        if self._clear_to_run.is_set():
                             logger.warning("no entries in the catalog")
-                        return dict()
-                    return {
+                        return None
+                    return CatalogEntryType(
                         **species_entry,
-                        DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
-                        LINES: [
+                        degreesoffreedom=catalog_entries[0].degrees_of_freedom,
+                        lines=[
                             _catalog_entry.to_dict()
                             for _catalog_entry in catalog_entries
                             if within(_catalog_entry.frequency, self._frequency_limits)
                         ],
-                    }
+                    )
 
                 species: list[dict[str, int | str]] = await get_species()
                 catalog: CatalogType = dict()
@@ -230,17 +243,17 @@ class Downloader(Thread):
                 if self._state_queue is not None:
                     self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
                 self._tasks = [asyncio.create_task(get_substance_catalog(_e)) for _e in species]
-                catalog_entry: CatalogEntryType
-                future_entry: asyncio.Future[CatalogEntryType]
+                catalog_entry: CatalogEntryType | None
+                future_entry: asyncio.Future[CatalogEntryType | None]
                 for future_entry in asyncio.as_completed(self._tasks):
                     catalog_entry = await future_entry
-                    if SPECIES_TAG in catalog_entry:
-                        catalog[catalog_entry[SPECIES_TAG]] = catalog_entry
+                    if catalog_entry is not None and catalog_entry.speciestag:
+                        catalog[catalog_entry.speciestag] = catalog_entry
                         if self._state_queue is not None:
                             self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
                     else:
                         skipped_count += 1
-                        if self._state_queue is not None and self._run:
+                        if self._state_queue is not None and self._clear_to_run.is_set():
                             self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
 
             return catalog

@@ -1,12 +1,14 @@
+import copy
 import logging
 import random
 import time
+from contextlib import suppress
 from http import HTTPMethod, HTTPStatus
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from math import inf
 from pathlib import Path
 from queue import Empty, Queue
-from threading import Thread
+from threading import Event, Thread
 from typing import Any, Final, Mapping, cast
 from urllib.error import HTTPError
 from urllib.parse import ParseResult, urlencode, urlparse
@@ -16,9 +18,16 @@ try:
 except ImportError:
     import json
 
-from .catalog import Catalog, CatalogEntryType, CatalogType
+from .catalog import Catalog
 from .catalog_entry import CatalogEntry
-from .utils import FREQUENCY, LINES, SPECIES_TAG, DEGREES_OF_FREEDOM, VERSION, within, save_catalog_to_file
+from .utils import (
+    SPECIES_TAG,
+    VERSION,
+    CatalogEntryType,
+    CatalogType,
+    save_catalog_to_file,
+    within,
+)
 
 __all__ = ["Downloader", "get_catalog", "save_catalog", "download"]
 
@@ -39,7 +48,7 @@ class Downloader(Thread):
         self._catalog: CatalogType = dict()
         self._existing_catalog: Catalog | None = existing_catalog
 
-        self._run: bool = False
+        self._clear_to_run: Event = Event()
         self._sessions: dict[tuple[str, str], HTTPConnection | HTTPSConnection] = dict()
 
     def __del__(self) -> None:
@@ -53,7 +62,7 @@ class Downloader(Thread):
         return self._catalog.copy()
 
     def stop(self) -> None:
-        self._run = False
+        self._clear_to_run.clear()
 
     def join(self, timeout: float | None = None) -> None:
         self.stop()
@@ -63,7 +72,7 @@ class Downloader(Thread):
         super().join(timeout=timeout)
 
     def run(self) -> None:
-        self._run = True
+        self._clear_to_run.set()
 
         def session_for_url(scheme: str, location: str) -> HTTPConnection | HTTPSConnection:
             if (scheme, location) not in self._sessions:
@@ -79,26 +88,24 @@ class Downloader(Thread):
             parse_result: ParseResult = urlparse(url)
             session: HTTPConnection | HTTPSConnection = session_for_url(parse_result.scheme, parse_result.netloc)
             response: HTTPResponse
-            while True:
+            while self._clear_to_run.is_set():
                 try:
                     session.request(method=HTTPMethod.GET, url=parse_result.path, headers=(headers or dict()))
                     response = session.getresponse()
                 except ConnectionResetError:
                     time.sleep(random.random())
                 else:
-                    break
-            if response.closed:
-                return ""
-            try:
-                return response.read().decode()
-            except AttributeError:  # `response.fp` became `None` before the socket began closing
-                return ""
+                    if response.closed:
+                        break
+                    with suppress(AttributeError):  # `response.fp` became `None` before the socket began closing
+                        return response.read().decode()
+            return ""
 
         def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> bytes:
             parse_result: ParseResult = urlparse(url)
             session: HTTPConnection | HTTPSConnection = session_for_url(parse_result.scheme, parse_result.netloc)
             response: HTTPResponse
-            while True:
+            while self._clear_to_run.is_set():
                 try:
                     session.request(
                         method=HTTPMethod.POST,
@@ -110,18 +117,18 @@ class Downloader(Thread):
                 except ConnectionResetError:
                     time.sleep(random.random())
                 else:
-                    break
-            if response.closed:
-                logger.error(f"Stream closed before read the response from {url}")
-                return b""
-            if response.status != HTTPStatus.OK:
-                logger.error(f"Status {response.status} ({response.reason}) while posting to {url}")
-                return b""
-            try:
-                return response.read()
-            except AttributeError:
-                logger.warning("`response.fp` became `None` before the socket began closing")
-                return b""
+                    if response.closed:
+                        logger.error(f"Stream closed before read the response from {url}")
+                        break
+                    if response.status != HTTPStatus.OK:
+                        logger.error(f"Status {response.status} ({response.reason}) while posting to {url}")
+                        break
+                    try:
+                        return response.read()
+                    except AttributeError:
+                        logger.warning("`response.fp` became `None` before the socket began closing")
+                        break
+            return b""
 
         def get_species() -> list[dict[str, int | str]]:
             def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
@@ -168,9 +175,9 @@ class Downloader(Thread):
             data: dict[str, int | str | list[dict[str, None | int | str]]] = json.loads(species_list)
             return ensure_unique_species_tags([purge_null_data(trim_strings(s)) for s in data.get("species", [])])
 
-        def get_substance_catalog(species_entry: dict[str, int | str]) -> CatalogEntryType:
-            if not self._run:
-                return dict()  # quickly exit the function
+        def get_substance_catalog(species_entry: dict[str, int | str]) -> CatalogEntryType | None:
+            if not self._clear_to_run.is_set():
+                return None  # quickly exit the function
 
             def entry_url(_species_tag: int) -> str:
                 entry_filename: str = f"c{_species_tag:06}.cat"
@@ -184,7 +191,7 @@ class Downloader(Thread):
             if SPECIES_TAG not in species_entry:
                 # nothing to go on with
                 logger.error(f"{SPECIES_TAG!r} not in the species entry: {species_entry!r}")
-                return dict()
+                return None
 
             if (
                 self._existing_catalog is not None
@@ -195,40 +202,41 @@ class Downloader(Thread):
                 existing_catalog_entry: CatalogEntryType
                 for species_tag, existing_catalog_entry in self._existing_catalog.catalog.items():
                     if all(
-                        existing_catalog_entry.get(key, type(value)()) == value for key, value in species_entry.items()
+                        getattr(existing_catalog_entry, key, type(value)()) == value
+                        for key, value in species_entry.items()
                     ):
                         logger.debug(f"using existing entry for species tag {species_tag}")
-                        _catalog_entry = existing_catalog_entry.copy()
-                        _catalog_entry[LINES] = [
+                        _catalog_entry = copy.copy(existing_catalog_entry)
+                        _catalog_entry.lines = [
                             _line
-                            for _line in existing_catalog_entry.get(LINES, [])
-                            if within(_line[FREQUENCY], self._frequency_limits)
+                            for _line in existing_catalog_entry.lines
+                            if within(_line.frequency, self._frequency_limits)
                         ]
                         return _catalog_entry
 
             fn: str = entry_url(cast(int, species_entry[SPECIES_TAG]))
             if not fn:  # no need to download a file for the species tag
                 logger.debug(f"skipping species tag {species_entry[SPECIES_TAG]}")
-                return dict()
+                return None
             try:
                 logger.debug(f"getting {fn}")
                 lines = get(fn).splitlines()
             except HTTPError as ex:
                 logger.error(fn, exc_info=ex)
-                return dict()
+                return None
             catalog_entries = [CatalogEntry(line) for line in lines]
             if not catalog_entries:
                 logger.warning("no entries in the catalog")
-                return dict()
-            return {
+                return None
+            return CatalogEntryType(
                 **species_entry,
-                DEGREES_OF_FREEDOM: catalog_entries[0].degrees_of_freedom,
-                LINES: [
+                degreesoffreedom=catalog_entries[0].degrees_of_freedom,
+                lines=[
                     _catalog_entry.to_dict()
                     for _catalog_entry in catalog_entries
                     if within(_catalog_entry.frequency, self._frequency_limits)
                 ],
-            }
+            )
 
         species: list[dict[str, int | str]] = get_species()
         catalog: CatalogType = dict()
@@ -240,13 +248,13 @@ class Downloader(Thread):
         _e: dict[str, int | str]
         for _e in species:
             catalog_entry = get_substance_catalog(_e)
-            if SPECIES_TAG in catalog_entry:
-                catalog[catalog_entry[SPECIES_TAG]] = catalog_entry
+            if catalog_entry is not None and catalog_entry.speciestag:
+                catalog[catalog_entry.speciestag] = catalog_entry
                 if self._state_queue is not None:
                     self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
             else:
                 skipped_count += 1
-                if self._state_queue is not None and self._run:
+                if self._state_queue is not None and self._clear_to_run.is_set():
                     self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
 
         self._catalog = catalog
