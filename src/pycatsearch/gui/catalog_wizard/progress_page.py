@@ -79,10 +79,16 @@ class ProgressPage(QWizardPage):
 
     def stop(self) -> None:
         self._downloader.stop()
-        cataloged_species: int
-        not_yet_processed_species: int
-        while not self._state_queue.empty():
-            cataloged_species, not_yet_processed_species = self._state_queue.get(block=False)
-            self._progress_bar.setValue(cataloged_species)
-            self._progress_bar.setMaximum(cataloged_species + not_yet_processed_species)
-        self._downloader.join()
+        while True:
+            cataloged_species: int
+            not_yet_processed_species: int
+            while not self._state_queue.empty():
+                cataloged_species, not_yet_processed_species = self._state_queue.get(block=False)
+                self._progress_bar.setValue(cataloged_species)
+                self._progress_bar.setMaximum(cataloged_species + not_yet_processed_species)
+            try:
+                self._downloader.join(timeout=0.1)
+            except TimeoutError:
+                continue
+            else:
+                break
