@@ -1,4 +1,3 @@
-import enum
 import http
 import platform
 import sys
@@ -107,7 +106,7 @@ if sys.version_info < (3, 10) and __file__ != "<string>":
 
 if sys.version_info < (3, 11):
 
-    class HTTPMethod(enum.Enum):
+    class HTTPMethod:
         CONNECT = "CONNECT"
         DELETE = "DELETE"
         GET = "GET"
