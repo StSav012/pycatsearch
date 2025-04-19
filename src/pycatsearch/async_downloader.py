@@ -2,6 +2,7 @@ import asyncio
 import copy
 import logging
 import random
+from collections import defaultdict
 from contextlib import suppress
 from math import inf
 from pathlib import Path
@@ -11,7 +12,7 @@ from ssl import SSLCertVerificationError
 from threading import Event, Thread
 from typing import Any, Final, Mapping, cast
 from urllib.error import HTTPError
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import aiohttp
 import aiohttp.client_exceptions
@@ -81,6 +82,8 @@ class Downloader(Thread):
         self._clear_to_run.set()
 
         async def async_get_catalog() -> CatalogType:
+            semaphores: dict[str, asyncio.Semaphore] = defaultdict(lambda: asyncio.Semaphore(4))
+
             session: aiohttp.ClientSession
             async with aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(),  # disable timeout checks
@@ -91,29 +94,30 @@ class Downloader(Thread):
                     ssl: bool | None = None
                     response: aiohttp.ClientResponse
                     while self._clear_to_run.is_set():
-                        try:
-                            async with session.get(url, headers=headers, ssl=ssl, compress=True) as response:
-                                return await response.read()
-                        except aiohttp.client_exceptions.ServerDisconnectedError as ex:
-                            logger.warning(f"{url}: {ex.message!s}")
-                        except aiohttp.client_exceptions.ClientConnectorError as ex:
-                            if str(ex.args[1]):
-                                logger.warning(f"{ex.args[1]!s} to {url}")
-                            else:
-                                if not ex.strerror:
-                                    ex.strerror = ex.args[1].__class__.__name__
-                                logger.warning(f"{ex!s} when getting {url}")
-                            if isinstance(ex.args[1], SSLCertVerificationError) and system() == "Windows":
-                                logger.critical("Disabling the SSL Certificate validation for the URL!")
-                                ssl = False
-                        except aiohttp.client_exceptions.ClientOSError as ex:
-                            logger.warning(f"{url}: {ex!s}")
-                        except aiohttp.client_exceptions.ClientPayloadError as ex:
-                            logger.warning(f"{url}: {ex!s}")
-                        except aiohttp.client_exceptions.ClientError as ex:
-                            logger.error(f"{url}: {ex!s}", exc_info=ex)
-                        with suppress(asyncio.exceptions.CancelledError):
-                            await asyncio.sleep(random.random() * 20)
+                        async with semaphores[urlparse(url).hostname]:
+                            try:
+                                async with session.get(url, headers=headers, ssl=ssl, compress=True) as response:
+                                    return await response.read()
+                            except aiohttp.client_exceptions.ServerDisconnectedError as ex:
+                                logger.warning(f"{url}: {ex.message!s}")
+                            except aiohttp.client_exceptions.ClientConnectorError as ex:
+                                if str(ex.args[1]):
+                                    logger.warning(f"{ex.args[1]!s} to {url}")
+                                else:
+                                    if not ex.strerror:
+                                        ex.strerror = ex.args[1].__class__.__name__
+                                    logger.warning(f"{ex!s} when getting {url}")
+                                if isinstance(ex.args[1], SSLCertVerificationError) and system() == "Windows":
+                                    logger.critical("Disabling the SSL Certificate validation for the URL!")
+                                    ssl = False
+                            except aiohttp.client_exceptions.ClientOSError as ex:
+                                logger.warning(f"{url}: {ex!s}")
+                            except aiohttp.client_exceptions.ClientPayloadError as ex:
+                                logger.warning(f"{url}: {ex!s}")
+                            except aiohttp.client_exceptions.ClientError as ex:
+                                logger.error(f"{url}: {ex!s}", exc_info=ex)
+                            with suppress(asyncio.exceptions.CancelledError):
+                                await asyncio.sleep(random.random() * 20)
                     return bytes()
 
                 async def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> bytes:
