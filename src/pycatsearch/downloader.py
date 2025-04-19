@@ -92,7 +92,8 @@ class Downloader(Thread):
                 try:
                     session.request(method=HTTPMethod.GET, url=parse_result.path, headers=(headers or dict()))
                     response = session.getresponse()
-                except ConnectionResetError:
+                except ConnectionResetError as ex:
+                    logger.warning(ex)
                     time.sleep(random.random())
                 else:
                     if response.closed:
@@ -114,7 +115,8 @@ class Downloader(Thread):
                         headers=(headers or dict()),
                     )
                     response = session.getresponse()
-                except ConnectionResetError:
+                except ConnectionResetError as ex:
+                    logger.warning(ex)
                     time.sleep(random.random())
                 else:
                     if response.closed:
