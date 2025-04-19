@@ -2,7 +2,7 @@
 QtPy>=2.3.1
 
 # for faster downloading
-aiohttp
+aiohttp>=3.3
 
 # for faster JSON loading
 orjson
