@@ -16,21 +16,21 @@ except ImportError:
     import json
 
 from .utils import (
+    BUILD_TIME,
+    CATALOG,
+    FREQUENCY,
+    LINES,
+    M_LOG10E,
+    SPECIES_TAG,
+    T0,
     CatalogEntryType,
     CatalogJSONType,
     CatalogType,
     LineType,
-    M_LOG10E,
     OldCatalogJSONType,
-    T0,
     c,
     h,
     k,
-    CATALOG,
-    BUILD_TIME,
-    LINES,
-    FREQUENCY,
-    SPECIES_TAG,
     merge_sorted,
     search_sorted,
 )

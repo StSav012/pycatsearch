@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import Any, Collection, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Collection
 
 from qtpy.QtCore import QModelIndex, Qt, Signal, Slot
 from qtpy.QtGui import QContextMenuEvent, QIcon
@@ -19,7 +19,7 @@ from .html_style_delegate import HTMLDelegate
 from .selectable_label import SelectableLabel
 from .url_label import URLLabel
 from ..catalog import Catalog
-from ..utils import CatalogEntryType, HUMAN_READABLE, ID, INCHI_KEY, LINES, STATE_HTML, best_name, chem_html
+from ..utils import HUMAN_READABLE, ID, INCHI_KEY, LINES, STATE_HTML, CatalogEntryType, best_name, chem_html
 
 __all__ = ["SubstanceInfoSelector", "SubstanceInfo"]
 

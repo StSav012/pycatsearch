@@ -24,12 +24,12 @@ from .settings import Settings
 from .substance_info import SubstanceInfo, SubstanceInfoSelector
 from ..catalog import Catalog
 from ..utils import (
-    CatalogEntryType,
     ISOTOPOLOG,
     NAME,
     STOICHIOMETRIC_FORMULA,
     STRUCTURAL_FORMULA,
     TRIVIAL_NAME,
+    CatalogEntryType,
     best_name,
     remove_html,
 )

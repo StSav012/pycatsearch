@@ -378,7 +378,7 @@ def search_sorted(
     key: Callable[[_AnyType], SupportsLessAndEqual] | None = None,
     maybe_equal: bool = False,
 ) -> int:
-    from operator import lt, le
+    from operator import le, lt
 
     if not items:
         raise ValueError("Empty sequence provided")
@@ -784,8 +784,8 @@ def latest_release() -> ReleaseInfo:
     import urllib.request
     import xml.dom.minidom as dom
     from http.client import HTTPResponse
-    from xml.dom.minicompat import NodeList
     from urllib.error import URLError
+    from xml.dom.minicompat import NodeList
 
     from . import __original_name__
 

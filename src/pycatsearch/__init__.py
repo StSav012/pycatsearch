@@ -1,7 +1,7 @@
 import http
 import platform
 import sys
-from argparse import ArgumentParser, Namespace, ZERO_OR_MORE
+from argparse import ZERO_OR_MORE, ArgumentParser, Namespace
 from importlib import import_module
 from importlib.abc import Loader, MetaPathFinder
 from importlib.machinery import ModuleSpec
