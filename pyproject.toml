@@ -67,13 +67,11 @@ line-length = 120
 
 [tool.ruff]
 line-length = 120
-extend-select = ["I"]
 
 [tool.ruff.lint]
-fixable = ["ALL"]
-unfixable = []
-select = ["NPY201"]
+extend-select = ["I", "NPY201"]
 
 [tool.ruff.lint.isort]
 case-sensitive = true
+combine-as-imports = true
 relative-imports-order = "closest-to-furthest"
