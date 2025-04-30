@@ -37,9 +37,8 @@ def _warn_about_outdated_package(package_name: str, package_version: str, releas
 
 
 def _make_old_qt_compatible_again() -> None:
-    # noinspection PyUnresolvedReferences
     def to_iso_format(s: str) -> str:
-        if sys.version_info < (3, 11):
+        if sys.version_info < (3, 11, 0):
             import re
             from typing import Callable
 

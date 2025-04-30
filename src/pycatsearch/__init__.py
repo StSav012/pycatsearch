@@ -1,13 +1,6 @@
-import http
-import platform
 import sys
 from argparse import ZERO_OR_MORE, ArgumentParser, Namespace
-from importlib import import_module
-from importlib.abc import Loader, MetaPathFinder
-from importlib.machinery import ModuleSpec
-from importlib.util import spec_from_file_location
 from pathlib import Path
-from types import ModuleType
 
 __author__ = "StSav012"
 __original_name__ = "pycatsearch"
@@ -18,7 +11,12 @@ try:
 except ImportError:
     __version__ = ""
 
-if sys.version_info < (3, 10) and __file__ != "<string>":
+if sys.version_info < (3, 10, 0) and __file__ != "<string>":
+    from importlib import import_module
+    from importlib.abc import Loader, MetaPathFinder
+    from importlib.machinery import ModuleSpec
+    from importlib.util import spec_from_file_location
+    from types import CodeType, ModuleType
 
     class StringImporter(MetaPathFinder):
         class Loader(Loader):
@@ -30,7 +28,7 @@ if sys.version_info < (3, 10) and __file__ != "<string>":
                 return isinstance(self._modules[module_name], dict)
 
             # noinspection PyMethodMayBeStatic
-            def get_code(self, module_name: str):
+            def get_code(self, module_name: str) -> CodeType:
                 return compile(self._modules[module_name], filename="<string>", mode="exec")
 
             def create_module(self, spec: ModuleSpec) -> "ModuleType | None":
@@ -104,7 +102,8 @@ if sys.version_info < (3, 10) and __file__ != "<string>":
         if __original_name__ not in sys.modules:
             sys.modules[__original_name__] = import_module(__original_name__)
 
-if sys.version_info < (3, 11):
+if sys.version_info < (3, 11, 0):
+    import http
 
     class HTTPMethod:
         CONNECT = "CONNECT"
@@ -221,7 +220,7 @@ def _show_exception(ex: Exception) -> None:
 
     error_message: str = ""
     if isinstance(ex, SyntaxError):
-        error_message = "Python %s is not supported.\nGet a newer Python!" % platform.python_version()
+        error_message = "Python %s is not supported.\nGet a newer Python!" % ".".join(map(str, sys.version_info[:2]))
     elif isinstance(ex, ImportError):
         if ex.name is not None:
             if "from" in ex.msg.split():

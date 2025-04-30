@@ -28,7 +28,7 @@ def required_packages() -> list[str]:
             )
 
     def is_package_importable(package_requirement: PackageRequirement) -> bool:
-        from importlib.metadata import version, PackageNotFoundError
+        from importlib.metadata import PackageNotFoundError, version
 
         try:
             actual_package_version: Version = Version(version(package_requirement.package_name))

@@ -38,11 +38,20 @@ from .settings import Settings
 from .substance_info import SubstanceInfo
 from .substances_box import SubstanceBox
 from .. import __version__
-from ..catalog import Catalog, CatalogType
-from ..utils import ReleaseInfo, a_tag, latest_release, p_tag, remove_html, tag, update_with_pip, wrap_in_html
+from ..catalog import Catalog
+from ..utils import (
+    CatalogType,
+    ReleaseInfo,
+    a_tag,
+    latest_release,
+    p_tag,
+    remove_html,
+    tag,
+    update_with_pip,
+    wrap_in_html,
+)
 
-if sys.version_info < (3, 10):
-    # noinspection PyUnresolvedReferences
+if sys.version_info < (3, 10, 0):
     from ..utils import zip
 
 __all__ = ["UI"]
