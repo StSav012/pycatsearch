@@ -26,12 +26,31 @@ supported_name_filters = [
         name=_translate("file type", "JSON with LZMA2 compression"),
         file_extensions=[".json.xz", ".json.lzma"],
     ),
+    OpenFileDialog.SupportedNameFilterItem(
+        required_packages=["tarfile", "gzip"],
+        name=_translate("file type", "Tar archive with GZip compression"),
+        file_extensions=[".tar.gz", ".tgz"],
+    ),
+    OpenFileDialog.SupportedNameFilterItem(
+        required_packages=["tarfile", "bz2"],
+        name=_translate("file type", "Tar archive with Bzip2 compression"),
+        file_extensions=[".tar.bz2", ".tbz2"],
+    ),
+    OpenFileDialog.SupportedNameFilterItem(
+        required_packages=["tarfile", "lzma"],
+        name=_translate("file type", "Tar archive with LZMA2 compression"),
+        file_extensions=[".tar.xz", ".txz"],
+    ),
 ]
 
 supported_mimetype_filters = [
     OpenFileDialog.SupportedMimetypeItem(
         required_packages=[],
         file_extension=".json",
+    ),
+    OpenFileDialog.SupportedMimetypeItem(
+        required_packages=["tarfile"],
+        file_extension=".tar",
     ),
 ]
 

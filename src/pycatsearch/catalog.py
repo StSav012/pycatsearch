@@ -4,11 +4,16 @@ import gzip
 import lzma
 import math
 import sys
+import tarfile
 from contextlib import contextmanager, suppress
 from datetime import datetime, timezone
+from io import BytesIO
 from os import PathLike
 from pathlib import Path
+from string import digits
 from typing import BinaryIO, Callable, Collection, Iterable, Iterator, Mapping, NamedTuple, TextIO, cast
+
+from .catalog_entry import CatalogEntry
 
 try:
     import orjson as json
@@ -21,13 +26,16 @@ from .utils import (
     FREQUENCY,
     LINES,
     M_LOG10E,
+    SPECIES,
     SPECIES_TAG,
     T0,
     CatalogEntryType,
+    CatalogJSONEntryType,
     CatalogJSONType,
     CatalogType,
     LineType,
     OldCatalogJSONType,
+    SpeciesJSONEntryType,
     c,
     h,
     k,
@@ -161,6 +169,13 @@ class Catalog:
             ".json.bz2": bz2.open,
             ".json.xz": lzma.open,
             ".json.lzma": lzma.open,
+            ".tar": tarfile.open,
+            ".tar.gz": tarfile.open,
+            ".tar.bz2": tarfile.open,
+            ".tar.xz": tarfile.open,
+            ".tgz": tarfile.open,
+            ".tbz2": tarfile.open,
+            ".txz": tarfile.open,
         }
 
         OPENERS_BY_SIGNATURE: dict[str, Callable] = {
@@ -212,13 +227,38 @@ class Catalog:
                 encoding = "utf-8"
             tmp_path: Path = self._path.with_name(self._path.name + ".part")
 
+            kwargs: dict[str, object] = dict(
+                encoding=encoding,
+            )
+
+            if self._opener is tarfile.open:
+                if (
+                    ":" not in mode
+                    and "|" not in mode
+                    and self._path.name.casefold().endswith(
+                        (".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tbz2", ".tar.xz", ".txz")
+                    )
+                ):
+                    for ext, m in {
+                        ".tar": ":",
+                        (".tar.gz", ".tgz"): ":gz",
+                        (".tar.bz2", ".tbz2"): ":bz2",
+                        (".tar.xz", ".txz"): ":xz",
+                    }.items():
+                        if self._path.name.casefold().endswith(ext):
+                            mode += m
+                            break
+                if isinstance(errors, str):
+                    kwargs["errors"] = errors
+            else:
+                kwargs["errors"] = errors
+                kwargs["newline"] = newline
+            kwargs["mode"] = mode
+
             # manually open and close the file here to close it before replacing if writing
             file: TextIO | BinaryIO = self._opener(
                 tmp_path if writing else self._path,
-                mode=mode,
-                encoding=encoding,
-                errors=errors,
-                newline=newline,
+                **kwargs,
             )
             try:
                 yield file
@@ -227,36 +267,165 @@ class Catalog:
                 if writing:
                     tmp_path.replace(self._path)
 
+        @property
+        def multiple_files(self) -> bool:
+            return self._opener is tarfile.open
+
     def __init__(self, *catalog_file_names: str | PathLike[str]) -> None:
         self._data: CatalogData = CatalogData()
         self._sources: list[CatalogSourceInfo] = []
 
+        def load_single_file() -> None:
+            f_in: BinaryIO
+            content: bytes
+            with opener.open("rb") as f_in:
+                content = f_in.read()
+                try:
+                    json_catalog_data: dict[str, str | list[float | None] | CatalogJSONType | OldCatalogJSONType] = (
+                        json.loads(content)
+                    )
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    print(f"{filename} doesn't contain UTF-8 data or is corrupted", file=sys.stderr)
+                else:
+                    try:
+                        self._data.append(
+                            new_catalog=json_catalog_data[CATALOG],
+                            frequency_limits=json_catalog_data.get(FREQUENCY, ((0.0, math.inf),)),
+                        )
+                        build_datetime: datetime | None = None
+                        if BUILD_TIME in json_catalog_data:
+                            with suppress(TypeError, ValueError):
+                                build_datetime = datetime.fromisoformat(cast(str, json_catalog_data[BUILD_TIME]))
+                    except (LookupError, TypeError, ValueError):
+                        print(f"{filename} is corrupted", file=sys.stderr)
+                    else:
+                        self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
+
+        def load_archive() -> None:
+            f_in: BinaryIO | None
+            content: bytes
+            tar_in: tarfile.TarFile
+            with opener.open("r") as tar_in:
+                has_data: bool = False
+                build_datetime: datetime | None = None
+                with suppress(KeyError):
+                    if (f_in := tar_in.extractfile("metadata.json")) is not None:
+                        content = f_in.read()
+                        try:
+                            metadata_json_data: dict[str, object] = json.loads(content)
+                        except (json.JSONDecodeError, UnicodeDecodeError):
+                            print(
+                                f"{filename}/{f_in.name} doesn't contain UTF-8 data or is corrupted",
+                                file=sys.stderr,
+                            )
+                        else:
+                            if BUILD_TIME in metadata_json_data:
+                                with suppress(TypeError, ValueError):
+                                    build_datetime = datetime.fromisoformat(cast(str, metadata_json_data[BUILD_TIME]))
+                species: list[SpeciesJSONEntryType] = []
+                with suppress(KeyError):
+                    if (f_in := tar_in.extractfile("species.json")) is not None:
+                        content = f_in.read()
+                        try:
+                            species_json_data: dict[str, list[SpeciesJSONEntryType]] = json.loads(content)
+                        except (json.JSONDecodeError, UnicodeDecodeError):
+                            print(
+                                f"{filename}/{f_in.name} doesn't contain UTF-8 data or is corrupted",
+                                file=sys.stderr,
+                            )
+                        else:
+                            if SPECIES in species_json_data:
+                                with suppress(TypeError, ValueError):
+                                    species = species_json_data[SPECIES]
+                for member in tar_in.getmembers():
+                    if member.name in ("metadata.json", "species.json"):
+                        continue
+                    f_in = tar_in.extractfile(member)
+                    if f_in is None:
+                        print(f"{member.name} cannot be extracted from {filename}", file=sys.stderr)
+                        continue
+                    member_tag_str: str = ""
+                    ic = iter(member.name)
+                    while (_c := next(ic, "")).isalpha():
+                        pass
+                    if _c in digits:
+                        member_tag_str += _c
+                    while (_c := next(ic, "")) in digits:
+                        member_tag_str += _c
+                    if not member_tag_str:
+                        continue
+                    member_tag: int = int(member_tag_str)
+
+                    species_entry: SpeciesJSONEntryType = {}
+                    for _se in species:
+                        if _se[SPECIES_TAG] == member_tag:
+                            species_entry = _se
+                            break
+
+                    content = f_in.read()
+                    if content.startswith(b"{"):
+                        try:
+                            json_entry_data: CatalogJSONEntryType = {
+                                **{
+                                    key: (value.strip() if isinstance(value, str) else value)
+                                    for key, value in species_entry.items()
+                                },
+                                **json.loads(content),
+                            }
+                        except (json.JSONDecodeError, UnicodeDecodeError):
+                            print(
+                                f"{filename}/{member.name} doesn't contain UTF-8 data or is corrupted",
+                                file=sys.stderr,
+                            )
+                        else:
+                            try:
+                                frequency_values = [line[FREQUENCY] for line in json_entry_data[LINES]]
+                                self._data.append(
+                                    new_catalog=[json_entry_data],
+                                    frequency_limits=((min(frequency_values), max(frequency_values)),),
+                                )
+                            except (LookupError, TypeError, ValueError):
+                                print(f"{filename} is corrupted", file=sys.stderr)
+                            else:
+                                has_data = True
+                    elif member.name.casefold().endswith(".cat"):
+                        if not species_entry:
+                            print(f"{member.name} has no corresponding entry in {filename}", file=sys.stderr)
+                            continue
+                        lines: list[str] = content.decode("ascii").splitlines()
+                        if not lines:
+                            continue
+                        catalog_entries = [CatalogEntry(line) for line in lines]
+                        frequency_values = [_catalog_entry.frequency for _catalog_entry in catalog_entries]
+                        self._data.append(
+                            new_catalog=CatalogEntryType(
+                                **{
+                                    key: (value.strip() if isinstance(value, str) else value)
+                                    for key, value in species_entry.items()
+                                },
+                                degreesoffreedom=catalog_entries[0].degrees_of_freedom,
+                                lines=(_catalog_entry.to_dict() for _catalog_entry in catalog_entries),
+                            ),
+                            frequency_limits=((min(frequency_values), max(frequency_values)),),
+                        )
+                        has_data = True
+                if has_data:
+                    self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
+
         filename: Path
         for filename in map(Path, catalog_file_names):
             if filename.exists() and filename.is_file():
-                f_in: BinaryIO
-                with Catalog.Opener(filename).open("rb") as f_in:
-                    content: bytes = f_in.read()
-                    try:
-                        json_data: dict[str, str | list[float | None] | CatalogJSONType | OldCatalogJSONType] = (
-                            json.loads(content)
-                        )
-                    except (json.JSONDecodeError, UnicodeDecodeError):
-                        print(f"{filename} doesn't contain UTF-8 data or is corrupted", file=sys.stderr)
-                    else:
-                        try:
-                            self._data.append(
-                                new_catalog=json_data[CATALOG],
-                                frequency_limits=json_data.get(FREQUENCY, ((0.0, math.inf),)),
-                            )
-                            build_datetime: datetime | None = None
-                            if BUILD_TIME in json_data:
-                                with suppress(TypeError, ValueError):
-                                    build_datetime = datetime.fromisoformat(cast(str, json_data[BUILD_TIME]))
-                        except (LookupError, TypeError, ValueError):
-                            print(f"{filename} is corrupted", file=sys.stderr)
-                        else:
-                            self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
+                opener: Catalog.Opener
+                try:
+                    opener = Catalog.Opener(filename)
+                except ValueError:
+                    print(f"{filename} is of an unknown type", file=sys.stderr)
+                    continue
+
+                if opener.multiple_files:
+                    load_archive()
+                else:
+                    load_single_file()
 
     def __bool__(self) -> bool:
         return bool(self._data.catalog)
@@ -582,26 +751,80 @@ class Catalog:
                 return "{" + ",".join(":".join((_repr(key), _repr(getattr(o, key)))) for key in o.__slots__) + "}"
             return repr(o)
 
-        f: TextIO
-        with opener.open("wt") as f:
-            f.write("{")
-            f.write(_repr(CATALOG))
-            f.write(":{")
-            is_not_first_item: bool = False
-            for species_tag in self._data.catalog:
-                if is_not_first_item:
-                    f.write(",")
-                else:
-                    is_not_first_item = True
-                f.write(_repr(str(species_tag)))
+        if not opener.multiple_files:
+            f: TextIO
+            with opener.open("wt") as f:
+                f.write("{")
+                f.write(_repr(CATALOG))
+                f.write(":{")
+                is_not_first_item: bool = False
+                for species_tag in self._data.catalog:
+                    if is_not_first_item:
+                        f.write(",")
+                    else:
+                        is_not_first_item = True
+                    f.write(_repr(str(species_tag)))
+                    f.write(":")
+                    f.write(_repr(self._data.catalog[species_tag]))
+                f.write("},")
+                f.write(_repr(FREQUENCY))
                 f.write(":")
-                f.write(_repr(self._data.catalog[species_tag]))
-            f.write("},")
-            f.write(_repr(FREQUENCY))
-            f.write(":")
-            f.write(_repr(self._data.frequency_limits))
-            f.write(",")
-            f.write(_repr(BUILD_TIME))
-            f.write(":")
-            f.write(_repr(build_time.isoformat()))
-            f.write("}")
+                f.write(_repr(self._data.frequency_limits))
+                f.write(",")
+                f.write(_repr(BUILD_TIME))
+                f.write(":")
+                f.write(_repr(build_time.isoformat()))
+                f.write("}")
+        else:
+
+            def build_args(text: str | bytes, fn: str, ts: float | None = None) -> dict[str, tarfile.TarInfo | BytesIO]:
+                if isinstance(text, str):
+                    text = text.encode(encoding="utf-8")
+                _ti: tarfile.TarInfo = tarfile.TarInfo(name=fn)
+                _ti.size = len(text)
+                if ts is not None:
+                    _ti.mtime = ts
+                return dict(tarinfo=_ti, fileobj=BytesIO(text))
+
+            t: tarfile.TarFile
+            with opener.open("w") as t:
+                t.stream = True
+                t.addfile(
+                    **build_args(
+                        fn="metadata.json",
+                        text="".join(
+                            (
+                                "{",
+                                _repr("credit"),
+                                ":",
+                                _repr(
+                                    {
+                                        "copyright": "I. Physikalisches Institut der Universität zu Köln",
+                                        "url": "https://cdms.astro.uni-koeln.de/",
+                                        "references": [
+                                            "https://doi.org/10.1016/j.jms.2016.03.005",
+                                            "https://doi.org/10.1016/j.molstruc.2005.01.027",
+                                            "https://doi.org/10.1051/0004-6361:20010367",
+                                        ],
+                                    }
+                                ),
+                                ",",
+                                _repr(FREQUENCY),
+                                ":",
+                                _repr(self._data.frequency_limits),
+                                ",",
+                                _repr(BUILD_TIME),
+                                ":",
+                                _repr(build_time.isoformat()),
+                                "}",
+                            )
+                        ),
+                    ),
+                )
+                for species_tag in self._data.catalog:
+                    t.addfile(
+                        **build_args(
+                            fn=f"c{species_tag:06d}.json",
+                            text=_repr(self._data.catalog[species_tag]),
+                        )
+                    )
