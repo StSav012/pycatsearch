@@ -129,11 +129,7 @@ class Downloader(Thread):
 
                 async def get_species() -> list[dict[str, int | str]]:
                     def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
-                        return dict(
-                            (key, value)
-                            for key, value in entry.items()
-                            if value is not None and value not in ("", "None")
-                        )
+                        return dict((key, value) for key, value in entry.items() if value not in (None, "", "None"))
 
                     def trim_strings(entry: dict[str, None | int | str]) -> dict[str, None | int | str]:
                         key: str
