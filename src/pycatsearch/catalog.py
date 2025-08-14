@@ -88,7 +88,7 @@ class CatalogData:
 
     def append(
         self,
-        new_catalog: CatalogJSONType | OldCatalogJSONType,
+        new_catalog: CatalogEntryType | CatalogJSONType | OldCatalogJSONType,
         frequency_limits: Collection[tuple[float, float] | list[float]],
     ) -> None:
         if (
@@ -105,6 +105,8 @@ class CatalogData:
                 (int(species_tag_str), CatalogEntryType(**new_catalog[species_tag_str]))
                 for species_tag_str in new_catalog
             )
+        elif isinstance(new_catalog, CatalogEntryType):
+            catalog = {new_catalog.speciestag: new_catalog}
         else:
             raise TypeError("Unsupported data type")
 
