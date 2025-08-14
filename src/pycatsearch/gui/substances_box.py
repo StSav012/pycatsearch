@@ -22,7 +22,6 @@ from qtpy.QtWidgets import (
 from .html_style_delegate import HTMLDelegate
 from .settings import Settings
 from .substance_info import SubstanceInfo, SubstanceInfoSelector
-from ..catalog import Catalog
 from ..utils import (
     ISOTOPOLOG,
     NAME,
@@ -30,6 +29,7 @@ from ..utils import (
     STRUCTURAL_FORMULA,
     TRIVIAL_NAME,
     CatalogEntryType,
+    CatalogType,
     best_name,
     remove_html,
 )
@@ -40,12 +40,12 @@ __all__ = ["SubstanceBox"]
 class SubstanceBox(QGroupBox):
     selectedSubstancesChanged: Signal = Signal(name="selectedSubstancesChanged")
 
-    def __init__(self, catalog: Catalog, settings: Settings, parent: QWidget | None = None) -> None:
+    def __init__(self, catalog: CatalogType, settings: Settings, parent: QWidget | None = None) -> None:
         from . import qta_icon  # import locally to avoid a circular import
 
         super().__init__(parent)
 
-        self._catalog: Catalog = catalog
+        self._catalog: CatalogType = catalog
         self._settings: Settings = settings
         self._selected_substances: set[int] = set()
 
@@ -151,7 +151,7 @@ class SubstanceBox(QGroupBox):
                 else:
                     for match_function in (pattern.fullmatch, pattern.match, pattern.search):
                         for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                            for species_tag, entry in self._catalog.catalog.items():
+                            for species_tag, entry in self._catalog.items():
                                 with suppress(LookupError):
                                     plain_text_name = remove_html(str(getattr(entry, name_key)))
                                     if match_function(plain_text_name):
@@ -168,7 +168,7 @@ class SubstanceBox(QGroupBox):
                 cmp_function: Callable[[str, str], bool]
                 for cmp_function in (str.startswith, str.__contains__):
                     for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                        for species_tag, entry in self._catalog.catalog.items():
+                        for species_tag, entry in self._catalog.items():
                             with suppress(LookupError):
                                 plain_text_name = remove_html(str(getattr(entry, name_key)))
                                 if cmp_function(plain_text_name, filter_text) or (
@@ -185,7 +185,7 @@ class SubstanceBox(QGroupBox):
                                         list_items[html_name] = {species_tag}
             # species tag suspected
             if filter_text.isdecimal():
-                for species_tag in self._catalog.catalog:
+                for species_tag in self._catalog:
                     plain_text_name = str(species_tag)
                     if plain_text_name.startswith(filter_text):
                         if plain_text_name not in list_items:
@@ -198,7 +198,7 @@ class SubstanceBox(QGroupBox):
                 and filter_text[25] == "-"
                 and filter_text.count("-") == 2
             ):
-                for species_tag, entry in self._catalog.catalog.items():
+                for species_tag, entry in self._catalog.items():
                     plain_text_name = str(entry.inchikey)
                     if plain_text_name == filter_text:
                         if plain_text_name not in list_items:
@@ -206,7 +206,7 @@ class SubstanceBox(QGroupBox):
                         list_items[plain_text_name].add(species_tag)
         else:
             for name_key in (ISOTOPOLOG, NAME, STRUCTURAL_FORMULA, STOICHIOMETRIC_FORMULA, TRIVIAL_NAME):
-                for species_tag, entry in self._catalog.catalog.items():
+                for species_tag, entry in self._catalog.items():
                     plain_text_name = remove_html(str(getattr(entry, name_key)))
                     if plain_text_name not in list_items:
                         list_items[plain_text_name] = set()
@@ -362,11 +362,11 @@ class SubstanceBox(QGroupBox):
             self._settings.setValue("enabled", self.isChecked())
 
     @property
-    def catalog(self) -> Catalog:
+    def catalog(self) -> CatalogType:
         return self._catalog
 
     @catalog.setter
-    def catalog(self, new_value: Catalog) -> None:
+    def catalog(self, new_value: CatalogType) -> None:
         self._catalog = new_value
         self._fill_substances_list()
 

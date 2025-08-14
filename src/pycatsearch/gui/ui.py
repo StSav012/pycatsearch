@@ -93,7 +93,7 @@ class UI(QMainWindow):
         self.spin_intensity: FloatSpinBox = FloatSpinBox(self._central_widget)
         self.spin_temperature: QDoubleSpinBox = QDoubleSpinBox(self._central_widget)
 
-        self.box_substance: SubstanceBox = SubstanceBox(self.catalog, self.settings, self._central_widget)
+        self.box_substance: SubstanceBox = SubstanceBox(self.catalog.catalog, self.settings, self._central_widget)
         self.box_frequency: FrequencyBox = FrequencyBox(self.settings, self._central_widget)
         self.button_search: QPushButton = QPushButton(self._central_widget)
 
@@ -298,7 +298,7 @@ class UI(QMainWindow):
         self.setCursor(Qt.CursorShape.WaitCursor)
         self.repaint()
         self.catalog = Catalog(*catalog_file_names)
-        self.box_substance.catalog = self.catalog
+        self.box_substance.catalog = self.catalog.catalog
         self.setCursor(last_cursor)
         self.setEnabled(True)
         self.button_search.setDisabled(self.catalog.is_empty)
@@ -523,7 +523,7 @@ class UI(QMainWindow):
     def _on_action_substance_info_triggered(self) -> None:
         if self.results_table.selectionModel().hasSelection():
             syn: SubstanceInfo = SubstanceInfo(
-                self.catalog,
+                self.catalog.catalog,
                 self.results_model.row(self.results_table.selectionModel().selectedRows()[0].row()).species_tag,
                 inchi_key_search_url_template=self.settings.inchi_key_search_url_template,
                 parent=self,

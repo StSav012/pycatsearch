@@ -18,8 +18,17 @@ from qtpy.QtWidgets import (
 from .html_style_delegate import HTMLDelegate
 from .selectable_label import SelectableLabel
 from .url_label import URLLabel
-from ..catalog import Catalog
-from ..utils import HUMAN_READABLE, ID, INCHI_KEY, LINES, STATE_HTML, CatalogEntryType, best_name, chem_html
+from ..utils import (
+    HUMAN_READABLE,
+    ID,
+    INCHI_KEY,
+    LINES,
+    STATE_HTML,
+    CatalogEntryType,
+    CatalogType,
+    best_name,
+    chem_html,
+)
 
 __all__ = ["SubstanceInfoSelector", "SubstanceInfo"]
 
@@ -29,7 +38,7 @@ class SubstanceInfoSelector(QDialog):
 
     def __init__(
         self,
-        catalog: Catalog,
+        catalog: CatalogType,
         species_tags: Collection[int],
         *,
         selected_species_tags: Collection[int] = (),
@@ -38,7 +47,7 @@ class SubstanceInfoSelector(QDialog):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self._catalog: Catalog = catalog
+        self._catalog: CatalogType = catalog
         self._inchi_key_search_url_template: str = inchi_key_search_url_template
         self.setModal(True)
         self.setWindowTitle(self.tr("Select Substance"))
@@ -54,7 +63,7 @@ class SubstanceInfoSelector(QDialog):
         while species_tags:
             species_tag: int = species_tags.pop()
             # don't specify the parent here: https://t.me/qtforpython/20950
-            item: QListWidgetItem = QListWidgetItem(best_name(catalog.catalog[species_tag], allow_html=allow_html))
+            item: QListWidgetItem = QListWidgetItem(best_name(catalog[species_tag], allow_html=allow_html))
             item.setData(Qt.ItemDataRole.ToolTipRole, str(species_tag))
             item.setData(Qt.ItemDataRole.UserRole, species_tag)
             item.setCheckState(
@@ -122,7 +131,7 @@ class SubstanceInfo(QDialog):
 
     def __init__(
         self,
-        catalog: Catalog,
+        catalog: CatalogType,
         species_tag: int,
         inchi_key_search_url_template: str = "",
         parent: QWidget | None = None,
@@ -134,7 +143,7 @@ class SubstanceInfo(QDialog):
             self.setWindowIcon(parent.windowIcon())
         layout: QFormLayout = QFormLayout(self)
         label: SelectableLabel
-        entry: CatalogEntryType = catalog.catalog[species_tag]
+        entry: CatalogEntryType = catalog[species_tag]
         for key in entry.__slots__:
             if key == LINES:
                 continue
