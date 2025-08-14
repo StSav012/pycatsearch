@@ -6,7 +6,12 @@ __all__ = ["CatalogEntry"]
 
 
 class CatalogEntry:
-    __slots__ = ["FREQ", "INT", "DR", "ELO", "FREQ", "INT", "DR", "ELO"]
+    __slots__ = ["FREQ", "INT", "DR", "ELO"]
+
+    FREQ: float  # frequency, MHz, mandatory
+    INT: float  # intensity, log10(nm²×MHz), mandatory
+    DR: int  # degrees of freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
+    ELO: float  # lower state energy relative to the ground state, 1/cm
 
     def __init__(
         self,
@@ -17,14 +22,6 @@ class CatalogEntry:
         degrees_of_freedom: int = -1,
         lower_state_energy: float = nan,
     ) -> None:
-        self.FREQ: float  # frequency, MHz, mandatory
-        self.INT: float  # intensity, log10(nm²×MHz), mandatory
-        self.DR: int  # degrees of freedom: 0 for atoms, 2 for linear molecules, and 3 for nonlinear molecules.
-        self.ELO: float  # lower state energy relative to the ground state, 1/cm
-        self.FREQ = frequency
-        self.INT = intensity
-        self.DR = degrees_of_freedom
-        self.ELO = lower_state_energy
         if spcat_line:
             # FREQ         ERR     LGINT   DR ELO      GUP TAG   QNFMT QN'       QN"
             # F13     .4   F8 .4   F8 .4   I2F10  .4,  I3 I7     I4  6I2         6I2
@@ -34,6 +31,11 @@ class CatalogEntry:
             self.INT = float(spcat_line[21:29])
             self.DR = int(spcat_line[29:31])
             self.ELO = float(spcat_line[31:41])
+        else:
+            self.FREQ = frequency
+            self.INT = intensity
+            self.DR = degrees_of_freedom
+            self.ELO = lower_state_energy
 
     @property
     def frequency(self) -> float:
