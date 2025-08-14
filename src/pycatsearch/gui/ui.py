@@ -302,6 +302,7 @@ class UI(QMainWindow):
         self.setCursor(last_cursor)
         self.setEnabled(True)
         self.button_search.setDisabled(self.catalog.is_empty)
+        self.menu_bar.action_reload.setDisabled(self.catalog.is_empty)
         self.menu_bar.action_save_as.setDisabled(self.catalog.is_empty)
         if not self.catalog.is_empty:
             self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)

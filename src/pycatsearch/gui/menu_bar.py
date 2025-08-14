@@ -107,6 +107,7 @@ class MenuBar(QMenuBar):
         self.action_about.setMenuRole(QAction.MenuRole.AboutRole)
         self.action_about_qt.setMenuRole(QAction.MenuRole.AboutQtRole)
 
+        self.action_reload.setDisabled(True)
         self.action_save_as.setDisabled(True)
 
         self.action_show_substance.setCheckable(True)
