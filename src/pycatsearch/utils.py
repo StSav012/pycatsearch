@@ -5,7 +5,7 @@ import os
 import sys
 from math import e as _e, inf, log10, nan, pow
 from numbers import Real
-from typing import Any, Callable, Dict, Final, Iterable, List, Protocol, Sequence, TypeVar, Union, overload
+from typing import Any, Callable, Final, Iterable, Literal, Protocol, Sequence, TypeVar, TypedDict, overload
 
 __all__ = [
     "M_LOG10E",
@@ -15,6 +15,7 @@ __all__ = [
     "k",
     "e",
     "CATALOG",
+    "SPECIES",
     "BUILD_TIME",
     "LINES",
     "FREQUENCY",
@@ -79,6 +80,8 @@ __all__ = [
     "LinesType",
     "CatalogEntryType",
     "CatalogType",
+    "SpeciesJSONEntryType",
+    "CatalogJSONEntryType",
     "CatalogJSONType",
     "OldCatalogJSONType",
 ]
@@ -91,28 +94,29 @@ h: Final[float] = 6.626070150e-34  # [J/Hz], see https://physics.nist.gov/cgi-bi
 e: Final[float] = 1.602176634e-19  # [C],    see https://physics.nist.gov/cgi-bin/cuu/Value?e
 c: Final[float] = 299_792_458.000  # [m/s],  see https://physics.nist.gov/cgi-bin/cuu/Value?c
 
-CATALOG: Final[str] = "catalog"
-BUILD_TIME: Final[str] = "build_time"
-LINES: Final[str] = "lines"
-FREQUENCY: Final[str] = "frequency"
-INTENSITY: Final[str] = "intensity"
-ID: Final[str] = "id"
-MOLECULE: Final[str] = "molecule"
-STRUCTURAL_FORMULA: Final[str] = "structuralformula"
-STOICHIOMETRIC_FORMULA: Final[str] = "stoichiometricformula"
-MOLECULE_SYMBOL: Final[str] = "moleculesymbol"
-SPECIES_TAG: Final[str] = "speciestag"
-NAME: Final[str] = "name"
-TRIVIAL_NAME: Final[str] = "trivialname"
-ISOTOPOLOG: Final[str] = "isotopolog"
-STATE: Final[str] = "state"
-STATE_HTML: Final[str] = "state_html"
-INCHI_KEY: Final[str] = "inchikey"
-CONTRIBUTOR: Final[str] = "contributor"
-VERSION: Final[str] = "version"
-DATE_OF_ENTRY: Final[str] = "dateofentry"
-DEGREES_OF_FREEDOM: Final[str] = "degreesoffreedom"
-LOWER_STATE_ENERGY: Final[str] = "lowerstateenergy"
+CATALOG: Literal["catalog"] = "catalog"
+SPECIES: Literal["species"] = "species"
+BUILD_TIME: Literal["build_time"] = "build_time"
+LINES: Literal["lines"] = "lines"
+FREQUENCY: Literal["frequency"] = "frequency"
+INTENSITY: Literal["intensity"] = "intensity"
+ID: Literal["id"] = "id"
+MOLECULE: Literal["molecule"] = "molecule"
+STRUCTURAL_FORMULA: Literal["structuralformula"] = "structuralformula"
+STOICHIOMETRIC_FORMULA: Literal["stoichiometricformula"] = "stoichiometricformula"
+MOLECULE_SYMBOL: Literal["moleculesymbol"] = "moleculesymbol"
+SPECIES_TAG: Literal["speciestag"] = "speciestag"
+NAME: Literal["name"] = "name"
+TRIVIAL_NAME: Literal["trivialname"] = "trivialname"
+ISOTOPOLOG: Literal["isotopolog"] = "isotopolog"
+STATE: Literal["state"] = "state"
+STATE_HTML: Literal["state_html"] = "state_html"
+INCHI_KEY: Literal["inchikey"] = "inchikey"
+CONTRIBUTOR: Literal["contributor"] = "contributor"
+VERSION: Literal["version"] = "version"
+DATE_OF_ENTRY: Literal["dateofentry"] = "dateofentry"
+DEGREES_OF_FREEDOM: Literal["degreesoffreedom"] = "degreesoffreedom"
+LOWER_STATE_ENERGY: Literal["lowerstateenergy"] = "lowerstateenergy"
 
 HUMAN_READABLE: Final[dict[str, str]] = {
     CATALOG: "Catalog",
@@ -153,7 +157,12 @@ class LineType:
         self.lowerstateenergy: float = lowerstateenergy
 
 
-LinesType = List[LineType]
+if sys.version_info < (3, 9, 0):
+    from typing import List
+
+    LinesType = List[LineType]
+else:
+    LinesType = list[LineType]
 
 
 # noinspection PyShadowingBuiltins
@@ -217,10 +226,45 @@ class CatalogEntryType:
         self.lines: LinesType = [LineType(**line) for line in lines]
 
 
-CatalogType = Dict[int, CatalogEntryType]
-CatalogJSONEntryType = Dict[str, Union[int, str, List[Dict[str, float]]]]
-CatalogJSONType = Dict[str, CatalogJSONEntryType]
-OldCatalogJSONType = List[CatalogJSONEntryType]
+class LineJSONType(TypedDict, total=False):
+    frequency: float
+    intensity: float
+    lowerstateenergy: float
+
+
+class SpeciesJSONEntryType(TypedDict, total=False):
+    id: int
+    molecule: int
+    structuralformula: str
+    stoichiometricformula: str
+    moleculesymbol: str
+    speciestag: int
+    name: str
+    trivialname: str
+    isotopolog: str
+    state: str
+    state_html: str
+    inchikey: str
+    contributor: str
+    version: str
+    dateofentry: str
+    degreesoffreedom: int
+
+
+class CatalogJSONEntryType(SpeciesJSONEntryType, total=False):
+    lines: Iterable[LineJSONType]
+
+
+if sys.version_info < (3, 9, 0):
+    from typing import Dict, List
+
+    CatalogType = Dict[int, CatalogEntryType]
+    CatalogJSONType = Dict[str, CatalogJSONEntryType]
+    OldCatalogJSONType = List[CatalogJSONEntryType]
+else:
+    CatalogType = dict[int, CatalogEntryType]
+    CatalogJSONType = dict[str, CatalogJSONEntryType]
+    OldCatalogJSONType = list[CatalogJSONEntryType]
 
 
 def within(x: float, limits: tuple[float, float] | tuple[tuple[float, float], ...]) -> bool:
