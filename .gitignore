@@ -7,6 +7,12 @@
 *.json.bz2
 *.json.xz
 *.json.lzma
+*.tar
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.lzma
+*.part
 
 # CDMS provides databases at https://cdms.astro.uni-koeln.de/cdms/portal/cdms_lite__official.db.gz
 # and https://cdms.astro.uni-koeln.de/cdms/portal/cdms_lite.db.gz,
