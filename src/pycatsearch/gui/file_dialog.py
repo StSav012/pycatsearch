@@ -69,6 +69,7 @@ class FileDialog(QFileDialog):
             for child in self.children():
                 if child.objectName() == name:
                     return child
+            return None
 
         fileTypeCombo: QObject | None = find_widget("fileTypeCombo")
         if fileTypeCombo is not None:
@@ -88,6 +89,7 @@ class FileDialog(QFileDialog):
             if expected_suffixes and not sf.name.endswith(expected_suffixes):
                 sf = sf.with_name(sf.name + expected_suffixes[0])
             return sf
+        return None
 
     def selectedFiles(self) -> list[str]:
         expected_suffixes: tuple[str, ...] = self._extensions_from_filter(self.selectedNameFilter())
