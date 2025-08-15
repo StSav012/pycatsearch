@@ -129,7 +129,7 @@ class CatalogData:
             if not args:
                 return tuple()
             ranges: tuple[tuple[float, float], ...] = tuple()
-            args = sorted(args)
+            args = sorted((min(arg), max(arg)) for arg in args)
             skip: int = 0
             for i in range(len(args)):
                 if skip > 0:
