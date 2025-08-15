@@ -37,6 +37,7 @@ from .save_catalog_waiting_screen import SaveCatalogWaitingScreen
 from .settings import Settings
 from .substance_info import SubstanceInfo
 from .substances_box import SubstanceBox
+from .waiting_screen import WaitingScreen
 from .. import __version__
 from ..catalog import Catalog
 from ..utils import (
@@ -293,11 +294,42 @@ class UI(QMainWindow):
         event.accept()
 
     def load_catalog(self, *catalog_file_names: Path) -> bool:
+        if not catalog_file_names:
+            return not self.catalog.is_empty
+
         self.setDisabled(True)
         last_cursor: QCursor = self.cursor()
         self.setCursor(Qt.CursorShape.WaitCursor)
         self.repaint()
-        self.catalog = Catalog(*catalog_file_names)
+        label: str
+        if len(catalog_file_names) > 1:
+            label = tag(
+                "html",
+                "\n".join(
+                    (
+                        p_tag(self.tr("Loading catalogs:")),
+                        tag("ul", "\n".join((tag("li", str(fn)) for fn in catalog_file_names))),
+                    )
+                ),
+            )
+        else:
+            label = tag("html", p_tag(self.tr("Loading a catalog from<br>{}").format(catalog_file_names[0])))
+        ws: WaitingScreen = WaitingScreen(
+            parent=self,
+            label=label,
+            target=Catalog,
+            args=catalog_file_names,
+            label_alignment=Qt.AlignmentFlag.AlignLeading,
+        )
+        cat: object | Catalog = ws.exec()
+        if cat is None or cat.is_empty:
+            if ws.is_cancelled():
+                self.status_bar.showMessage(self.tr("Loading has been cancelled."))
+            else:
+                self.status_bar.showMessage(self.tr("Failed to load a catalog."))
+        else:
+            self.status_bar.showMessage(self.tr("Catalogs loaded."))
+        self.catalog = cat or self.catalog
         self.box_substance.catalog = self.catalog.catalog
         self.setCursor(last_cursor)
         self.setEnabled(True)
@@ -334,11 +366,7 @@ class UI(QMainWindow):
 
         if new_catalog_filenames:
             self.status_bar.showMessage(self.tr("Loading…"))
-            if self.load_catalog(*new_catalog_filenames):
-                self.status_bar.showMessage(self.tr("Catalogs loaded."))
-            else:
-                self.status_bar.showMessage(self.tr("Failed to load a catalog."))
-
+            self.load_catalog(*new_catalog_filenames)
         else:
             self.status_bar.clearMessage()
 
@@ -346,10 +374,7 @@ class UI(QMainWindow):
     def _on_action_reload_triggered(self) -> None:
         if self.catalog.sources:
             self.status_bar.showMessage(self.tr("Loading…"))
-            if self.load_catalog(*self.catalog.sources):
-                self.status_bar.showMessage(self.tr("Catalogs loaded."))
-            else:
-                self.status_bar.showMessage(self.tr("Failed to load a catalog."))
+            self.load_catalog(*self.catalog.sources)
         else:
             self.status_bar.clearMessage()
 
