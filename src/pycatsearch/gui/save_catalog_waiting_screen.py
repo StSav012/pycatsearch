@@ -4,8 +4,7 @@ from qtpy import QT5
 from qtpy.QtWidgets import QWidget
 
 from .waiting_screen import WaitingScreen
-from ..catalog import CatalogType
-from ..utils import save_catalog_to_file
+from ..utils import CatalogType, save_catalog_to_file
 
 __all__ = ["SaveCatalogWaitingScreen"]
 
@@ -13,7 +12,7 @@ __all__ = ["SaveCatalogWaitingScreen"]
 class SaveCatalogWaitingScreen(WaitingScreen):
     def __init__(
         self,
-        parent: QWidget,
+        parent: QWidget | None,
         *,
         filename: str | PathLike[str],
         catalog: CatalogType,

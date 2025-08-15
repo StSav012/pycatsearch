@@ -26,9 +26,9 @@ def _spinner(parent: QWidget | None = None) -> QWidget | None:
 class WaitingScreen(QWidget):
     def __init__(
         self,
-        parent: QWidget,
+        parent: QWidget | None,
         label: str | QWidget,
-        target: Callable[[...], Any],
+        target: Callable | None = None,
         args: Sequence[Any] = (),
         kwargs: Mapping[str, Any] | None = None,
         margins: float | None = None,
@@ -49,7 +49,7 @@ class WaitingScreen(QWidget):
         if margins is not None:
             layout.setContentsMargins(*([margins] * 4))
 
-        self._target: Callable[[...], Any] = target
+        self._target: Callable | None = target
         self._args: Sequence[Any] = args
         self._kwargs: Mapping[str, Any] = kwargs or dict()
         self._thread: Thread | None = None
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     from qtpy.QtWidgets import QApplication
 
     app: QApplication = QApplication(sys.argv)
-    w: WaitingScreen = WaitingScreen(None, "label", None)  # type: ignore
+    w: WaitingScreen = WaitingScreen(None, "label", None)
     w.hideEvent = lambda event: app.quit()
     w.show()
     app.exec()
