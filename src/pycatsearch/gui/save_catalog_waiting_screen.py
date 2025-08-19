@@ -1,7 +1,6 @@
 from os import PathLike
 
-from qtpy import QT5
-from qtpy.QtCore import QMargins
+from qtpy.QtCore import QCoreApplication, QMargins
 from qtpy.QtWidgets import QWidget
 
 from .waiting_screen import WaitingScreen
@@ -11,20 +10,18 @@ __all__ = ["SaveCatalogWaitingScreen"]
 
 
 class SaveCatalogWaitingScreen(WaitingScreen):
-    def __init__(
-        self,
+    def __new__(
+        cls,
         parent: QWidget | None,
         *,
         filename: str | PathLike[str],
         catalog: CatalogType,
         frequency_limits: tuple[float, float],
         margins: int | QMargins | None = None,
-    ) -> None:
-        if QT5:
-            super(QWidget, self).__init__(parent)
-        super().__init__(
-            parent,
-            label=self.tr("Please wait…"),
+    ) -> WaitingScreen:
+        return WaitingScreen(
+            parent=parent,
+            label=QCoreApplication.translate("SaveCatalogWaitingScreen", "Please wait…"),
             target=save_catalog_to_file,
             kwargs=dict(filename=filename, catalog=catalog, frequency_limits=frequency_limits),
             margins=margins,
