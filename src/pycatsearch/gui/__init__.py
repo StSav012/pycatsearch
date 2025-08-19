@@ -117,7 +117,6 @@ def _make_old_qt_compatible_again() -> None:
         if PYSIDE2:
             QApplication.exec = QApplication.exec_
             QDialog.exec = QDialog.exec_
-            QMenu.exec = lambda self, pos: self.exec_(pos)
 
         if not QT6:
             QLibraryInfo.path = lambda *args, **kwargs: QLibraryInfo.location(*args, **kwargs)
@@ -193,6 +192,9 @@ def _make_old_qt_compatible_again() -> None:
         )
         Qt.AlignmentFlag.__or__ = lambda self, other: int(self) | int(other)
         Qt.AlignmentFlag.__ror__ = lambda self, other: int(other) | int(self)
+
+        if not hasattr(QMenu, "exec"):
+            QMenu.exec = lambda self, pos: self.exec_(pos)
 
 
 def qta_icon(*qta_name: str, **qta_specs: Any) -> QIcon:
