@@ -6,12 +6,18 @@ from qtpy.QtWidgets import QDialog, QMessageBox, QWidget, QWizard
 from ..catalog_file_dialog import CatalogSaveFileDialog
 from ..save_catalog_waiting_screen import SaveCatalogWaitingScreen
 from ..settings import Settings
+from ..waiting_screen import WaitingScreen
 from ...utils import CatalogType
 
 __all__ = ["SaveCatalogWizard"]
 
 
-class SaveCatalogWizard(QWizard):
+class _SaveCatalogWizardMeta(type(QWizard), abc.ABCMeta):
+    # https://stackoverflow.com/a/28727066/8554611
+    pass
+
+
+class SaveCatalogWizard(QWizard, abc.ABC, metaclass=_SaveCatalogWizardMeta):
     def __init__(
         self,
         settings: Settings,
@@ -33,7 +39,7 @@ class SaveCatalogWizard(QWizard):
     def frequency_limits(self) -> tuple[float, float]: ...
 
     def done(self, exit_code: QDialog.DialogCode) -> None:
-        ws: SaveCatalogWaitingScreen
+        ws: WaitingScreen
         if exit_code == QDialog.DialogCode.Accepted and self.catalog:
             if self.default_save_location is not None:
                 try:
