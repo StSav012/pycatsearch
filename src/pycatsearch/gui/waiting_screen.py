@@ -85,6 +85,7 @@ class WaitingScreen(QWidget):
             cancel_button.setShortcut(QKeySequence.StandardKey.Cancel)
             cancel_button.clicked.connect(self.stop)
             layout.addWidget(cancel_button)
+            layout.setAlignment(cancel_button, Qt.AlignmentFlag.AlignCenter)
 
         if isinstance(margins, int):
             layout.setContentsMargins(margins, margins, margins, margins)
