@@ -23,11 +23,9 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
             def __init__(self, modules: "dict[str, str | dict]") -> None:
                 self._modules: "dict[str, str | dict]" = modules
 
-            # noinspection PyMethodMayBeStatic
             def is_package(self, module_name: str) -> bool:
                 return isinstance(self._modules[module_name], dict)
 
-            # noinspection PyMethodMayBeStatic
             def get_code(self, module_name: str) -> CodeType:
                 return compile(self._modules[module_name], filename="<string>", mode="exec")
 
