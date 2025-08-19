@@ -15,7 +15,8 @@ def _spinner(parent: QWidget | None = None) -> QWidget | None:
         import qtawesome as qta
 
         spinner: qta.IconWidget = qta.IconWidget(parent=parent)
-        spinner.setIconSize(QSize(*([spinner.fontMetrics().height() * 2] * 2)))
+        size: int = spinner.fontMetrics().height() * 2
+        spinner.setIconSize(QSize(size, size))
         # might raise an `Exception` if the icon is not in the font
         spinner.setIcon(qta.icon("mdi6.loading", animation=qta.Spin(spinner, interval=16, step=4)))
         spinner.setAlignment(Qt.AlignmentFlag.AlignCenter)
