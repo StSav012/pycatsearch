@@ -1,5 +1,7 @@
 import site
 import sys
+from functools import partial
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import cast
 
@@ -52,7 +54,7 @@ class AboutBox(QDialog):
         tabs.setTabPosition(QTabWidget.TabPosition.South)
         tabs.addTab(about_text, self.tr("About"))
 
-        third_party_modules: list[str] = []
+        third_party_modules: list[tuple[str, str]] = []
         prefixes: list[Path] = [
             Path(prefix).resolve() for prefix in site.getsitepackages([sys.exec_prefix, sys.prefix])
         ]
@@ -65,18 +67,32 @@ class AboutBox(QDialog):
                 and getattr(module, "__package__", "")
                 and any(prefix in Path(p).resolve().parents for p in paths for prefix in prefixes)
             ):
-                third_party_modules.append(module_name)
+                try:
+                    third_party_modules.append((module_name, version(module_name)))
+                except PackageNotFoundError:
+                    third_party_modules.append((module_name, getattr(module, "__version__", "")))
         if third_party_modules:
+            td_tag: partial[str] = partial(tag, "td")
+            tr_tag: partial[str] = partial(tag, "tr")
+            th_tag: partial[str] = partial(tag, "th", scope="col")
             lines: list[str] = [
                 self.tr("The app uses the following third-party modules:"),
                 tag(
-                    "ul",
-                    "".join(
-                        map(
-                            lambda s: tag("li", tag("tt", s)),
-                            sorted(third_party_modules, key=str.casefold),
-                        )
+                    "table",
+                    tag(
+                        "thead",
+                        tr_tag(th_tag(self.tr("Package Name")) + th_tag(self.tr("Package Version"))),
+                    )
+                    + tag(
+                        "tbody",
+                        "".join(
+                            map(
+                                lambda s: tr_tag(td_tag(tag("tt", s[0])) + td_tag(s[1], align="center")),
+                                sorted(third_party_modules, key=lambda s: (s[0].casefold(), s[1])),
+                            )
+                        ),
                     ),
+                    width="100%",
                 ),
             ]
             third_party_label: QTextBrowser = QTextBrowser(self)
