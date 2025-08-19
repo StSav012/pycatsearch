@@ -1,6 +1,7 @@
 from os import PathLike
 
 from qtpy import QT5
+from qtpy.QtCore import QMargins
 from qtpy.QtWidgets import QWidget
 
 from .waiting_screen import WaitingScreen
@@ -17,7 +18,7 @@ class SaveCatalogWaitingScreen(WaitingScreen):
         filename: str | PathLike[str],
         catalog: CatalogType,
         frequency_limits: tuple[float, float],
-        margins: float | None = None,
+        margins: int | QMargins | None = None,
     ) -> None:
         if QT5:
             super(QWidget, self).__init__(parent)

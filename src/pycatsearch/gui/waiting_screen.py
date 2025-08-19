@@ -1,7 +1,7 @@
 from threading import Thread
 from typing import Any, Callable, Mapping, Sequence
 
-from qtpy.QtCore import QCoreApplication, QEventLoop, QSize, Qt
+from qtpy.QtCore import QCoreApplication, QEventLoop, QMargins, QSize, Qt
 from qtpy.QtGui import QKeySequence
 from qtpy.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 
@@ -62,7 +62,7 @@ class WaitingScreen(QWidget):
         target: Callable | None = None,
         args: Sequence[Any] = (),
         kwargs: Mapping[str, Any] | None = None,
-        margins: float | None = None,
+        margins: int | QMargins | None = None,
         label_alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignCenter,
         cancellable: bool = True,
     ) -> None:
@@ -85,8 +85,10 @@ class WaitingScreen(QWidget):
             cancel_button.clicked.connect(self.stop)
             layout.addWidget(cancel_button)
 
-        if margins is not None:
-            layout.setContentsMargins(*([margins] * 4))
+        if isinstance(margins, int):
+            layout.setContentsMargins(margins, margins, margins, margins)
+        elif isinstance(margins, QMargins):
+            layout.setContentsMargins(margins)
 
         self._target: Callable | None = target
         self._args: Sequence[Any] = args
