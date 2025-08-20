@@ -13,8 +13,7 @@ license = {text = 'LGPL-3.0-only'}
 requires-python = '>=3.8'
 classifiers = [
     'Development Status :: 5 - Production/Stable',
-    'Environment :: Win32 (MS Windows)',
-    'Environment :: X11 Applications :: Qt',
+    'Environment :: Console',
     'Intended Audience :: Science/Research',
     'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
     'Operating System :: Microsoft :: Windows :: Windows 7',
@@ -40,12 +39,9 @@ dynamic = [
 ]
 
 [project.scripts]
-pycatsearch-cli = 'pycatsearch:main_cli'
+pycatsearch-cli = 'pycatsearch:main'
 pycatsearch-downloader = 'pycatsearch:download'
 pycatsearch-async-downloader = 'pycatsearch:async_download'
-
-[project.gui-scripts]
-pycatsearch = 'pycatsearch:main_gui'
 
 [project.urls]
 'Source Code' = 'https://github.com/StSav012/pycatsearch'

@@ -194,7 +194,7 @@ def _cli_argument_parser() -> ArgumentParser:
     return ap
 
 
-def main_cli() -> int:
+def main() -> int:
     ap: ArgumentParser = _cli_argument_parser()
     args: Namespace = ap.parse_intermixed_args()
 
@@ -257,23 +257,6 @@ def _show_exception(ex: Exception) -> None:
         else:
             tkinter.messagebox.showerror(title="Error", message=error_message)
         root.destroy()
-
-
-def main_gui() -> int:
-    ap: ArgumentParser = _argument_parser()
-    args: Namespace = ap.parse_intermixed_args()
-
-    try:
-        from . import gui
-    except Exception as ex:
-        _show_exception(ex)
-        return 1
-    else:
-        try:
-            return gui.run(*args.catalog)
-        except Exception as ex:
-            _show_exception(ex)
-            return 1
 
 
 def download() -> None:
