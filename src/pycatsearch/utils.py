@@ -547,7 +547,7 @@ def save_catalog_to_file(
 if sys.version_info < (3, 10, 0):
     import builtins
 
-    # noinspection PyShadowingBuiltins
+    # noinspection PyShadowingBuiltins,PyUnusedLocal
     def zip(*iterables: Iterable[Any], strict: bool = False) -> builtins.zip:
         """Intentionally override `builtins.zip` to ignore `strict` parameter in Python < 3.10"""
         return builtins.zip(*iterables)
