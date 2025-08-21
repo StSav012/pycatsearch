@@ -333,6 +333,12 @@ def main_gui() -> int:
                         )
                     return process.returncode or 1
                 else:
+                    try:
+                        import tkinter
+                    except (ModuleNotFoundError, ImportError):
+                        pass
+                    else:
+                        tkinter.Tk().quit()
                     return main()
             else:
                 return 1
