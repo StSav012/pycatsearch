@@ -11,7 +11,6 @@ It should work under `Python 3.8` but is uninstallable there bue to changes in `
 Still, you can get the source files and try them under `Python 3.8`.
 
 The non-GUI parts require an absolute minimum of non-standard modules.
-For faster catalog loading, try installing `orjson`.
 If you want to download the catalog data faster, consider `async_downloader` module;
 it requires `aiohttp`.
 Otherwise, only the built-ins are used.
@@ -24,17 +23,9 @@ The package is available from the PyPI repo:
 python3 -m pip install pycatsearch
 ```
 
-One may provide a Qt binding beforehand manually installing
-- `PySide6-Essentials`,
-- `PyQt6`,
-- `PyQt5`, or
-- `PySide2`.
-
-Otherwise, one of them will be installed automatically.
-Currently, it is unavoidable.
-If you need the non-GUI parts only, get the files from the GitHub repo manually.
-
 For a bit faster downloading the catalog data, install `aiohttp`.
+
+For a faster catalog loading, install `orjson`.
 
 ## Usage
 
@@ -228,11 +219,6 @@ for which the data has already been downloaded
 and contains spectral lines within the specified frequency range.
 The second one is the number of species yet to be downloaded and processed.
 The numbers are the same as what `get_catalog` function types.
-
-### `gui`
-
-This is the graphical interface built with Python bindings for Qt (`PyQt5`, `PySide6`, `PyQt6`, or `PySide2`).
-Run `pycatsearch` and see for yourself.
 
 ## File Format
 

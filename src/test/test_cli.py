@@ -25,7 +25,7 @@ def test_cli():
     import sys
     from importlib.util import find_spec
 
-    from pycatsearch import main_cli as main
+    from pycatsearch import main
 
     third_party_modules: list[str]
 

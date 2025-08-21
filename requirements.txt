@@ -1,14 +1,8 @@
-# for the compatibility b/w various Qt versions
-QtPy>=2.3.1
-
 # for faster downloading
 aiohttp>=3.3
 
 # for faster JSON loading
 orjson
-
-# for unified icons
-qtawesome
 
 # to build a package and install it
 setuptools>=45

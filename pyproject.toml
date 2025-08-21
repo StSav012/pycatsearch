@@ -29,11 +29,10 @@ dependencies = []
 optional-dependencies = { aiohttp = ['aiohttp'], orjson = ['orjson'] }
 
 [project.scripts]
-pycatsearch-cli = 'pycatsearch:main_cli'
+pycatsearch-cli = 'pycatsearch:main'
 pycatsearch-downloader = 'pycatsearch:download'
 pycatsearch-async-downloader = 'pycatsearch:async_download'
-
-[project.gui-scripts]
+# for the sake of migration
 pycatsearch = 'pycatsearch:main_gui'
 
 [project.urls]
