@@ -117,6 +117,14 @@ def main() -> None:
         # do not save the archive if the directory tree is missing
         with gzip.open(gzip_file, "wt", encoding="utf-8") as f_out:
             f_out.write(species_list_text)
+
+        # add the file to `MANIFEST.in` if exists
+        manifest: Path = Path("MANIFEST.in")
+        if manifest.exists():
+            lines: list[str] = manifest.read_text().splitlines()
+            if (line := f"include {gzip_file}") not in lines:
+                lines.extend((line, ""))
+                manifest.write_text("\n".join(lines))
     else:
         print("skipping", gzip_file)
 

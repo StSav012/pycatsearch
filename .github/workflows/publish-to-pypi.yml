@@ -19,6 +19,9 @@ jobs:
       with:
         python-version: "3.x"
 
+    - name: Get species list
+      run: python "download species list.py"
+
     - name: Install pypa/build
       run: >-
         python -m
