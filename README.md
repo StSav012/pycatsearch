@@ -23,17 +23,9 @@ The package is available from the PyPI repo:
 python3 -m pip install pycatsearch
 ```
 
-One may provide a Qt binding beforehand manually installing
-- `PySide6-Essentials`,
-- `PyQt6`,
-- `PyQt5`, or
-- `PySide2`.
-
-Otherwise, one of them will be installed automatically.
-Currently, it is unavoidable.
-If you need the non-GUI parts only, get the files from the GitHub repo manually.
-
 For a bit faster downloading the catalog data, install `aiohttp`.
+
+For a faster catalog loading, install `orjson`.
 
 ## Usage
 
