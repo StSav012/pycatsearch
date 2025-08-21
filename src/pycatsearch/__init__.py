@@ -117,18 +117,13 @@ if sys.version_info < (3, 11, 0):
     http.HTTPMethod = HTTPMethod
 
 
-def _argument_parser() -> ArgumentParser:
+def _cli_argument_parser() -> ArgumentParser:
     ap: ArgumentParser = ArgumentParser(
         allow_abbrev=True,
         description="Yet another implementation of JPL and CDMS spectroscopy catalogs offline search.\n"
         f"Find more at https://github.com/{__author__}/{__original_name__}.",
     )
     ap.add_argument("catalog", type=Path, help="the catalog location to load", nargs=ZERO_OR_MORE)
-    return ap
-
-
-def _cli_argument_parser() -> ArgumentParser:
-    ap: ArgumentParser = _argument_parser()
     ap.add_argument("-fmin", "--min-frequency", type=float, help="the lower frequency [MHz] to take")
     ap.add_argument("-fmax", "--max-frequency", type=float, help="the upper frequency [MHz] to take")
     ap.add_argument(
@@ -269,3 +264,66 @@ def async_download() -> None:
     from . import async_downloader
 
     async_downloader.download()
+
+
+def main_gui() -> int:
+    try:
+        try:
+            # noinspection PyUnresolvedReferences
+            from pycatsearch_qt import main
+        except (ModuleNotFoundError, ImportError):
+            approved: bool
+            try:
+                import tkinter
+                import tkinter.messagebox
+            except (ModuleNotFoundError, ImportError):
+                approved = True
+            else:
+                tkinter.Tk().withdraw()
+                approved = tkinter.messagebox.askyesno(
+                    title="No GUI found",
+                    message="There is no GUI. Would you like to install one?",
+                )
+            if approved:
+                import subprocess
+                from shutil import which
+
+                args: list[str]
+                if which("pip") is not None:
+                    args = ["pip", "install", "-U", "pycatsearch-qt"]
+                else:
+                    args = [sys.executable, "-m", "pip", "install", "-U", "pycatsearch-qt"]
+
+                process: subprocess.CompletedProcess = subprocess.run(
+                    args=args,
+                    capture_output=True,
+                    text=True,
+                )
+                if process.stdout:
+                    print(process.stdout, file=sys.stdout)
+                if process.stderr:
+                    print(process.stderr, file=sys.stderr)
+
+                try:
+                    # noinspection PyUnresolvedReferences
+                    from pycatsearch_qt import main
+                except (ModuleNotFoundError, ImportError):
+                    try:
+                        import tkinter.messagebox
+                    except (ModuleNotFoundError, ImportError):
+                        pass
+                    else:
+                        tkinter.messagebox.showerror(
+                            title="No GUI found",
+                            message="Failed to install GUI.",
+                        )
+                    return process.returncode or 1
+                else:
+                    return main()
+            else:
+                return 1
+        else:
+            return main()
+    except Exception as ex:
+        _show_exception(ex)
+        return -1

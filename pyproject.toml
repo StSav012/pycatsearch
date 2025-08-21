@@ -32,6 +32,8 @@ optional-dependencies = { aiohttp = ['aiohttp'], orjson = ['orjson'] }
 pycatsearch-cli = 'pycatsearch:main'
 pycatsearch-downloader = 'pycatsearch:download'
 pycatsearch-async-downloader = 'pycatsearch:async_download'
+# for the sake of migration
+pycatsearch = 'pycatsearch:main_gui'
 
 [project.urls]
 'Source Code' = 'https://github.com/StSav012/pycatsearch'
