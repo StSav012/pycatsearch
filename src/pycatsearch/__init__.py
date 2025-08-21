@@ -286,13 +286,27 @@ def main_gui() -> int:
                 )
             if approved:
                 import subprocess
+                from importlib.util import find_spec
                 from shutil import which
 
                 args: list[str]
-                if which("pip") is not None:
+                if find_spec("pip") is not None:
+                    args = [sys.executable, "-m", "pip", "install", "-U", "pycatsearch-qt"]
+                elif which("uv") is not None:
+                    args = ["uv", "pip", "install", "-U", "pycatsearch-qt"]
+                elif which("pip") is not None:
                     args = ["pip", "install", "-U", "pycatsearch-qt"]
                 else:
-                    args = [sys.executable, "-m", "pip", "install", "-U", "pycatsearch-qt"]
+                    try:
+                        import tkinter.messagebox
+                    except (ModuleNotFoundError, ImportError):
+                        pass
+                    else:
+                        tkinter.messagebox.showerror(
+                            title="No GUI found",
+                            message="Failed to install GUI.",
+                        )
+                    return 1
 
                 process: subprocess.CompletedProcess = subprocess.run(
                     args=args,
