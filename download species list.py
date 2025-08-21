@@ -2,6 +2,8 @@
 Download the species list and save it to ./species.json
 and to ./src/pycatsearch/species.json.gz if the ./src/pycatsearch/ path exists.
 
+Add a line to include the GZip archive into the MANIFEST.in if one exists.
+
 Backup the existing files.
 
 The JSON is prepended with the copyright notice and appended with the timestamp it was received at.
@@ -18,10 +20,10 @@ from datetime import datetime, timezone
 from http import HTTPMethod, HTTPStatus
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Literal, Mapping
 from urllib.parse import ParseResult, urlencode, urlparse
 
-from pycatsearch.utils import SPECIES_TAG
+SPECIES_TAG: Literal["speciestag"] = "speciestag"
 
 logger: logging.Logger = logging.getLogger(__file__)
 
