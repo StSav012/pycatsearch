@@ -242,7 +242,7 @@ def _show_exception(ex: Exception) -> None:
     try:
         import tkinter
         import tkinter.messagebox
-    except (ModuleNotFoundError, ImportError):
+    except (Exception,):  # actually, `ImportError` or `_tkinter.TclError`
         pass
     else:
         root: tkinter.Tk = tkinter.Tk()
@@ -278,7 +278,7 @@ def main_gui() -> int:
             try:
                 import tkinter
                 import tkinter.messagebox
-            except (ModuleNotFoundError, ImportError):
+            except (Exception,):  # actually, `ImportError` or `_tkinter.TclError`
                 approved = True
             else:
                 tkinter.Tk().withdraw()
@@ -301,7 +301,7 @@ def main_gui() -> int:
                 else:
                     try:
                         import tkinter.messagebox
-                    except (ModuleNotFoundError, ImportError):
+                    except (Exception,):  # actually, `ImportError` or `_tkinter.TclError`
                         pass
                     else:
                         tkinter.messagebox.showerror(
@@ -326,7 +326,7 @@ def main_gui() -> int:
                 except (ModuleNotFoundError, ImportError):
                     try:
                         import tkinter.messagebox
-                    except (ModuleNotFoundError, ImportError):
+                    except (Exception,):  # actually, `ImportError` or `_tkinter.TclError`
                         pass
                     else:
                         tkinter.messagebox.showerror(
@@ -337,7 +337,7 @@ def main_gui() -> int:
                 else:
                     try:
                         import tkinter
-                    except (ModuleNotFoundError, ImportError):
+                    except (Exception,):  # actually, `ImportError` or `_tkinter.TclError`
                         pass
                     else:
                         tkinter.Tk().quit()
