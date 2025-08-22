@@ -1,7 +1,7 @@
 from contextlib import contextmanager, suppress
 from os import PathLike, linesep
 from pathlib import Path
-from typing import Any, Callable, Final, Hashable, Iterable, NamedTuple, Sequence
+from typing import Any, Callable, Final, Hashable, Iterable, Iterator, NamedTuple, Sequence
 
 from qtpy.QtCore import QByteArray, QObject, QSettings
 
@@ -119,8 +119,8 @@ class Settings(QSettings):
     def dialog(
         self,
     ) -> dict[
-        (str | tuple[str, tuple[str, ...]] | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]]),
-        dict[str, (CallbackOnly | PathCallbackOnly | SpinboxAndCallback | ComboboxAndCallback)],
+        str | tuple[str, tuple[str, ...]] | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]],
+        dict[str, CallbackOnly | PathCallbackOnly | SpinboxAndCallback | ComboboxAndCallback],
     ]:
         return {
             (self.tr("When the program starts"), ("mdi6.rocket-launch",)): {
@@ -162,7 +162,7 @@ class Settings(QSettings):
         }
 
     @contextmanager
-    def section(self, section: str) -> None:
+    def section(self, section: str) -> Iterator[None]:
         try:
             self.beginGroup(section)
             yield None

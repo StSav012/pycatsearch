@@ -50,14 +50,12 @@ class PreferencePage(BaseLogger, QScrollArea, metaclass=_QWidgetMetaMixin):
     def __init__(
         self,
         value: dict[
-            (str | tuple[str, tuple[str, ...]] | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]]),
-            (
-                Settings.CallbackOnly
-                | Settings.PathCallbackOnly
-                | Settings.SpinboxAndCallback
-                | Settings.ComboboxAndCallback
-                | Settings.EditableComboboxAndCallback
-            ),
+            str | tuple[str, tuple[str, ...]] | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]],
+            Settings.CallbackOnly
+            | Settings.PathCallbackOnly
+            | Settings.SpinboxAndCallback
+            | Settings.ComboboxAndCallback
+            | Settings.EditableComboboxAndCallback,
         ],
         settings: Settings,
         parent: QWidget | None = None,
@@ -197,13 +195,11 @@ class PreferencesBody(BaseLogger, QSplitter, metaclass=_QWidgetMetaMixin):
         key: str | tuple[str, tuple[str, ...]] | tuple[str, tuple[str, ...], tuple[tuple[str, Any], ...]]
         value: dict[
             str,
-            (
-                Settings.CallbackOnly
-                | Settings.PathCallbackOnly
-                | Settings.SpinboxAndCallback
-                | Settings.ComboboxAndCallback
-                | Settings.EditableComboboxAndCallback
-            ),
+            Settings.CallbackOnly
+            | Settings.PathCallbackOnly
+            | Settings.SpinboxAndCallback
+            | Settings.ComboboxAndCallback
+            | Settings.EditableComboboxAndCallback,
         ]
         for key, value in settings.dialog.items():
             if not (isinstance(value, dict) and value):
