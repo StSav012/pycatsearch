@@ -1,4 +1,5 @@
 import sys
+from abc import ABCMeta
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 from functools import partialmethod
@@ -9,9 +10,13 @@ from typing import Any
 from qtpy import PYSIDE2, QT6
 from qtpy.QtCore import QLibraryInfo, QLocale, QTranslator, Qt, qVersion
 from qtpy.QtGui import QIcon
-from qtpy.QtWidgets import QAbstractSpinBox, QApplication, QDialog, QMenu
+from qtpy.QtWidgets import QAbstractSpinBox, QApplication, QDialog, QMenu, QWidget
 
 __all__ = ["qta_icon", "run"]
+
+
+class _QWidgetMetaMixin(type(QWidget), ABCMeta):
+    pass
 
 
 def _version_tuple(version_string: bytes | str) -> tuple[int | bytes | str, ...]:

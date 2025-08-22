@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from functools import partial
 from logging import Logger, getLogger
 from pathlib import Path
@@ -22,13 +22,14 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from . import _QWidgetMetaMixin
 from .open_file_path_entry import OpenFilePathEntry
 from .settings import Settings
 
 __all__ = ["Preferences"]
 
 
-class BaseLogger:
+class BaseLogger(ABC):
     logger: ClassVar[Logger]
     from typing import ParamSpec
 
@@ -43,7 +44,7 @@ class BaseLogger:
         pass
 
 
-class PreferencePage(BaseLogger, QScrollArea):
+class PreferencePage(BaseLogger, QScrollArea, metaclass=_QWidgetMetaMixin):
     """A page of the Preferences dialog"""
 
     def __init__(
@@ -61,7 +62,6 @@ class PreferencePage(BaseLogger, QScrollArea):
         settings: Settings,
         parent: QWidget | None = None,
     ) -> None:
-        BaseLogger.__init__(self)
         QScrollArea.__init__(self, parent)
 
         widget: QWidget = QWidget(self)
@@ -180,7 +180,7 @@ class PreferencePage(BaseLogger, QScrollArea):
         return self._changed_settings.copy()
 
 
-class PreferencesBody(BaseLogger, QSplitter):
+class PreferencesBody(BaseLogger, QSplitter, metaclass=_QWidgetMetaMixin):
     """The main area of the GUI preferences dialog"""
 
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
