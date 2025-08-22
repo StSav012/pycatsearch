@@ -1,0 +1,7 @@
+global-exclude *.pyc __pycache__/
+global-exclude .*
+exclude *.sh
+exclude *.py
+exclude requirements.txt
+prune src/test/
+prune .*/
