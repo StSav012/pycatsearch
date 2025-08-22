@@ -82,6 +82,8 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
             lines.insert(0, "from __future__ import annotations")
             new_text: str = "\n".join(lines)
             new_text = new_text.replace("ParamSpec", "TypeVar")
+            if f.resolve() != me:
+                new_text = new_text.replace("__file__", repr(str(f.resolve())))
             parts: "tuple[str, ...]" = f.relative_to(my_parent).parts
             p: "dict[str, str | dict]" = py38_modules
             for part in parts[:-1]:
