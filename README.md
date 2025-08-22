@@ -223,7 +223,7 @@ Run `pycatsearch` and see for yourself.
 
 ### Requirements
 
-The code is developed under `python 3.11`. It should work under `python 3.8` but merely tested.
+The code is developed under `python 3.13`. It should work under `python 3.8` but merely tested.
 
 The non-GUI parts require an absolute minimum of non-standard modules.
 If you want to download the catalog data faster, consider `async_downloader` module;
