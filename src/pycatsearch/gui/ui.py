@@ -42,10 +42,13 @@ from .. import __version__
 from ..catalog import Catalog
 from ..utils import (
     CatalogType,
+    ReleaseInfo,
     a_tag,
+    latest_release,
     p_tag,
     remove_html,
     tag,
+    update_with_pip,
     wrap_in_html,
 )
 
@@ -241,6 +244,7 @@ class UI(QMainWindow):
         self.menu_bar.action_download_catalog.triggered.connect(self._on_action_download_catalog_triggered)
         self.menu_bar.action_preferences.triggered.connect(self._on_action_preferences_triggered)
         self.menu_bar.action_quit.triggered.connect(self._on_action_quit_triggered)
+        self.menu_bar.action_check_updates.triggered.connect(self._on_action_check_updates_triggered)
         self.menu_bar.action_about_catalogs.triggered.connect(self._on_action_about_catalogs_triggered)
         self.menu_bar.action_about.triggered.connect(self._on_action_about_triggered)
         self.menu_bar.action_about_qt.triggered.connect(self._on_action_about_qt_triggered)
@@ -262,6 +266,30 @@ class UI(QMainWindow):
 
         if not self.catalog.is_empty:
             self.box_frequency.set_frequency_limits(self.catalog.min_frequency, self.catalog.max_frequency)
+
+        if sys.version_info < (3, 9, 0):
+            self.settings.check_updates = False
+        if self.settings.check_updates:
+            _latest_release: ReleaseInfo = latest_release()
+            if (
+                _latest_release
+                and _latest_release.version != self.settings.ignored_version
+                and _latest_release.version > __version__
+            ):
+                res: QMessageBox.StandardButton = QMessageBox.question(
+                    self,
+                    self.tr("Release Info"),
+                    self.tr(
+                        "Version {release.version} published {release.pub_date} is available. "
+                        "Would you like to get the update? "
+                        "The app will try to restart."
+                    ).format(release=_latest_release),
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Ignore,
+                )
+                if res == QMessageBox.StandardButton.Yes:
+                    update_with_pip()
+                elif res == QMessageBox.StandardButton.Ignore:
+                    self.settings.ignored_version = _latest_release.version
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.save_settings()
@@ -553,6 +581,37 @@ class UI(QMainWindow):
     @Slot(bool)
     def _on_action_show_lower_state_energy_toggled(self, is_checked: bool) -> None:
         self.toggle_results_table_column_visibility(3, is_checked)
+
+    @Slot()
+    def _on_action_check_updates_triggered(self) -> None:
+        if sys.version_info < (3, 9, 0):
+            QMessageBox.information(
+                self,
+                self.tr("Release Info"),
+                self.tr("You are using the final version for Python 3.8.\nThere will be no more updates."),
+            )
+            return
+
+        _latest_release: ReleaseInfo = latest_release()
+        if not _latest_release:
+            QMessageBox.warning(self, self.tr("Release Info"), self.tr("Update check failed."))
+        elif _latest_release.version > __version__:
+            res: QMessageBox.StandardButton = QMessageBox.question(
+                self,
+                self.tr("Release Info"),
+                self.tr(
+                    "Version {release.version} published {release.pub_date} is available. "
+                    "Would you like to get the update? "
+                    "The app will try to restart."
+                ).format(release=_latest_release),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Ignore,
+            )
+            if res == QMessageBox.StandardButton.Yes:
+                update_with_pip()
+            elif res == QMessageBox.StandardButton.Ignore:
+                self.settings.ignored_version = _latest_release.version
+        else:
+            QMessageBox.information(self, self.tr("Release Info"), self.tr("You are using the latest version."))
 
     @Slot()
     def _on_action_about_catalogs_triggered(self) -> None:

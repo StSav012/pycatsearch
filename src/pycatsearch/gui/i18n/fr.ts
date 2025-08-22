@@ -854,6 +854,13 @@
         <translation>Échec de la vérification des mises à jour.</translation>
     </message>
     <message>
+        <location filename="../ui.py" line="550"/>
+        <source>You are using the final version for Python&#xa0;3.8.
+There will be no more updates.</source>
+        <translation>Vous utilisez la version finale de Python&#xa0;3.8.
+Il n&apos;y aura plus de mises à jour.</translation>
+    </message>
+    <message>
         <location filename="../ui.py" line="554"/>
         <source>You are using the latest version.</source>
         <translation>Vous utilisez la version la plus récente.</translation>

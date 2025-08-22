@@ -854,6 +854,13 @@
         <translation>Die Aktualisierungsprüfung ist fehlgeschlagen.</translation>
     </message>
     <message>
+        <location filename="../ui.py" line="550"/>
+        <source>You are using the final version for Python&#xa0;3.8.
+There will be no more updates.</source>
+        <translation>Sie verwenden die endgültige Version für Python&#xa0;3.8.
+Es wird keine weiteren Updates geben.</translation>
+    </message>
+    <message>
         <location filename="../ui.py" line="554"/>
         <source>You are using the latest version.</source>
         <translation>Sie verwenden die neueste Version.</translation>

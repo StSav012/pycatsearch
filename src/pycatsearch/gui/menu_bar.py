@@ -86,6 +86,10 @@ class MenuBar(QMenuBar):
         self.action_show_lower_state_energy: QAction = self.menu_columns.addAction(self.tr("&Lower State Energy"))
 
         self.menu_help: QMenu = self.addMenu(self.tr("&Help"))
+        self.action_check_updates: QAction = self.menu_help.addAction(
+            self._icon("application-update", "mdi6.update"), self.tr("Check for &Updates…")
+        )
+        self.menu_help.addSeparator()
         self.action_about_catalogs: QAction = self.menu_help.addAction(
             self._icon("document-properties", "mdi6.information"), self.tr("About &Catalogs…")
         )

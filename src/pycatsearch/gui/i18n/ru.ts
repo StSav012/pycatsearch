@@ -854,6 +854,13 @@
         <translation>Ошибка при проверке наличия обновлений.</translation>
     </message>
     <message>
+        <location filename="../ui.py" line="550"/>
+        <source>You are using the final version for Python&#xa0;3.8.
+There will be no more updates.</source>
+        <translation>Вы используете последнюю версию под Python&#xa0;3.8.
+Больше обновлений не будет.</translation>
+    </message>
+    <message>
         <location filename="../ui.py" line="554"/>
         <source>You are using the latest version.</source>
         <translation>Вы используете новейшую версию.</translation>
