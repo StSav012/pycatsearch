@@ -70,9 +70,6 @@ __all__ = [
     "wrap_in_html",
     "ensure_prefix",
     "save_catalog_to_file",
-    "ReleaseInfo",
-    "latest_release",
-    "update_with_pip",
     "tag",
     "p_tag",
     "a_tag",
@@ -781,109 +778,6 @@ def save_catalog_to_file(
         return False
     Catalog.from_data(catalog_data=catalog, frequency_limits=frequency_limits).save(filename=filename)
     return True
-
-
-class ReleaseInfo:
-    def __init__(self, version: str = "", pub_date: str = "") -> None:
-        self.version: str = version
-        self.pub_date: str = pub_date
-
-    def __bool__(self) -> bool:
-        return bool(self.version) and bool(self.pub_date)
-
-    def __lt__(self, other: Any) -> bool:
-        if not isinstance(other, (str, ReleaseInfo)):
-            raise TypeError("The argument must be a string or ReleaseInfo")
-        if isinstance(other, str):
-            other = ReleaseInfo(version=other)
-        i: str
-        j: str
-        for i, j in itertools.zip_longest(
-            self.version.replace("-", ".").split("."), other.version.replace("-", ".").split("."), fillvalue=""
-        ):
-            if i == j:
-                continue
-            if i.isdigit() and j.isdigit():
-                return int(i) < int(j)
-            else:
-                i_digits: str = "".join(itertools.takewhile(str.isdigit, i))
-                j_digits: str = "".join(itertools.takewhile(str.isdigit, j))
-                if i_digits != j_digits:
-                    if i_digits and j_digits:
-                        return int(i_digits) < int(j_digits)
-                    else:
-                        return i_digits < j_digits
-                return i < j
-        return False
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, (str, ReleaseInfo)):
-            raise TypeError("The argument must be a string or ReleaseInfo")
-        if isinstance(other, str):
-            other = ReleaseInfo(version=other)
-        return self.version == other.version
-
-
-def latest_release() -> ReleaseInfo:
-    import urllib.request
-    import xml.dom.minidom as dom
-    from http.client import HTTPResponse
-    from urllib.error import URLError
-    from xml.dom.minicompat import NodeList
-
-    from . import __original_name__
-
-    try:
-        r: HTTPResponse = urllib.request.urlopen(
-            f"https://pypi.org/rss/project/{__original_name__}/releases.xml", timeout=1
-        )
-    except URLError:
-        return ReleaseInfo()
-    if r.getcode() != 200 or not r.readable():
-        return ReleaseInfo()
-    rss: dom.Node | None = dom.parseString(r.read().decode(encoding="ascii")).documentElement
-    if not isinstance(rss, dom.Element) or rss.tagName != "rss":
-        return ReleaseInfo()
-    channels: NodeList = rss.getElementsByTagName("channel")
-    if not channels or channels[0].nodeType != dom.Node.ELEMENT_NODE:
-        return ReleaseInfo()
-    channel: dom.Element = channels[0]
-    items: NodeList = channel.getElementsByTagName("item")
-    if not items or items[0].nodeType != dom.Node.ELEMENT_NODE:
-        return ReleaseInfo()
-    item: dom.Element = items[0]
-    titles: NodeList = item.getElementsByTagName("title")
-    if not titles or titles[0].nodeType != dom.Node.ELEMENT_NODE:
-        return ReleaseInfo()
-    title: dom.Element = titles[0]
-    pub_dates: NodeList = item.getElementsByTagName("pubDate")
-    if not pub_dates or pub_dates[0].nodeType != dom.Node.ELEMENT_NODE:
-        return ReleaseInfo()
-    pub_date: dom.Element = pub_dates[0]
-    title_value: dom.Node = title.firstChild
-    pub_date_value: dom.Node = pub_date.firstChild
-    if not isinstance(title_value, dom.Text) or not isinstance(pub_date_value, dom.Text):
-        return ReleaseInfo()
-
-    return ReleaseInfo(title_value.data, pub_date_value.data)
-
-
-def update_with_pip() -> None:
-    import subprocess
-    import sys
-
-    from . import __original_name__
-
-    subprocess.Popen(
-        args=[
-            sys.executable,
-            "-c",
-            f"""import sys, subprocess, time; time.sleep(2);\
-        subprocess.run(args=[sys.executable, '-m', 'pip', 'install', '-U', {__original_name__!r}]);\
-        subprocess.Popen(args=[sys.executable, '-m', {__original_name__!r}])""",
-        ]
-    )
-    sys.exit(0)
 
 
 def tag(name: str, text: str = "", **attrs: str) -> str:

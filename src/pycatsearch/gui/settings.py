@@ -125,7 +125,6 @@ class Settings(QSettings):
         return {
             (self.tr("When the program starts"), ("mdi6.rocket-launch",)): {
                 self.tr("Load catalogs"): Settings.CallbackOnly(Settings.load_last_catalogs.fset.__name__),
-                self.tr("Check for update"): Settings.CallbackOnly(Settings.check_updates.fset.__name__),
             },
             (self.tr("Display"), ("mdi6.binoculars",)): {
                 self.tr("Allow rich text in formulas"): Settings.CallbackOnly(
@@ -287,16 +286,6 @@ class Settings(QSettings):
     def load_last_catalogs(self, new_value: bool) -> None:
         with self.section("start"):
             self.setValue("loadLastCatalogs", new_value)
-
-    @property
-    def check_updates(self) -> bool:
-        with self.section("start"):
-            return self.value("checkUpdates", True, bool)
-
-    @check_updates.setter
-    def check_updates(self, new_value: bool) -> None:
-        with self.section("start"):
-            self.setValue("checkUpdates", new_value)
 
     @property
     def rich_text_in_formulas(self) -> bool:
