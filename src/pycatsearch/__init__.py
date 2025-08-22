@@ -242,18 +242,22 @@ def _show_exception(ex: Exception) -> None:
     try:
         import tkinter
         import tkinter.messagebox
-    except (Exception,):  # actually, `ImportError` or `_tkinter.TclError`
+    except (ModuleNotFoundError, ImportError):
         pass
     else:
-        root: tkinter.Tk = tkinter.Tk()
-        root.withdraw()
-        if isinstance(ex, SyntaxError):
-            tkinter.messagebox.showerror(title="Syntax Error", message=error_message)
-        elif isinstance(ex, ImportError):
-            tkinter.messagebox.showerror(title="Package Missing", message=error_message)
+        try:
+            root: tkinter.Tk = tkinter.Tk()
+        except tkinter.TclError:
+            pass
         else:
-            tkinter.messagebox.showerror(title="Error", message=error_message)
-        root.destroy()
+            root.withdraw()
+            if isinstance(ex, SyntaxError):
+                tkinter.messagebox.showerror(title="Syntax Error", message=error_message)
+            elif isinstance(ex, ImportError):
+                tkinter.messagebox.showerror(title="Package Missing", message=error_message)
+            else:
+                tkinter.messagebox.showerror(title="Error", message=error_message)
+            root.destroy()
 
 
 def download() -> None:
@@ -278,14 +282,20 @@ def main_gui() -> int:
             try:
                 import tkinter
                 import tkinter.messagebox
-            except (Exception,):  # actually, `ImportError` or `_tkinter.TclError`
+            except (ModuleNotFoundError, ImportError):
                 approved = True
             else:
-                tkinter.Tk().withdraw()
-                approved = tkinter.messagebox.askyesno(
-                    title="No GUI found",
-                    message="There is no GUI. Would you like to install one?",
-                )
+                try:
+                    root: tkinter.Tk = tkinter.Tk()
+                except tkinter.TclError:
+                    approved = True
+                else:
+                    root.withdraw()
+                    approved = tkinter.messagebox.askyesno(
+                        title="No GUI found",
+                        message="There is no GUI. Would you like to install one?",
+                    )
+                    root.destroy()
             if approved:
                 import subprocess
                 from importlib.util import find_spec
@@ -301,13 +311,20 @@ def main_gui() -> int:
                 else:
                     try:
                         import tkinter.messagebox
-                    except (Exception,):  # actually, `ImportError` or `_tkinter.TclError`
+                    except (ModuleNotFoundError, ImportError):
                         pass
                     else:
-                        tkinter.messagebox.showerror(
-                            title="No GUI found",
-                            message="Failed to install GUI.",
-                        )
+                        try:
+                            root: tkinter.Tk = tkinter.Tk()
+                        except tkinter.TclError:
+                            pass
+                        else:
+                            root.withdraw()
+                            tkinter.messagebox.showerror(
+                                title="No GUI found",
+                                message="Failed to install GUI.",
+                            )
+                            root.destroy()
                     return 1
 
                 process: subprocess.CompletedProcess = subprocess.run(
@@ -326,21 +343,22 @@ def main_gui() -> int:
                 except (ModuleNotFoundError, ImportError):
                     try:
                         import tkinter.messagebox
-                    except (Exception,):  # actually, `ImportError` or `_tkinter.TclError`
+                    except (ModuleNotFoundError, ImportError):
                         pass
                     else:
-                        tkinter.messagebox.showerror(
-                            title="No GUI found",
-                            message="Failed to install GUI.",
-                        )
+                        try:
+                            root: tkinter.Tk = tkinter.Tk()
+                        except tkinter.TclError:
+                            pass
+                        else:
+                            root.withdraw()
+                            tkinter.messagebox.showerror(
+                                title="No GUI found",
+                                message="Failed to install GUI.",
+                            )
+                            root.destroy()
                     return process.returncode or 1
                 else:
-                    try:
-                        import tkinter
-                    except (Exception,):  # actually, `ImportError` or `_tkinter.TclError`
-                        pass
-                    else:
-                        tkinter.Tk().quit()
                     return main()
             else:
                 return 1
