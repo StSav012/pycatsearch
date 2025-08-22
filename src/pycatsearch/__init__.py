@@ -248,15 +248,19 @@ def _show_exception(ex: Exception) -> None:
     except (ModuleNotFoundError, ImportError):
         pass
     else:
-        root: tkinter.Tk = tkinter.Tk()
-        root.withdraw()
-        if isinstance(ex, SyntaxError):
-            tkinter.messagebox.showerror(title="Syntax Error", message=error_message)
-        elif isinstance(ex, ImportError):
-            tkinter.messagebox.showerror(title="Package Missing", message=error_message)
+        try:
+            root: tkinter.Tk = tkinter.Tk()
+        except tkinter.TclError:
+            pass
         else:
-            tkinter.messagebox.showerror(title="Error", message=error_message)
-        root.destroy()
+            root.withdraw()
+            if isinstance(ex, SyntaxError):
+                tkinter.messagebox.showerror(title="Syntax Error", message=error_message)
+            elif isinstance(ex, ImportError):
+                tkinter.messagebox.showerror(title="Package Missing", message=error_message)
+            else:
+                tkinter.messagebox.showerror(title="Error", message=error_message)
+            root.destroy()
 
 
 def main_gui() -> int:
