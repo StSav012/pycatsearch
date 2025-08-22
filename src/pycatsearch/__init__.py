@@ -205,6 +205,8 @@ def main() -> int:
     else:
         print("No search parameter specified", file=sys.stderr)
         ap.print_help(file=sys.stderr)
+        print("\nTrying the GUI", file=sys.stderr)
+        main_gui()
         return 1
 
 
