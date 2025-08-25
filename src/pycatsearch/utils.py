@@ -142,12 +142,7 @@ class LineType:
         self.lowerstateenergy: float = lowerstateenergy
 
 
-if sys.version_info < (3, 9, 0):
-    from typing import List
-
-    LinesType = List[LineType]
-else:
-    LinesType = list[LineType]
+LinesType = list[LineType]
 
 
 # noinspection PyShadowingBuiltins
@@ -240,16 +235,9 @@ class CatalogJSONEntryType(SpeciesJSONEntryType, total=False):
     lines: Iterable[LineJSONType]
 
 
-if sys.version_info < (3, 9, 0):
-    from typing import Dict, List
-
-    CatalogType = Dict[int, CatalogEntryType]
-    CatalogJSONType = Dict[str, CatalogJSONEntryType]
-    OldCatalogJSONType = List[CatalogJSONEntryType]
-else:
-    CatalogType = dict[int, CatalogEntryType]
-    CatalogJSONType = dict[str, CatalogJSONEntryType]
-    OldCatalogJSONType = list[CatalogJSONEntryType]
+CatalogType = dict[int, CatalogEntryType]
+CatalogJSONType = dict[str, CatalogJSONEntryType]
+OldCatalogJSONType = list[CatalogJSONEntryType]
 
 
 def within(x: float, limits: tuple[float, float] | tuple[tuple[float, float], ...]) -> bool:

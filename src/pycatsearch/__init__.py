@@ -214,9 +214,7 @@ def _show_exception(ex: Exception) -> None:
     from traceback import format_exception
 
     error_message: str = ""
-    if isinstance(ex, SyntaxError):
-        error_message = "Python %s is not supported.\nGet a newer Python!" % ".".join(map(str, sys.version_info[:2]))
-    elif isinstance(ex, ImportError):
+    if isinstance(ex, ImportError):
         if ex.name is not None:
             if "from" in ex.msg.split():
                 error_message = (
