@@ -872,7 +872,7 @@ def update_with_pip() -> None:
     import subprocess
     import sys
 
-    from . import __original_name__
+    __original_name__ = "pycatsearch-qt"
 
     subprocess.Popen(
         args=[
