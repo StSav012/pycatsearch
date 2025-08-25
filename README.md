@@ -222,6 +222,10 @@ The numbers are the same as what `get_catalog` function types.
 
 ## File Format
 
+For physical meaning of the values, check out [catdoc.pdf](https://spec.jpl.nasa.gov//ftp//pub/catalog/doc/catdoc.pdf).
+
+### A JSON file, optionally compressed
+
 The JSON file contains a dictionary of substances called `catalog`.
 The keys of the dictionary are the species tags.
 Each substance is described like the following:
@@ -264,4 +268,39 @@ Besides `catalog`, the JSON file contains `frequency` array that holds the frequ
 and the catalog build time in ISO format.
 Just in case.
 
-For physical meaning of the values, check out [catdoc.pdf](https://spec.jpl.nasa.gov//ftp//pub/catalog/doc/catdoc.pdf).
+The compression might be [GZip](https://en.wikipedia.org/wiki/Gzip),
+[BZip2](https://en.wikipedia.org/wiki/Bzip2),
+or [LZMA2](https://en.wikipedia.org/wiki/LZMA#LZMA2_format).
+
+The filename is expected to be suffixed with `.json`, `.json.gz`, `.json.bz2`, `.json.xz`, or `.json.lzma`.
+
+### A tar archive, optionally compressed
+
+The tar format allows storing multiple files inside an archive.
+Loading multiple files might require more time but generally less memory.
+
+The archive may contain files in the initial format as provided by JPL and CDMS.
+The naming convention is the same as for the organizations.
+Besides them, there should be a file named `species.json` describing the substance a data file is for.
+The description looks identical to what the unified JSON file contains for a substance;
+the `lines` list is ignored and is better omitted.
+The tags missing from `species.json` are ignored.
+The archive might also contain a file named `metadata.json`.
+Currently, only the `build_time` field from the file is taken into account.
+
+Alternatively, the tar archive may contain files in the JSON format for every substance.
+The files are exactly like the dictionary for a substance in the unified JSON file.
+If all the files in the archive are like this, there is no need for a `species.json` file.
+If such a file is nonetheless present, the data in the per-species files take precedence over `species.json`.
+The archive might also contain a file named `metadata.json`.
+There, the `frequency` field contains the frequency limits for the catalog data.
+The `build_time` field stores the moment when the archive file is created;
+it is _not_ the time when the data for the substances are comprised.
+
+The compression might be [GZip](https://en.wikipedia.org/wiki/Gzip),
+[BZip2](https://en.wikipedia.org/wiki/Bzip2),
+or [LZMA2](https://en.wikipedia.org/wiki/LZMA#LZMA2_format).
+
+The filename is expected to be suffixed with `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, `.tbz2`, or `.txz`
+regardless of the files inside.
+An archive may contain both files in the initial CMDS/JPL format and per-substance JSON documents.
