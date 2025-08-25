@@ -41,6 +41,7 @@ pycatsearch = 'pycatsearch:main_gui'
 
 [tool.setuptools_scm]
 local_scheme = 'no-local-version'
+version_scheme = 'no-guess-dev'
 write_to = 'src/pycatsearch/_version.py'
 
 [tool.setuptools.dynamic]
