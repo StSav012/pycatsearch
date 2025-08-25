@@ -273,7 +273,7 @@ def async_download() -> None:
 def main_gui() -> int:
     try:
         try:
-            # noinspection PyUnresolvedReferences
+            # noinspection PyUnresolvedReferences,PyPackageRequirements
             from pycatsearch_qt import main
         except (ModuleNotFoundError, ImportError):
             approved: bool
@@ -336,7 +336,7 @@ def main_gui() -> int:
                     print(process.stderr, file=sys.stderr)
 
                 try:
-                    # noinspection PyUnresolvedReferences
+                    # noinspection PyUnresolvedReferences,PyPackageRequirements
                     from pycatsearch_qt import main
                 except (ModuleNotFoundError, ImportError):
                     try:
