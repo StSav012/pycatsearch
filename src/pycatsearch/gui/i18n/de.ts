@@ -58,135 +58,810 @@
     </message>
 </context>
 <context>
-    <name>AboutBox</name>
+    <name>SubstanceInfo</name>
     <message>
-        <location filename="../about_dialog.py" line="51"/>
-        <source>About</source>
-        <translation>Über</translation>
+        <location filename="../substance_info.py" line="160"/>
+        <source>HUMAN_READABLE[key]</source>
+        <translation type="obsolete">HUMAN_READABLE[key]</translation>
     </message>
     <message>
-        <location filename="../about_dialog.py" line="67"/>
-        <source>The app uses the following third-party modules:</source>
-        <translation>Die Anwendung verwendet die folgenden Module von Drittanbietern:</translation>
-    </message>
-</context>
-<context>
-    <name>file type</name>
-    <message>
-        <location filename="../catalog_file_dialog.py" line="19"/>
-        <source>JSON with GZip compression</source>
-        <translation>JSON mit GZip-Komprimierung</translation>
+        <location filename="../substance_info.py" line="141"/>
+        <source>Substance Info</source>
+        <translation>Substanzinfo</translation>
     </message>
     <message>
-        <location filename="../catalog_file_dialog.py" line="24"/>
-        <source>JSON with Bzip2 compression</source>
-        <translation>JSON mit Bzip2-Komprimierung</translation>
+        <location filename="../substance_info.py" line="168"/>
+        <source></source>
+        <comment>HUMAN_READABLE[key]</comment>
+        <translation></translation>
     </message>
     <message>
-        <location filename="../catalog_file_dialog.py" line="29"/>
-        <source>JSON with LZMA2 compression</source>
-        <translation>JSON mit LZMA2-Komprimierung</translation>
-    </message>
-</context>
-<context>
-    <name>SourcesList</name>
-    <message>
-        <location filename="../catalog_info.py" line="51"/>
-        <source>Filename</source>
-        <translation>Dateinamen</translation>
+        <location filename="../substance_info.py" line="170"/>
+        <source>Number of spectral lines</source>
+        <translation>Die Anzahl der Spektrallinien</translation>
     </message>
     <message>
-        <location filename="../catalog_info.py" line="51"/>
-        <source>Build Time</source>
-        <translation>Bauzeit</translation>
+        <location filename="../substance_info.py" line="177"/>
+        <source>Catalog</source>
+        <translation>Katalog</translation>
     </message>
     <message>
-        <location filename="../catalog_info.py" line="63"/>
-        <source>Open File &amp;Location</source>
-        <translation>Öffnen Sie den &amp;Dateispeicherort</translation>
+        <location filename="../substance_info.py" line="178"/>
+        <source>Lines</source>
+        <translation>Linien</translation>
     </message>
     <message>
-        <location filename="../catalog_info.py" line="69"/>
-        <source>&amp;Update Catalog</source>
-        <translation>&amp;Aktualisieren Sie den Katalog</translation>
-    </message>
-</context>
-<context>
-    <name>CatalogInfo</name>
-    <message>
-        <location filename="../catalog_info.py" line="154"/>
-        <source>Catalog Info</source>
-        <translation>Kataloginformationen</translation>
-    </message>
-    <message>
-        <location filename="../catalog_info.py" line="165"/>
-        <source>Frequency limits:</source>
-        <translation>Frequenzgrenzen:</translation>
-    </message>
-    <message>
-        <location filename="../catalog_info.py" line="170"/>
-        <source>{min_frequency} to {max_frequency}&#xa0;MHz</source>
-        <translation>{min_frequency} bis {max_frequency}&#xa0;MHz</translation>
-    </message>
-    <message>
-        <location filename="../catalog_info.py" line="179"/>
-        <source>Total number of substances:</source>
-        <translation>Gesamtzahl der Stoffe:</translation>
-    </message>
-</context>
-<context>
-    <name>DownloadDialog</name>
-    <message>
-        <location filename="../download_dialog.py" line="29"/>
-        <source>Download Catalog</source>
-        <translation>Katalog herunterladen</translation>
-    </message>
-</context>
-<context>
-    <name>OpenFileDialog</name>
-    <message>
-        <location filename="../file_dialog.py" line="108"/>
-        <source>All supported</source>
-        <translation>Alle unterstützten</translation>
-    </message>
-</context>
-<context>
-    <name>FoundLinesModel</name>
-    <message>
-        <location filename="../found_lines_model.py" line="77"/>
-        <location filename="../found_lines_model.py" line="86"/>
-        <source>{value} [{unit}]</source>
-        <comment>unit format</comment>
-        <translation>{value}, {unit}</translation>
-    </message>
-    <message>
-        <location filename="../found_lines_model.py" line="79"/>
-        <source>Substance</source>
-        <translation>Substanz</translation>
-    </message>
-    <message>
-        <location filename="../found_lines_model.py" line="80"/>
-        <location filename="../found_lines_model.py" line="88"/>
+        <location filename="../substance_info.py" line="179"/>
         <source>Frequency</source>
         <translation>Frequenz</translation>
     </message>
     <message>
-        <location filename="../found_lines_model.py" line="81"/>
-        <location filename="../found_lines_model.py" line="92"/>
+        <location filename="../substance_info.py" line="180"/>
         <source>Intensity</source>
         <translation>Intensität</translation>
     </message>
     <message>
-        <location filename="../found_lines_model.py" line="82"/>
-        <location filename="../found_lines_model.py" line="96"/>
+        <location filename="../substance_info.py" line="181"/>
+        <source>ID</source>
+        <translation>ID</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="182"/>
+        <source>Molecule</source>
+        <translation>Molekül</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="183"/>
+        <source>Structural formula</source>
+        <translation>Strukturformel</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="184"/>
+        <source>Stoichiometric formula</source>
+        <translation>Stöchiometrische Formel</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="185"/>
+        <source>Molecule symbol</source>
+        <translation>Molekülsymbol</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="186"/>
+        <source>Species tag</source>
+        <translation>Arten-Tag</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="187"/>
+        <source>Name</source>
+        <translation>Name</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="188"/>
+        <source>Trivial name</source>
+        <translation>Trivialname</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="189"/>
+        <source>Isotopolog</source>
+        <translation>Isotopologe</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="190"/>
+        <source>State (TeX)</source>
+        <translation>Staat (TeX)</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="191"/>
+        <source>State (HTML)</source>
+        <translation>Staat (HTML)</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="192"/>
+        <source>InChI key</source>
+        <translation>InChI-Schlüssel</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="193"/>
+        <source>Contributor</source>
+        <translation>Mitwirkender</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="194"/>
+        <source>Version</source>
+        <translation>Version</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="195"/>
+        <source>Date of entry</source>
+        <translation>Einreisedatum</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="196"/>
+        <source>Degrees of freedom</source>
+        <translation>Freiheitsgrade</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="197"/>
         <source>Lower state energy</source>
         <translation>Niedrigere Staatsenergie</translation>
     </message>
 </context>
 <context>
+    <name>UI</name>
+    <message>
+        <location filename="../ui.py" line="135"/>
+        <source>PyCatSearch (version {0})</source>
+        <translation>PyCatSearch (version {0})</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="137"/>
+        <source>PyCatSearch</source>
+        <translation>PyCatSearch</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="182"/>
+        <source>Limit shown spectral lines</source>
+        <translation>Begrenzen Sie die angezeigten Spektrallinien</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="183"/>
+        <source>Minimal Intensity:</source>
+        <translation>Minimale Intensität:</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="193"/>
+        <source>Temperature to calculate intensity</source>
+        <translation>Temperatur zur Berechnung der Intensität</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="194"/>
+        <source>&#xa0;K</source>
+        <translation>&#xa0;K</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="195"/>
+        <source>Temperature:</source>
+        <translation>Temperatur:</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="198"/>
+        <source>Show</source>
+        <translation>Anzeigen</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="281"/>
+        <location filename="../ui.py" line="590"/>
+        <location filename="../ui.py" line="597"/>
+        <location filename="../ui.py" line="601"/>
+        <location filename="../ui.py" line="614"/>
+        <source>Release Info</source>
+        <translation>Release Info</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="282"/>
+        <location filename="../ui.py" line="602"/>
+        <source>Version {release.version} published {release.pub_date} is available. Would you like to get the update? The app will try to restart.</source>
+        <translation>Die am {release.pub_date} veröffentlichte Version {release.version} ist verfügbar. Möchten Sie das Update erhalten? Die App wird versuchen, neu zu starten.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="312"/>
+        <source>Loading catalogs:</source>
+        <translation>Laden von Katalogen:</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="318"/>
+        <source>Loading a catalog from&lt;br&gt;{}</source>
+        <translation>Laden eines Katalogs aus&lt;br&gt;{}</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="329"/>
+        <source>Loading has been cancelled.</source>
+        <translation>Das Laden wurde abgebrochen.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="331"/>
+        <source>Failed to load a catalog.</source>
+        <translation>Ein Katalog konnte nicht geladen werden.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="333"/>
+        <source>Catalogs loaded.</source>
+        <translation>Kataloge geladen.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="366"/>
+        <source>Select a catalog file to load.</source>
+        <translation>Wählen Sie eine Katalogdatei zum Laden aus.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="370"/>
+        <location filename="../ui.py" line="378"/>
+        <source>Loading…</source>
+        <translation>Ladevorgang läuft…</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="403"/>
+        <source>Unable to save the catalog</source>
+        <translation>Der Katalog kann nicht gespeichert werden</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="404"/>
+        <source>Error {exception} occurred while saving {filename}. Try another location.</source>
+        <translation>Beim Speichern von {filename} ist der Fehler {exception} aufgetreten. Versuchen Sie es an einem anderen Ort.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="432"/>
+        <source>{value} {unit}</source>
+        <comment>format value in html</comment>
+        <translation>{value} {unit}</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="434"/>
+        <source>{value}</source>
+        <comment>format value in html</comment>
+        <translation>{value}</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="591"/>
+        <source>You are using the final version for Python&#xa0;3.8.
+There will be no more updates.</source>
+        <translation>Sie verwenden die endgültige Version für Python&#xa0;3.8.
+Es wird keine weiteren Updates geben.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="597"/>
+        <source>Update check failed.</source>
+        <translation>Die Aktualisierungsprüfung ist fehlgeschlagen.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="614"/>
+        <source>You are using the latest version.</source>
+        <translation>Sie verwenden die neueste Version.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="623"/>
+        <source>Catalog Info</source>
+        <translation>Kataloginformationen</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="623"/>
+        <source>No catalogs loaded</source>
+        <translation>Keine Kataloge geladen</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="628"/>
+        <source>CatSearch is a means of searching through spectroscopy lines catalogs. It&apos;s an offline application.</source>
+        <translation>CatSearch ist eine Möglichkeit, Kataloge von Spektroskopielinien zu durchsuchen. Es handelt sich um eine Offline-Anwendung.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="631"/>
+        <source>It relies on the data stored in JSON files.</source>
+        <translation>Es basiert auf den in JSON-Dateien gespeicherten Daten.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="632"/>
+        <source>One can use their own catalogs as well as download data from &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; and &lt;a href=&quot;https://cdms.astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt; spectroscopy databases available on the Internet.</source>
+        <translation>Man kann eigene Kataloge verwenden sowie Daten aus den im Internet verfügbaren &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt;- und &lt;a href=&quot;https://astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt;-Spektroskopiedatenbanken herunterladen.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="638"/>
+        <source>Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported.</source>
+        <translation>Sowohl Klartext-JSON als auch GZip/BZip2/LZMA-komprimiertes JSON werden unterstützt.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="639"/>
+        <source>See {readme_link} for more info.</source>
+        <translation>Weitere Informationen finden Sie in der {readme_link}.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="641"/>
+        <source>readme</source>
+        <translation>Liesmich</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="644"/>
+        <source>CatSearch is licensed under the {license_link}.</source>
+        <translation>CatSearch ist unter der {license_link} lizenziert.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="645"/>
+        <source>GNU LGPL version 3</source>
+        <translation>GNU LGPL Version 3</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="647"/>
+        <source>The source code is available on {repo_link}.</source>
+        <translation>Der Quellcode ist auf {repo_link} verfügbar.</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="653"/>
+        <source>About CatSearch</source>
+        <translation>Über CatSearch</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="777"/>
+        <source>Searching…</source>
+        <translation>Suche läuft…</translation>
+    </message>
+    <message>
+        <location filename="../ui.py" line="785"/>
+        <source>Ready.</source>
+        <translation>Bereit.</translation>
+    </message>
+</context>
+<context>
+    <name>Settings</name>
+    <message>
+        <location filename="../settings.py" line="98"/>
+        <source>Line Feed (\n)</source>
+        <translation>Zeilenvorschub (\n)</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="99"/>
+        <source>Carriage Return (\r)</source>
+        <translation>Wagenrücklauf (\r)</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="100"/>
+        <source>CR+LF (\r\n)</source>
+        <translation>WR+ZL (\r\n)</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="101"/>
+        <source>LF+CR (\n\r)</source>
+        <translation>ZL+WR (\n\r)</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="104"/>
+        <source>comma (,)</source>
+        <translation>Komma (,)</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="105"/>
+        <source>tab (\t)</source>
+        <translation>Tab (\t)</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="106"/>
+        <source>semicolon (;)</source>
+        <translation>Semikolon (;)</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="107"/>
+        <source>space ( )</source>
+        <translation>Leerzeichen ( )</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="109"/>
+        <source>MHz</source>
+        <translation>MHz</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="109"/>
+        <source>GHz</source>
+        <translation>GHz</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="109"/>
+        <location filename="../settings.py" line="116"/>
+        <source>cm⁻¹</source>
+        <translation>cm⁻¹</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="109"/>
+        <source>nm</source>
+        <translation>nm</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="111"/>
+        <source>lg(nm² × MHz)</source>
+        <translation>lg(nm² · MHz)</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="112"/>
+        <source>nm² × MHz</source>
+        <translation>nm² · MHz</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="113"/>
+        <source>lg(cm / molecule)</source>
+        <translation>lg(cm / Molekül)</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="114"/>
+        <source>cm / molecule</source>
+        <translation>cm / Molekül</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="116"/>
+        <source>meV</source>
+        <translation>meV</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="116"/>
+        <source>J</source>
+        <translation>J</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="117"/>
+        <source>K</source>
+        <translation>K</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="117"/>
+        <source>°C</source>
+        <translation>°C</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="127"/>
+        <source>When the program starts</source>
+        <translation>Wenn das Programm startet</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="137"/>
+        <source>Display</source>
+        <translation>Anzeige</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="142"/>
+        <source>Units</source>
+        <translation>Einheiten</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="154"/>
+        <source>Export</source>
+        <translation>Exportieren</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="162"/>
+        <source>Info</source>
+        <translation>Info</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="129"/>
+        <location filename="../settings.py" line="133"/>
+        <source>Load catalogs</source>
+        <translation>Kataloge laden</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="134"/>
+        <source>Check for update</source>
+        <translation>Nach Aktualisierung suchen</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="138"/>
+        <source>Allow rich text in formulas</source>
+        <translation>Rich-Text in Formeln zulassen</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="143"/>
+        <source>Frequency:</source>
+        <translation>Frequenz:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="146"/>
+        <source>Intensity:</source>
+        <translation>Intensität:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="149"/>
+        <source>Energy:</source>
+        <translation>Energie:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="150"/>
+        <source>Temperature:</source>
+        <translation>Temperatur:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="155"/>
+        <source>With units</source>
+        <translation>Mit Einheiten</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="156"/>
+        <source>Line ending:</source>
+        <translation>Zeilenumbruch:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="157"/>
+        <source>CSV separator:</source>
+        <translation>CSV-Trennzeichen:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="166"/>
+        <source>InChI key search URL:</source>
+        <translation>InChI-Schlüsselsuch-URL:</translation>
+    </message>
+</context>
+<context>
+    <name>FoundLinesModel</name>
+    <message>
+        <location filename="../found_lines_model.py" line="106"/>
+        <location filename="../found_lines_model.py" line="115"/>
+        <source>{value} [{unit}]</source>
+        <comment>unit format</comment>
+        <translation>{value}, {unit}</translation>
+    </message>
+    <message>
+        <location filename="../found_lines_model.py" line="108"/>
+        <source>Substance</source>
+        <translation>Substanz</translation>
+    </message>
+    <message>
+        <location filename="../found_lines_model.py" line="109"/>
+        <location filename="../found_lines_model.py" line="117"/>
+        <source>Frequency</source>
+        <translation>Frequenz</translation>
+    </message>
+    <message>
+        <location filename="../found_lines_model.py" line="110"/>
+        <location filename="../found_lines_model.py" line="121"/>
+        <source>Intensity</source>
+        <translation>Intensität</translation>
+    </message>
+    <message>
+        <location filename="../found_lines_model.py" line="111"/>
+        <location filename="../found_lines_model.py" line="125"/>
+        <source>Lower state energy</source>
+        <translation>Niedrigere Staatsenergie</translation>
+    </message>
+</context>
+<context>
+    <name>AboutBox</name>
+    <message>
+        <location filename="../about_dialog.py" line="55"/>
+        <source>About</source>
+        <translation>Über</translation>
+    </message>
+    <message>
+        <location filename="../about_dialog.py" line="79"/>
+        <source>The app uses the following third-party modules:</source>
+        <translation>Die Anwendung verwendet die folgenden Module von Drittanbietern:</translation>
+    </message>
+    <message>
+        <location filename="../about_dialog.py" line="84"/>
+        <source>Package Name</source>
+        <translation>Paketname</translation>
+    </message>
+    <message>
+        <location filename="../about_dialog.py" line="84"/>
+        <source>Package Version</source>
+        <translation>Paketversion</translation>
+    </message>
+</context>
+<context>
+    <name>SubstanceBox</name>
+    <message>
+        <location filename="../substances_box.py" line="59"/>
+        <source>Search Only For…</source>
+        <translation>Nur suchen nach…</translation>
+    </message>
+    <message>
+        <location filename="../substances_box.py" line="61"/>
+        <source>Filter</source>
+        <translation>Filter</translation>
+    </message>
+    <message>
+        <location filename="../substances_box.py" line="72"/>
+        <source>Keep substances list selection through filter changes</source>
+        <translation>Auswahl der Stoffliste durch Filteränderungen beibehalten</translation>
+    </message>
+    <message>
+        <location filename="../substances_box.py" line="73"/>
+        <source>Persistent Selection</source>
+        <translation>Persistente Auswahl</translation>
+    </message>
+    <message>
+        <location filename="../substances_box.py" line="75"/>
+        <source>Clear substances list selection</source>
+        <translation>Auswahl der Stoffliste löschen</translation>
+    </message>
+    <message>
+        <location filename="../substances_box.py" line="76"/>
+        <source>Select None</source>
+        <translation>Keine auswählen</translation>
+    </message>
+    <message>
+        <location filename="../substances_box.py" line="102"/>
+        <source>Substance &amp;Info</source>
+        <translation>Substanz&amp;info</translation>
+    </message>
+    <message>
+        <location filename="../substances_box.py" line="102"/>
+        <source>&amp;Select Substance</source>
+        <translation>Substanz aus&amp;wählen</translation>
+    </message>
+</context>
+<context>
+    <name>WaitingScreen</name>
+    <message>
+        <location filename="../waiting_screen.py" line="84"/>
+        <source>&amp;Cancel</source>
+        <translation>&amp;Abbrechen</translation>
+    </message>
+</context>
+<context>
+    <name>OpenFileDialog</name>
+    <message>
+        <location filename="../file_dialog.py" line="178"/>
+        <source>All supported</source>
+        <translation>Alle unterstützten</translation>
+    </message>
+</context>
+<context>
+    <name>UpdateDialog</name>
+    <message>
+        <location filename="../update_dialog.py" line="31"/>
+        <source>Update Catalog</source>
+        <translation>Aktualisieren Sie den Katalog</translation>
+    </message>
+</context>
+<context>
+    <name>SubstanceInfoSelector</name>
+    <message>
+        <location filename="../substance_info.py" line="53"/>
+        <source>Select Substance</source>
+        <translation>Substanz auswählen</translation>
+    </message>
+    <message>
+        <location filename="../substance_info.py" line="86"/>
+        <source>Substance &amp;Info</source>
+        <translation>Substanz&amp;info</translation>
+    </message>
+</context>
+<context>
+    <name>ProgressPage</name>
+    <message>
+        <location filename="../catalog_wizard/progress_page.py" line="22"/>
+        <source>Downloading catalog</source>
+        <translation>Katalog herunterladen</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/progress_page.py" line="33"/>
+        <source>%p% (%v out of %m)</source>
+        <comment>%p = the percentage. %v = the current value. %m = the total number of steps.</comment>
+        <translation>%p% (%v von %m)</translation>
+    </message>
+</context>
+<context>
+    <name>SummaryPage</name>
+    <message>
+        <location filename="../catalog_wizard/summary_page.py" line="21"/>
+        <source>Success</source>
+        <translation>Gelingen</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/summary_page.py" line="22"/>
+        <source>&amp;Save</source>
+        <translation>&amp;Speichern</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/summary_page.py" line="24"/>
+        <source>Click {button_text} to save the catalog for {min_frequency} to {max_frequency}&#xa0;MHz.</source>
+        <translation>Klicken Sie auf {button_text}, um den Katalog für {min_frequency} bis {max_frequency}&#xa0;MHz zu speichern.</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/summary_page.py" line="31"/>
+        <source>Failure</source>
+        <translation>Ausfall</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/summary_page.py" line="32"/>
+        <source>For the specified frequency range, nothing has been loaded.</source>
+        <translation>Für den angegebenen Frequenzbereich wurde nichts geladen.</translation>
+    </message>
+</context>
+<context>
+    <name>SettingsPage</name>
+    <message>
+        <location filename="../catalog_wizard/settings_page.py" line="12"/>
+        <source>New catalog</source>
+        <translation>Neuer Katalog</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/settings_page.py" line="22"/>
+        <location filename="../catalog_wizard/settings_page.py" line="23"/>
+        <source></source>
+        <comment>spin prefix</comment>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/settings_page.py" line="24"/>
+        <location filename="../catalog_wizard/settings_page.py" line="25"/>
+        <source>&#xa0;MHz</source>
+        <comment>spin suffix</comment>
+        <translation>&#xa0;MHz</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/settings_page.py" line="26"/>
+        <source>Minimal frequency:</source>
+        <translation>Minimale Frequenz:</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/settings_page.py" line="27"/>
+        <source>Maximal frequency:</source>
+        <translation>Maximale Frequenz:</translation>
+    </message>
+</context>
+<context>
+    <name>SaveCatalogWizard</name>
+    <message>
+        <location filename="../catalog_wizard/__init__.py" line="56"/>
+        <location filename="../catalog_wizard/__init__.py" line="81"/>
+        <source>Unable to save the catalog</source>
+        <translation>Der Katalog kann nicht gespeichert werden</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/__init__.py" line="57"/>
+        <location filename="../catalog_wizard/__init__.py" line="82"/>
+        <source>Error {exception} occurred while saving {filename}. Try another location.</source>
+        <translation>Beim Speichern von {filename} ist der Fehler {exception} aufgetreten. Versuchen Sie es an einem anderen Ort.</translation>
+    </message>
+</context>
+<context>
+    <name>DownloadConfirmationPage</name>
+    <message>
+        <location filename="../catalog_wizard/download_confirmation_page.py" line="11"/>
+        <source>Downloading catalog</source>
+        <translation>Katalog herunterladen</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/download_confirmation_page.py" line="20"/>
+        <source>&amp;Start</source>
+        <translation>&amp;Start</translation>
+    </message>
+    <message>
+        <location filename="../catalog_wizard/download_confirmation_page.py" line="22"/>
+        <source>Click {button_text} to start the download data for {min_frequency} to {max_frequency}&#xa0;MHz.</source>
+        <translation>Klicken Sie auf {button_text}, um den Download der Daten für {min_frequency} bis {max_frequency}&#xa0;MHz zu starten.</translation>
+    </message>
+</context>
+<context>
+    <name>file type</name>
+    <message>
+        <location filename="../catalog_file_dialog.py" line="16"/>
+        <source>JSON with GZip compression</source>
+        <translation>JSON mit GZip-Komprimierung</translation>
+    </message>
+    <message>
+        <location filename="../catalog_file_dialog.py" line="21"/>
+        <source>JSON with Bzip2 compression</source>
+        <translation>JSON mit Bzip2-Komprimierung</translation>
+    </message>
+    <message>
+        <location filename="../catalog_file_dialog.py" line="26"/>
+        <source>JSON with LZMA2 compression</source>
+        <translation>JSON mit LZMA2-Komprimierung</translation>
+    </message>
+    <message>
+        <location filename="../catalog_file_dialog.py" line="31"/>
+        <source>Tar archive with GZip compression</source>
+        <translation>Tar-Archiv mit GZip-Komprimierung</translation>
+    </message>
+    <message>
+        <location filename="../catalog_file_dialog.py" line="36"/>
+        <source>Tar archive with Bzip2 compression</source>
+        <translation>Tar-Archiv mit Bzip2-Komprimierung</translation>
+    </message>
+    <message>
+        <location filename="../catalog_file_dialog.py" line="41"/>
+        <source>Tar archive with LZMA2 compression</source>
+        <translation>Tar-Archiv mit LZMA2-Komprimierung</translation>
+    </message>
+</context>
+<context>
+    <name>Preferences</name>
+    <message>
+        <location filename="../preferences.py" line="253"/>
+        <source>Preferences</source>
+        <translation>Präferenzen</translation>
+    </message>
+</context>
+<context>
     <name>FrequencySpinBox</name>
     <message>
-        <location filename="../frequency_box.py" line="25"/>
+        <location filename="../frequency_box.py" line="22"/>
         <source>&#xa0;MHz</source>
         <translation>&#xa0;MHz</translation>
     </message>
@@ -194,861 +869,241 @@
 <context>
     <name>FrequencyBox</name>
     <message>
-        <location filename="../frequency_box.py" line="56"/>
+        <location filename="../frequency_box.py" line="53"/>
         <source>From:</source>
         <translation>Von:</translation>
     </message>
     <message>
-        <location filename="../frequency_box.py" line="58"/>
+        <location filename="../frequency_box.py" line="55"/>
         <source>To:</source>
         <translation>Bis:</translation>
     </message>
     <message>
-        <location filename="../frequency_box.py" line="59"/>
+        <location filename="../frequency_box.py" line="56"/>
         <source>Range</source>
         <translation>Bereich</translation>
     </message>
     <message>
-        <location filename="../frequency_box.py" line="62"/>
+        <location filename="../frequency_box.py" line="59"/>
         <source>Center:</source>
         <translation>Center:</translation>
     </message>
     <message>
-        <location filename="../frequency_box.py" line="66"/>
+        <location filename="../frequency_box.py" line="63"/>
         <source>Deviation:</source>
         <translation>Abweichung:</translation>
     </message>
     <message>
-        <location filename="../frequency_box.py" line="67"/>
+        <location filename="../frequency_box.py" line="64"/>
         <source>Center</source>
         <translation>Center</translation>
     </message>
 </context>
 <context>
-    <name>MenuBar</name>
+    <name>SourcesList</name>
     <message>
-        <location filename="../menu_bar.py" line="16"/>
-        <source>&amp;File</source>
-        <translation>&amp;Datei</translation>
+        <location filename="../catalog_info.py" line="48"/>
+        <source>Filename</source>
+        <translation>Dateinamen</translation>
     </message>
     <message>
-        <location filename="../menu_bar.py" line="19"/>
-        <source>&amp;Load Catalog…</source>
-        <translation>Katalog &amp;laden…</translation>
+        <location filename="../catalog_info.py" line="48"/>
+        <source>Build Time</source>
+        <translation>Bauzeit</translation>
     </message>
     <message>
-        <location filename="../menu_bar.py" line="24"/>
-        <source>&amp;Reload Catalogs</source>
-        <translation>Kataloge &amp;neu laden</translation>
+        <location filename="../catalog_info.py" line="60"/>
+        <source>Open File &amp;Location</source>
+        <translation>Öffnen Sie den &amp;Dateispeicherort</translation>
     </message>
     <message>
-        <location filename="../menu_bar.py" line="31"/>
-        <source>&amp;Save Catalog As…</source>
-        <translation>&amp;Speichern den Katalog unter…</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="36"/>
-        <source>&amp;Download Catalog…</source>
-        <translation>Katalog &amp;herunterladen…</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="41"/>
-        <source>&amp;Preferences…</source>
-        <translation>&amp;Präferenzen…</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="47"/>
-        <source>&amp;Quit</source>
-        <translation>&amp;Beenden</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="51"/>
-        <source>&amp;Edit</source>
-        <translation>&amp;Bearbeiten</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="54"/>
-        <source>Clea&amp;r Results</source>
-        <translation>Ergebnisse &amp;löschen</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="57"/>
-        <source>Copy &amp;Only</source>
-        <translation>&amp;Nur kopieren</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="58"/>
-        <source>Active &amp;Cell</source>
-        <translation>Aktive &amp;Zelle</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="60"/>
-        <source>&amp;Substance Name</source>
-        <translation>&amp;Substanzname</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="61"/>
-        <location filename="../menu_bar.py" line="87"/>
-        <source>&amp;Frequency</source>
-        <translation>&amp;Frequenz</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="62"/>
-        <location filename="../menu_bar.py" line="88"/>
-        <source>&amp;Intensity</source>
-        <translation>&amp;Intensität</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="64"/>
-        <location filename="../menu_bar.py" line="89"/>
-        <source>&amp;Lower State Energy</source>
-        <translation>&amp;Niedrigere Staatsenergie</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="67"/>
-        <source>&amp;Copy Selection</source>
-        <translation>Auswahl &amp;kopieren</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="71"/>
-        <source>Select &amp;All</source>
-        <translation>&amp;Alle auswählen</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="81"/>
-        <source>Substance &amp;Info</source>
-        <translation>Substanz&amp;info</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="85"/>
-        <source>&amp;Columns</source>
-        <translation>&amp;Spalten</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="86"/>
-        <source>&amp;Substance</source>
-        <translation>&amp;Substanz</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="91"/>
-        <source>&amp;Help</source>
-        <translation>&amp;Hilfe</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="93"/>
-        <source>Check for &amp;Updates…</source>
-        <translation>Nach &amp;Aktualisierungen suchen…</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="97"/>
-        <source>About &amp;Catalogs…</source>
-        <translation>Über &amp;Kataloge…</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="101"/>
-        <source>&amp;About…</source>
-        <translation>&amp;Über…</translation>
-    </message>
-    <message>
-        <location filename="../menu_bar.py" line="105"/>
-        <source>About &amp;Qt…</source>
-        <translation>Über &amp;Qt…</translation>
+        <location filename="../catalog_info.py" line="65"/>
+        <source>&amp;Update Catalog</source>
+        <translation>&amp;Aktualisieren Sie den Katalog</translation>
     </message>
 </context>
 <context>
-    <name>OpenFilePathEntry</name>
+    <name>CatalogInfo</name>
     <message>
-        <location filename="../open_file_path_entry.py" line="35"/>
-        <source>&amp;Browse…</source>
-        <translation>&amp;Durchsuchen…</translation>
+        <location filename="../catalog_info.py" line="150"/>
+        <source>Catalog Info</source>
+        <translation>Kataloginformationen</translation>
     </message>
     <message>
-        <location filename="../open_file_path_entry.py" line="42"/>
-        <source>Translations</source>
-        <translation>Übersetzungen</translation>
+        <location filename="../catalog_info.py" line="161"/>
+        <source>Frequency limits:</source>
+        <translation>Frequenzgrenzen:</translation>
     </message>
-</context>
-<context>
-    <name>Preferences</name>
     <message>
-        <location filename="../preferences.py" line="261"/>
-        <source>Preferences</source>
-        <translation>Präferenzen</translation>
+        <location filename="../catalog_info.py" line="166"/>
+        <source>{min_frequency} to {max_frequency}&#xa0;MHz</source>
+        <translation>{min_frequency} bis {max_frequency}&#xa0;MHz</translation>
+    </message>
+    <message>
+        <location filename="../catalog_info.py" line="175"/>
+        <source>Total number of substances:</source>
+        <translation>Gesamtzahl der Stoffe:</translation>
     </message>
 </context>
 <context>
     <name>SaveCatalogWaitingScreen</name>
     <message>
-        <location filename="../save_catalog_waiting_screen.py" line="30"/>
+        <location filename="../save_catalog_waiting_screen.py" line="24"/>
+        <location filename="../save_catalog_waiting_screen.py" line="24"/>
         <source>Please wait…</source>
         <translation>Warten Sie mal…</translation>
     </message>
 </context>
 <context>
-    <name>Settings</name>
+    <name>OpenFilePathEntry</name>
     <message>
-        <location filename="../settings.py" line="100"/>
-        <source>Line Feed (\n)</source>
-        <translation>Zeilenvorschub (\n)</translation>
+        <location filename="../open_file_path_entry.py" line="31"/>
+        <source>&amp;Browse…</source>
+        <translation>&amp;Durchsuchen…</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="101"/>
-        <source>Carriage Return (\r)</source>
-        <translation>Wagenrücklauf (\r)</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="102"/>
-        <source>CR+LF (\r\n)</source>
-        <translation>WR+ZL (\r\n)</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="103"/>
-        <source>LF+CR (\n\r)</source>
-        <translation>ZL+WR (\n\r)</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="106"/>
-        <source>comma (,)</source>
-        <translation>Komma (,)</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="107"/>
-        <source>tab (\t)</source>
-        <translation>Tab (\t)</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="108"/>
-        <source>semicolon (;)</source>
-        <translation>Semikolon (;)</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="109"/>
-        <source>space ( )</source>
-        <translation>Leerzeichen ( )</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="111"/>
-        <source>MHz</source>
-        <translation>MHz</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="111"/>
-        <source>GHz</source>
-        <translation>GHz</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="111"/>
-        <location filename="../settings.py" line="118"/>
-        <source>cm⁻¹</source>
-        <translation>cm⁻¹</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="111"/>
-        <source>nm</source>
-        <translation>nm</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="113"/>
-        <source>lg(nm² × MHz)</source>
-        <translation>lg(nm² · MHz)</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="114"/>
-        <source>nm² × MHz</source>
-        <translation>nm² · MHz</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="115"/>
-        <source>lg(cm / molecule)</source>
-        <translation>lg(cm / Molekül)</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="116"/>
-        <source>cm / molecule</source>
-        <translation>cm / Molekül</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="118"/>
-        <source>meV</source>
-        <translation>meV</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="118"/>
-        <source>J</source>
-        <translation>J</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="119"/>
-        <source>K</source>
-        <translation>K</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="119"/>
-        <source>°C</source>
-        <translation>°C</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="129"/>
-        <source>When the program starts</source>
-        <translation>Wenn das Programm startet</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="133"/>
-        <source>Display</source>
-        <translation>Anzeige</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="138"/>
-        <source>Units</source>
-        <translation>Einheiten</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="150"/>
-        <source>Export</source>
-        <translation>Exportieren</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="158"/>
-        <source>Info</source>
-        <translation>Info</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="130"/>
-        <source>Load catalogs</source>
-        <translation>Kataloge laden</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="131"/>
-        <source>Check for update</source>
-        <translation>Nach Aktualisierung suchen</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="134"/>
-        <source>Allow rich text in formulas</source>
-        <translation>Rich-Text in Formeln zulassen</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="139"/>
-        <source>Frequency:</source>
-        <translation>Frequenz:</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="142"/>
-        <source>Intensity:</source>
-        <translation>Intensität:</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="145"/>
-        <source>Energy:</source>
-        <translation>Energie:</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="146"/>
-        <source>Temperature:</source>
-        <translation>Temperatur:</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="151"/>
-        <source>With units</source>
-        <translation>Mit Einheiten</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="152"/>
-        <source>Line ending:</source>
-        <translation>Zeilenumbruch:</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="153"/>
-        <source>CSV separator:</source>
-        <translation>CSV-Trennzeichen:</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="162"/>
-        <source>InChI key search URL:</source>
-        <translation>InChI-Schlüsselsuch-URL:</translation>
+        <location filename="../open_file_path_entry.py" line="39"/>
+        <source>Translations</source>
+        <translation>Übersetzungen</translation>
     </message>
 </context>
 <context>
-    <name>SubstanceInfoSelector</name>
+    <name>DownloadDialog</name>
     <message>
-        <location filename="../substance_info.py" line="47"/>
-        <source>Select Substance</source>
-        <translation>Substanz auswählen</translation>
-    </message>
-    <message>
-        <location filename="../substance_info.py" line="80"/>
-        <source>Substance &amp;Info</source>
-        <translation>Substanz&amp;info</translation>
+        <location filename="../download_dialog.py" line="26"/>
+        <source>Download Catalog</source>
+        <translation>Katalog herunterladen</translation>
     </message>
 </context>
 <context>
-    <name>SubstanceInfo</name>
+    <name>MenuBar</name>
     <message>
-        <location filename="../substance_info.py" line="135"/>
-        <source>Substance Info</source>
-        <translation>Substanzinfo</translation>
+        <location filename="../menu_bar.py" line="13"/>
+        <source>&amp;File</source>
+        <translation>&amp;Datei</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="160"/>
-        <source>HUMAN_READABLE[key]</source>
-        <translation>HUMAN_READABLE[key]</translation>
+        <location filename="../menu_bar.py" line="16"/>
+        <source>&amp;Load Catalog…</source>
+        <translation>Katalog &amp;laden…</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="162"/>
-        <source>Number of spectral lines</source>
-        <translation>Die Anzahl der Spektrallinien</translation>
+        <location filename="../menu_bar.py" line="21"/>
+        <source>&amp;Reload Catalogs</source>
+        <translation>Kataloge &amp;neu laden</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="169"/>
-        <source>Catalog</source>
-        <translation>Katalog</translation>
+        <location filename="../menu_bar.py" line="28"/>
+        <source>&amp;Save Catalog As…</source>
+        <translation>&amp;Speichern den Katalog unter…</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="170"/>
-        <source>Lines</source>
-        <translation>Linien</translation>
+        <location filename="../menu_bar.py" line="33"/>
+        <source>&amp;Download Catalog…</source>
+        <translation>Katalog &amp;herunterladen…</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="171"/>
-        <source>Frequency</source>
-        <translation>Frequenz</translation>
+        <location filename="../menu_bar.py" line="38"/>
+        <source>&amp;Preferences…</source>
+        <translation>&amp;Präferenzen…</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="172"/>
-        <source>Intensity</source>
-        <translation>Intensität</translation>
+        <location filename="../menu_bar.py" line="44"/>
+        <source>&amp;Quit</source>
+        <translation>&amp;Beenden</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="173"/>
-        <source>ID</source>
-        <translation>ID</translation>
+        <location filename="../menu_bar.py" line="48"/>
+        <source>&amp;Edit</source>
+        <translation>&amp;Bearbeiten</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="174"/>
-        <source>Molecule</source>
-        <translation>Molekül</translation>
+        <location filename="../menu_bar.py" line="51"/>
+        <source>Clea&amp;r Results</source>
+        <translation>Ergebnisse &amp;löschen</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="175"/>
-        <source>Structural formula</source>
-        <translation>Strukturformel</translation>
+        <location filename="../menu_bar.py" line="54"/>
+        <source>Copy &amp;Only</source>
+        <translation>&amp;Nur kopieren</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="176"/>
-        <source>Stoichiometric formula</source>
-        <translation>Stöchiometrische Formel</translation>
+        <location filename="../menu_bar.py" line="55"/>
+        <source>Active &amp;Cell</source>
+        <translation>Aktive &amp;Zelle</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="177"/>
-        <source>Molecule symbol</source>
-        <translation>Molekülsymbol</translation>
+        <location filename="../menu_bar.py" line="57"/>
+        <source>&amp;Substance Name</source>
+        <translation>&amp;Substanzname</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="178"/>
-        <source>Species tag</source>
-        <translation>Arten-Tag</translation>
+        <location filename="../menu_bar.py" line="58"/>
+        <location filename="../menu_bar.py" line="84"/>
+        <source>&amp;Frequency</source>
+        <translation>&amp;Frequenz</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="179"/>
-        <source>Name</source>
-        <translation>Name</translation>
+        <location filename="../menu_bar.py" line="59"/>
+        <location filename="../menu_bar.py" line="85"/>
+        <source>&amp;Intensity</source>
+        <translation>&amp;Intensität</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="180"/>
-        <source>Trivial name</source>
-        <translation>Trivialname</translation>
+        <location filename="../menu_bar.py" line="61"/>
+        <location filename="../menu_bar.py" line="86"/>
+        <source>&amp;Lower State Energy</source>
+        <translation>&amp;Niedrigere Staatsenergie</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="181"/>
-        <source>Isotopolog</source>
-        <translation>Isotopologe</translation>
+        <location filename="../menu_bar.py" line="64"/>
+        <source>&amp;Copy Selection</source>
+        <translation>Auswahl &amp;kopieren</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="182"/>
-        <source>State (TeX)</source>
-        <translation>Staat (TeX)</translation>
+        <location filename="../menu_bar.py" line="68"/>
+        <source>Select &amp;All</source>
+        <translation>&amp;Alle auswählen</translation>
     </message>
     <message>
-        <location filename="../substance_info.py" line="183"/>
-        <source>State (HTML)</source>
-        <translation>Staat (HTML)</translation>
-    </message>
-    <message>
-        <location filename="../substance_info.py" line="184"/>
-        <source>InChI key</source>
-        <translation>InChI-Schlüssel</translation>
-    </message>
-    <message>
-        <location filename="../substance_info.py" line="185"/>
-        <source>Contributor</source>
-        <translation>Mitwirkender</translation>
-    </message>
-    <message>
-        <location filename="../substance_info.py" line="186"/>
-        <source>Version</source>
-        <translation>Version</translation>
-    </message>
-    <message>
-        <location filename="../substance_info.py" line="187"/>
-        <source>Date of entry</source>
-        <translation>Einreisedatum</translation>
-    </message>
-    <message>
-        <location filename="../substance_info.py" line="188"/>
-        <source>Degrees of freedom</source>
-        <translation>Freiheitsgrade</translation>
-    </message>
-    <message>
-        <location filename="../substance_info.py" line="189"/>
-        <source>Lower state energy</source>
-        <translation>Niedrigere Staatsenergie</translation>
-    </message>
-</context>
-<context>
-    <name>SubstanceBox</name>
-    <message>
-        <location filename="../substances_box.py" line="62"/>
-        <source>Search Only For…</source>
-        <translation>Nur suchen nach…</translation>
-    </message>
-    <message>
-        <location filename="../substances_box.py" line="64"/>
-        <source>Filter</source>
-        <translation>Filter</translation>
-    </message>
-    <message>
-        <location filename="../substances_box.py" line="75"/>
-        <source>Keep substances list selection through filter changes</source>
-        <translation>Auswahl der Stoffliste durch Filteränderungen beibehalten</translation>
-    </message>
-    <message>
-        <location filename="../substances_box.py" line="76"/>
-        <source>Persistent Selection</source>
-        <translation>Persistente Auswahl</translation>
-    </message>
-    <message>
-        <location filename="../substances_box.py" line="78"/>
-        <source>Clear substances list selection</source>
-        <translation>Auswahl der Stoffliste löschen</translation>
-    </message>
-    <message>
-        <location filename="../substances_box.py" line="79"/>
-        <source>Select None</source>
-        <translation>Keine auswählen</translation>
-    </message>
-    <message>
-        <location filename="../substances_box.py" line="105"/>
+        <location filename="../menu_bar.py" line="78"/>
         <source>Substance &amp;Info</source>
         <translation>Substanz&amp;info</translation>
     </message>
     <message>
-        <location filename="../substances_box.py" line="105"/>
-        <source>&amp;Select Substance</source>
-        <translation>Substanz aus&amp;wählen</translation>
-    </message>
-</context>
-<context>
-    <name>UI</name>
-    <message>
-        <location filename="../ui.py" line="126"/>
-        <source>PyCatSearch (version {0})</source>
-        <translation>PyCatSearch (version {0})</translation>
+        <location filename="../menu_bar.py" line="82"/>
+        <source>&amp;Columns</source>
+        <translation>&amp;Spalten</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="128"/>
-        <source>PyCatSearch</source>
-        <translation>PyCatSearch</translation>
+        <location filename="../menu_bar.py" line="83"/>
+        <source>&amp;Substance</source>
+        <translation>&amp;Substanz</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="170"/>
-        <source>Limit shown spectral lines</source>
-        <translation>Begrenzen Sie die angezeigten Spektrallinien</translation>
+        <location filename="../menu_bar.py" line="88"/>
+        <source>&amp;Help</source>
+        <translation>&amp;Hilfe</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="171"/>
-        <source>Minimal Intensity:</source>
-        <translation>Minimale Intensität:</translation>
+        <location filename="../menu_bar.py" line="90"/>
+        <source>Check for &amp;Updates…</source>
+        <translation>Nach &amp;Aktualisierungen suchen…</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="178"/>
-        <source>Temperature to calculate intensity</source>
-        <translation>Temperatur zur Berechnung der Intensität</translation>
+        <location filename="../menu_bar.py" line="94"/>
+        <source>About &amp;Catalogs…</source>
+        <translation>Über &amp;Kataloge…</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="179"/>
-        <source>&#xa0;K</source>
-        <translation>&#xa0;K</translation>
+        <location filename="../menu_bar.py" line="98"/>
+        <source>&amp;About…</source>
+        <translation>&amp;Über…</translation>
     </message>
     <message>
-        <location filename="../ui.py" line="180"/>
-        <source>Temperature:</source>
-        <translation>Temperatur:</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="183"/>
-        <source>Show</source>
-        <translation>Anzeigen</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="264"/>
-        <location filename="../ui.py" line="537"/>
-        <location filename="../ui.py" line="541"/>
-        <location filename="../ui.py" line="554"/>
-        <source>Release Info</source>
-        <translation>Release Info</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="265"/>
-        <location filename="../ui.py" line="542"/>
-        <source>Version {release.version} published {release.pub_date} is available. Would you like to get the update? The app will try to restart.</source>
-        <translation>Die am {release.pub_date} veröffentlichte Version {release.version} ist verfügbar. Möchten Sie das Update erhalten? Die App wird versuchen, neu zu starten.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="317"/>
-        <source>Select a catalog file to load.</source>
-        <translation>Wählen Sie eine Katalogdatei zum Laden aus.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="321"/>
-        <location filename="../ui.py" line="333"/>
-        <source>Loading…</source>
-        <translation>Ladevorgang läuft…</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="323"/>
-        <location filename="../ui.py" line="335"/>
-        <source>Catalogs loaded.</source>
-        <translation>Kataloge geladen.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="325"/>
-        <location filename="../ui.py" line="337"/>
-        <source>Failed to load a catalog.</source>
-        <translation>Ein Katalog konnte nicht geladen werden.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="361"/>
-        <source>Unable to save the catalog</source>
-        <translation>Der Katalog kann nicht gespeichert werden</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="362"/>
-        <source>Error {exception} occurred while saving {filename}. Try another location.</source>
-        <translation>Beim Speichern von {filename} ist der Fehler {exception} aufgetreten. Versuchen Sie es an einem anderen Ort.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="390"/>
-        <source>{value} {unit}</source>
-        <comment>format value in html</comment>
-        <translation>{value} {unit}</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="392"/>
-        <source>{value}</source>
-        <comment>format value in html</comment>
-        <translation>{value}</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="537"/>
-        <source>Update check failed.</source>
-        <translation>Die Aktualisierungsprüfung ist fehlgeschlagen.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="550"/>
-        <source>You are using the final version for Python&#xa0;3.8.
-There will be no more updates.</source>
-        <translation>Sie verwenden die endgültige Version für Python&#xa0;3.8.
-Es wird keine weiteren Updates geben.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="554"/>
-        <source>You are using the latest version.</source>
-        <translation>Sie verwenden die neueste Version.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="563"/>
-        <source>Catalog Info</source>
-        <translation>Kataloginformationen</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="563"/>
-        <source>No catalogs loaded</source>
-        <translation>Keine Kataloge geladen</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="568"/>
-        <source>CatSearch is a means of searching through spectroscopy lines catalogs. It&apos;s an offline application.</source>
-        <translation>CatSearch ist eine Möglichkeit, Kataloge von Spektroskopielinien zu durchsuchen. Es handelt sich um eine Offline-Anwendung.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="571"/>
-        <source>It relies on the data stored in JSON files.</source>
-        <translation>Es basiert auf den in JSON-Dateien gespeicherten Daten.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="572"/>
-        <source>One can use their own catalogs as well as download data from &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt; and &lt;a href=&quot;https://cdms.astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt; spectroscopy databases available on the Internet.</source>
-        <translation>Man kann eigene Kataloge verwenden sowie Daten aus den im Internet verfügbaren &lt;a href=&quot;https://spec.jpl.nasa.gov/&quot;&gt;JPL&lt;/a&gt;- und &lt;a href=&quot;https://astro.uni-koeln.de/&quot;&gt;CDMS&lt;/a&gt;-Spektroskopiedatenbanken herunterladen.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="578"/>
-        <source>Both plain text JSON and GZip/BZip2/LZMA-compressed JSON are supported.</source>
-        <translation>Sowohl Klartext-JSON als auch GZip/BZip2/LZMA-komprimiertes JSON werden unterstützt.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="579"/>
-        <source>See {readme_link} for more info.</source>
-        <translation>Weitere Informationen finden Sie in der {readme_link}.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="581"/>
-        <source>readme</source>
-        <translation>Liesmich</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="584"/>
-        <source>CatSearch is licensed under the {license_link}.</source>
-        <translation>CatSearch ist unter der {license_link} lizenziert.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="585"/>
-        <source>GNU LGPL version 3</source>
-        <translation>GNU LGPL Version 3</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="587"/>
-        <source>The source code is available on {repo_link}.</source>
-        <translation>Der Quellcode ist auf {repo_link} verfügbar.</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="593"/>
-        <source>About CatSearch</source>
-        <translation>Über CatSearch</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="715"/>
-        <source>Searching…</source>
-        <translation>Suche läuft…</translation>
-    </message>
-    <message>
-        <location filename="../ui.py" line="723"/>
-        <source>Ready.</source>
-        <translation>Bereit.</translation>
-    </message>
-</context>
-<context>
-    <name>UpdateDialog</name>
-    <message>
-        <location filename="../update_dialog.py" line="34"/>
-        <source>Update Catalog</source>
-        <translation>Aktualisieren Sie den Katalog</translation>
-    </message>
-</context>
-<context>
-    <name>DownloadConfirmationPage</name>
-    <message>
-        <location filename="../catalog_wizard/download_confirmation_page.py" line="14"/>
-        <source>Downloading catalog</source>
-        <translation>Katalog herunterladen</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/download_confirmation_page.py" line="23"/>
-        <source>&amp;Start</source>
-        <translation>&amp;Start</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/download_confirmation_page.py" line="25"/>
-        <source>Click {button_text} to start the download data for {min_frequency} to {max_frequency}&#xa0;MHz.</source>
-        <translation>Klicken Sie auf {button_text}, um den Download der Daten für {min_frequency} bis {max_frequency}&#xa0;MHz zu starten.</translation>
-    </message>
-</context>
-<context>
-    <name>SaveCatalogWizard</name>
-    <message>
-        <location filename="../catalog_wizard/__init__.py" line="53"/>
-        <location filename="../catalog_wizard/__init__.py" line="78"/>
-        <source>Unable to save the catalog</source>
-        <translation>Der Katalog kann nicht gespeichert werden</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/__init__.py" line="54"/>
-        <location filename="../catalog_wizard/__init__.py" line="79"/>
-        <source>Error {exception} occurred while saving {filename}. Try another location.</source>
-        <translation>Beim Speichern von {filename} ist der Fehler {exception} aufgetreten. Versuchen Sie es an einem anderen Ort.</translation>
-    </message>
-</context>
-<context>
-    <name>ProgressPage</name>
-    <message>
-        <location filename="../catalog_wizard/progress_page.py" line="25"/>
-        <source>Downloading catalog</source>
-        <translation>Katalog herunterladen</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/progress_page.py" line="36"/>
-        <source>%p% (%v out of %m)</source>
-        <comment>%p = the percentage. %v = the current value. %m = the total number of steps.</comment>
-        <translation>%p% (%v von %m)</translation>
-    </message>
-</context>
-<context>
-    <name>SettingsPage</name>
-    <message>
-        <location filename="../catalog_wizard/settings_page.py" line="15"/>
-        <source>New catalog</source>
-        <translation>Neuer Katalog</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/settings_page.py" line="25"/>
-        <location filename="../catalog_wizard/settings_page.py" line="26"/>
-        <source></source>
-        <comment>spin prefix</comment>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/settings_page.py" line="27"/>
-        <location filename="../catalog_wizard/settings_page.py" line="28"/>
-        <source>&#xa0;MHz</source>
-        <comment>spin suffix</comment>
-        <translation>&#xa0;MHz</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/settings_page.py" line="29"/>
-        <source>Minimal frequency:</source>
-        <translation>Minimale Frequenz:</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/settings_page.py" line="30"/>
-        <source>Maximal frequency:</source>
-        <translation>Maximale Frequenz:</translation>
-    </message>
-</context>
-<context>
-    <name>SummaryPage</name>
-    <message>
-        <location filename="../catalog_wizard/summary_page.py" line="24"/>
-        <source>Success</source>
-        <translation>Gelingen</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/summary_page.py" line="25"/>
-        <source>&amp;Save</source>
-        <translation>&amp;Speichern</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/summary_page.py" line="27"/>
-        <source>Click {button_text} to save the catalog for {min_frequency} to {max_frequency}&#xa0;MHz.</source>
-        <translation>Klicken Sie auf {button_text}, um den Katalog für {min_frequency} bis {max_frequency}&#xa0;MHz zu speichern.</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/summary_page.py" line="34"/>
-        <source>Failure</source>
-        <translation>Ausfall</translation>
-    </message>
-    <message>
-        <location filename="../catalog_wizard/summary_page.py" line="35"/>
-        <source>For the specified frequency range, nothing has been loaded.</source>
-        <translation>Für den angegebenen Frequenzbereich wurde nichts geladen.</translation>
+        <location filename="../menu_bar.py" line="102"/>
+        <source>About &amp;Qt…</source>
+        <translation>Über &amp;Qt…</translation>
     </message>
 </context>
 </TS>
