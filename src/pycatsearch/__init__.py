@@ -271,6 +271,22 @@ def async_download() -> None:
 
 
 def main_gui() -> int:
+    def decode(b: bytes) -> str:
+        from contextlib import suppress
+        from encodings import aliases
+        from random import shuffle
+
+        if isinstance(b, str):
+            return b
+
+        encodings: list[str] = list(set(aliases.aliases.values()))
+        shuffle(encodings)
+        encodings = ["utf-8", sys.getdefaultencoding()] + encodings
+        for encoding in encodings:
+            with suppress(UnicodeError):
+                return b.decode(encoding=encoding)
+        return b.decode(errors="replace")
+
     try:
         try:
             # noinspection PyUnresolvedReferences,PyPackageRequirements
@@ -328,12 +344,11 @@ def main_gui() -> int:
                 process: subprocess.CompletedProcess = subprocess.run(
                     args=args,
                     capture_output=True,
-                    text=True,
                 )
                 if process.stdout:
-                    print(process.stdout, file=sys.stdout)
+                    sys.stdout.write(decode(process.stdout))
                 if process.stderr:
-                    print(process.stderr, file=sys.stderr)
+                    sys.stderr.write(decode(process.stderr))
 
                 try:
                     # noinspection PyUnresolvedReferences,PyPackageRequirements
@@ -353,6 +368,7 @@ def main_gui() -> int:
                             tkinter.messagebox.showerror(
                                 title="No GUI found",
                                 message="Failed to install GUI.",
+                                detail=decode(process.stderr),
                             )
                             root.destroy()
                     return process.returncode or 1
