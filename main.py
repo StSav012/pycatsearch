@@ -107,25 +107,55 @@ if sys.version_info < (3, 11, 0):
 
 
 if __name__ == "__main__":
+
+    def main() -> int:
+        try:
+            import tkinter.messagebox
+        except (ModuleNotFoundError, ImportError):
+            pass
+        else:
+            try:
+                root: tkinter.Tk = tkinter.Tk()
+            except tkinter.TclError:
+                pass
+            else:
+                root.withdraw()
+                tkinter.messagebox.showerror(
+                    title="PyCatSearch Error",
+                    message="Failed to load PyCatSearch GUI.",
+                )
+                root.destroy()
+        return 1
+
     try:
         from pycatsearch import main_gui as main
-    except ImportError:
+    except (ModuleNotFoundError, ImportError):
         try:
             from src.pycatsearch import main_gui as main
-        except ImportError:
+        except (ModuleNotFoundError, ImportError):
             __author__ = "StSav012"
             __original_name__ = "pycatsearch"
 
             try:
                 from updater import update_with_pip
-
+            except (ModuleNotFoundError, ImportError):
+                pass
+            else:
                 update_with_pip(__original_name__)
 
-                from pycatsearch import main_gui as main
-            except ImportError:
-                from updater import update_from_github, update_with_git, update_with_pip
+                try:
+                    from pycatsearch import main_gui as main
+                except (ModuleNotFoundError, ImportError):
+                    try:
+                        from updater import update_from_github, update_with_git
+                    except (ModuleNotFoundError, ImportError):
+                        pass
+                    else:
+                        update_with_git() or update_from_github(__author__, __original_name__)
 
-                update_with_git() or update_from_github(__author__, __original_name__)
+                        try:
+                            from src.pycatsearch import main_gui as main
+                        except (ModuleNotFoundError, ImportError):
+                            pass
 
-                from src.pycatsearch import main_gui as main
     exit(main())
