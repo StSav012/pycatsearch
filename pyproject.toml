@@ -57,9 +57,6 @@ local_scheme = 'no-local-version'
 version_scheme = 'only-version'
 write_to = 'src/pycatsearch/_version.py'
 
-[tool.setuptools.dynamic]
-version = {attr = 'pycatsearch._version.__version__'}
-
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["test"]
