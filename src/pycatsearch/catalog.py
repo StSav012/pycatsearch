@@ -383,7 +383,11 @@ class Catalog:
                                 frequency_values = [line[FREQUENCY] for line in json_entry_data[LINES]]
                                 self._data.append(
                                     new_catalog=[json_entry_data],
-                                    frequency_limits=((min(frequency_values), max(frequency_values)),),
+                                    frequency_limits=(
+                                        ((min(frequency_values), max(frequency_values)),)
+                                        if frequency_values
+                                        else ((math.nan, math.nan),)
+                                    ),
                                 )
                             except (LookupError, TypeError, ValueError):
                                 print(f"{filename} is corrupted", file=sys.stderr)
