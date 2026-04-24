@@ -80,8 +80,15 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
         lines: "list[str]" = f.read_text(encoding="utf-8").splitlines()
         if not any(line.startswith("from __future__ import annotations") for line in lines):
             lines.insert(0, "from __future__ import annotations")
-            new_text: str = "\n".join(lines)
-            new_text = new_text.replace("ParamSpec", "TypeVar")
+            lines.insert(1, "from typing import Dict, List, Set, Tuple, TypeVar")
+            new_text: str = (
+                "\n".join(lines)
+                .replace("ParamSpec", "TypeVar")
+                .replace("dict[", "Dict[")
+                .replace("list[", "List[")
+                .replace("set[", "Set[")
+                .replace("tuple[", "Tuple[")
+            )
             parts: "tuple[str, ...]" = f.relative_to(my_parent).parts
             p: "dict[str, str | dict]" = py38_modules
             for part in parts[:-1]:
