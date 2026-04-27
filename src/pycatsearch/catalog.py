@@ -461,11 +461,25 @@ class Catalog:
 
     @property
     def min_frequency(self) -> float:
-        return min(min(f) for f in self._data.frequency_limits) if self._data.frequency_limits else 0.0
+        return min(
+            (
+                min(_f for _f in f if not math.isnan(_f))
+                for f in self._data.frequency_limits
+                if not all(math.isnan(_f) for _f in f)
+            ),
+            default=0.0,
+        )
 
     @property
     def max_frequency(self) -> float:
-        return max(max(f) for f in self._data.frequency_limits) if self._data.frequency_limits else math.inf
+        return max(
+            (
+                max(_f for _f in f if not math.isnan(_f))
+                for f in self._data.frequency_limits
+                if not all(math.isnan(_f) for _f in f)
+            ),
+            default=math.inf,
+        )
 
     def filter(
         self,
