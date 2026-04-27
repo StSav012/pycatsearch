@@ -11,7 +11,7 @@ from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from string import digits
-from typing import BinaryIO, Callable, Collection, Iterable, Iterator, Mapping, NamedTuple, TextIO, cast
+from typing import BinaryIO, Callable, Collection, IO, Iterable, Iterator, Mapping, NamedTuple, TextIO, cast
 
 from .catalog_entry import CatalogEntry
 
@@ -97,7 +97,7 @@ class CatalogData:
     def append(
         self,
         new_catalog: CatalogEntryType | CatalogJSONType | OldCatalogJSONType,
-        frequency_limits: Collection[tuple[float, float] | list[float]],
+        frequency_limits: Collection[tuple[float, float] | list[float] | Collection[tuple[float, float]]],
     ) -> None:
         if (
             isinstance(frequency_limits, (list, tuple))
@@ -303,7 +303,7 @@ class Catalog:
                         self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
 
         def load_archive() -> None:
-            f_in: BinaryIO | None
+            f_in: IO[bytes] | None
             content: bytes
             tar_in: tarfile.TarFile
             with opener.open("r") as tar_in:
@@ -527,7 +527,7 @@ class Catalog:
 
         st: int
         selected_entries: CatalogType = dict()
-        entry: CatalogEntryType
+        entry: CatalogEntryType | None
         filtered_entry: CatalogEntryType
         if any(
             (
@@ -552,8 +552,8 @@ class Catalog:
             any_name_or_formula_lowercase: str = any_name_or_formula.casefold()
             anything_lowercase: str = anything.casefold()
             for st in self._data.catalog if not species_tag else [species_tag]:
-                entry = self._data.catalog.get(st, dict())
-                if not entry:
+                entry = self._data.catalog.get(st, None)
+                if entry is None:
                     continue
                 if all(
                     (
@@ -615,8 +615,8 @@ class Catalog:
                         selected_entries[st] = filtered_entry
         else:
             for st in self._data.catalog:
-                entry = self.catalog.get(st, dict())
-                if not entry:
+                entry = self.catalog.get(st, None)
+                if entry is None:
                     continue
                 filtered_entry = filter_by_frequency_and_intensity(
                     entry,
@@ -661,11 +661,11 @@ class Catalog:
 
         species_tag: int
         selected_entries: CatalogType = dict()
-        entry: CatalogEntryType
+        entry: CatalogEntryType | None
         filtered_entry: CatalogEntryType
         for species_tag in species_tags if species_tags is not None else self._data.catalog:
-            entry = self.catalog.get(species_tag, dict())
-            if not entry:
+            entry = self.catalog.get(species_tag, None)
+            if entry is None:
                 continue
             filtered_entry = filter_by_frequency_and_intensity(
                 entry,
