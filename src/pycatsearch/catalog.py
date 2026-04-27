@@ -457,7 +457,7 @@ class Catalog:
 
     @property
     def frequency_limits(self) -> tuple[tuple[float, float], ...]:
-        return self._data.frequency_limits if self._data.catalog else (0.0, math.inf)
+        return self._data.frequency_limits if self._data.catalog else ((0.0, math.inf),)
 
     @property
     def min_frequency(self) -> float:
