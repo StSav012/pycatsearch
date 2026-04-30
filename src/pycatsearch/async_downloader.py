@@ -82,7 +82,7 @@ class Downloader(Thread):
         self._clear_to_run.set()
 
         async def async_get_catalog() -> CatalogType:
-            semaphores: dict[str, asyncio.Semaphore] = defaultdict(lambda: asyncio.Semaphore(4))
+            semaphores: dict[str | None, asyncio.Semaphore] = defaultdict(lambda: asyncio.Semaphore(4))
 
             session: aiohttp.ClientSession
             async with aiohttp.ClientSession(
@@ -91,7 +91,7 @@ class Downloader(Thread):
             ) as session:
 
                 async def get(url: str, headers: Mapping[str, str] | None = None) -> bytes:
-                    ssl: bool | None = None
+                    ssl: bool = True
                     response: aiohttp.ClientResponse
                     while self._clear_to_run.is_set():
                         async with semaphores[urlparse(url).hostname]:

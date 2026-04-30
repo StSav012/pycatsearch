@@ -244,7 +244,7 @@ class Downloader(Thread):
         skipped_count: int = 0
         if self._state_queue is not None:
             self._state_queue.put((len(catalog), species_count - len(catalog) - skipped_count))
-        catalog_entry: CatalogEntryType
+        catalog_entry: CatalogEntryType | None
         _e: dict[str, int | str]
         for _e in species:
             catalog_entry = get_substance_catalog(_e)

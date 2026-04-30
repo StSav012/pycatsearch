@@ -19,7 +19,7 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
     from types import CodeType, ModuleType
 
     class StringImporter(MetaPathFinder):
-        class Loader(Loader):
+        class StringLoader(Loader):
             def __init__(self, modules: "dict[str, str | dict]") -> None:
                 self._modules: "dict[str, str | dict]" = modules
 
@@ -48,7 +48,7 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
 
         def __init__(self, **modules: "str | dict") -> None:
             self._modules: "dict[str, str | dict]" = modules
-            self._loader = StringImporter.Loader(modules)
+            self._loader = StringImporter.StringLoader(modules)
 
         def find_spec(
             self,
@@ -57,8 +57,9 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
             target: "ModuleType | None" = None,
         ) -> "ModuleSpec | None":
             if fullname in self._modules:
-                spec: ModuleSpec = spec_from_file_location(fullname, loader=self._loader)
-                spec.origin = "<string>"
+                spec: ModuleSpec | None = spec_from_file_location(fullname, loader=self._loader)
+                if spec is not None:
+                    spec.origin = "<string>"
                 return spec
             return None
 
@@ -94,6 +95,9 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
             for part in parts[:-1]:
                 if part not in p:
                     p[part] = {}
+                elif not isinstance(p[part], dict):
+                    # it's almost impossible to enter the branch due to Python's import strategy
+                    continue
                 p = p[part]
             p[parts[-1][: -len(me.suffix)]] = new_text
 
