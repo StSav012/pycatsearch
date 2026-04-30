@@ -351,6 +351,12 @@ def download() -> None:
         description="Download JPL and CDMS spectroscopy catalogs for offline search.\n"
         "Find more at https://github.com/StSav012/pycatsearch.",
     )
+    try:
+        from ._version import __version__
+    except ImportError:
+        __version__ = ""
+    else:
+        ap.add_argument("-V", "--version", action="version", version=f"%(prog)s {__version__}")
     ap.add_argument("catalog", type=Path, help="the catalog location to save into (required)")
     ap.add_argument("-fmin", "--min-frequency", type=float, help="the lower frequency [MHz] to take", default=-inf)
     ap.add_argument("-fmax", "--max-frequency", type=float, help="the upper frequency [MHz] to take", default=+inf)

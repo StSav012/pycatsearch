@@ -134,6 +134,8 @@ def _cli_argument_parser() -> ArgumentParser:
         description="Yet another implementation of JPL and CDMS spectroscopy catalogs offline search.\n"
         f"Find more at https://github.com/{__author__}/{__original_name__}.",
     )
+    if __version__:
+        ap.add_argument("-V", "--version", action="version", version=f"%(prog)s {__version__}")
     ap.add_argument("catalog", type=Path, help="the catalog location to load", nargs=ZERO_OR_MORE)
     ap.add_argument("-fmin", "--min-frequency", type=float, help="the lower frequency [MHz] to take")
     ap.add_argument("-fmax", "--max-frequency", type=float, help="the upper frequency [MHz] to take")
