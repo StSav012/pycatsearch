@@ -69,6 +69,7 @@ __all__ = [
     "CatalogJSONEntryType",
     "CatalogJSONType",
     "OldCatalogJSONType",
+    "save_catalog_to_file",
 ]
 
 M_LOG10E: Final[float] = log10(_e)
