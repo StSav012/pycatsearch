@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from http import HTTPMethod, HTTPStatus
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from pathlib import Path
-from typing import Any, Literal, Mapping
+from typing import Any, Literal, Mapping, TypedDict
 from urllib.parse import ParseResult, urlencode, urlparse
 
 SPECIES_TAG: Literal["speciestag"] = "speciestag"
@@ -79,7 +79,34 @@ def main() -> None:
         print("got no data, exiting")
         return
 
-    data: dict[str, int | str | list[dict[str, None | int | str]]] = json.loads(species_list_data)
+    class CreditType(TypedDict, total=False):
+        copyright: str
+        url: str
+        references: list[str]
+
+    class SpeciesType(TypedDict, total=False):
+        id: int
+        molecule: int
+        structuralformula: str
+        stoichiometricformula: str
+        moleculesymbol: str
+        speciestag: int
+        name: str
+        trivialname: str
+        isotopolog: str
+        state: str
+        state_html: str
+        inchikey: str
+        contributor: str
+        version: str
+        dateofentry: str
+
+    class DataType(TypedDict, total=False):
+        credit: CreditType
+        species: list[SpeciesType]
+        timestamp: str
+
+    data: DataType = json.loads(species_list_data)
 
     data = {
         "credit": {
@@ -97,17 +124,17 @@ def main() -> None:
 
     file: Path = Path("species.json")
 
-    prev_data: dict[str, int | str | list[dict[str, None | int | str]]] = {}
+    prev_data: DataType = {}
     if file.exists():
         prev_data = json.loads(file.read_text(encoding="utf-8"))
         file.rename(file.with_stem("~" + file.stem))
     species_list_text: str = json.dumps(data, indent=2)
     file.write_text(species_list_text, encoding="utf-8")
 
-    print("saved", len(data.get("species", 0)), "species")
+    print("saved", len(data.get("species", [])), "species")
     if prev_data:
-        current_tags: set[int] = {s[SPECIES_TAG] for s in data.get("species")}
-        prev_tags: set[int] = {s[SPECIES_TAG] for s in prev_data.get("species")}
+        current_tags: set[int] = {s[SPECIES_TAG] for s in data.get("species", [])}
+        prev_tags: set[int] = {s[SPECIES_TAG] for s in prev_data.get("species", [])}
         print("removed tags:", prev_tags - current_tags)
         print("new tags:", current_tags - prev_tags)
 

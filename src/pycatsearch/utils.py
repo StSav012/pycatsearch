@@ -252,7 +252,7 @@ def within(x: float, limits: tuple[float, float] | tuple[tuple[float, float], ..
         raise TypeError("Invalid limits type")
 
 
-_AnyType = TypeVar("_AnyType")
+_AnyType = TypeVar("_AnyType", contravariant=True)
 
 
 class SupportsLessAndEqual(Protocol[_AnyType]):
