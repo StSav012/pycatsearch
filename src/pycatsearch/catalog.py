@@ -289,9 +289,12 @@ class Catalog:
                     print(f"{filename} doesn't contain UTF-8 data or is corrupted", file=sys.stderr)
                 else:
                     try:
+                        frequency_limits = json_catalog_data.get(FREQUENCY, ((0.0, math.inf),))
+                        if all(not isinstance(fl, Iterable) for fl in frequency_limits):
+                            frequency_limits = (frequency_limits,)
                         self._data.append(
                             new_catalog=json_catalog_data[CATALOG],
-                            frequency_limits=json_catalog_data.get(FREQUENCY, ((0.0, math.inf),)),
+                            frequency_limits=frequency_limits,
                         )
                         build_datetime: datetime | None = None
                         if BUILD_TIME in json_catalog_data:
