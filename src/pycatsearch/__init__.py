@@ -12,39 +12,53 @@ except ImportError:
     __version__ = ""
 
 if sys.version_info < (3, 10, 0) and __file__ != "<string>":
+    from collections.abc import Sequence
     from importlib import import_module
-    from importlib.abc import Loader, MetaPathFinder
+    from importlib.abc import ExecutionLoader, MetaPathFinder
     from importlib.machinery import ModuleSpec
     from importlib.util import spec_from_file_location
-    from types import CodeType, ModuleType
+    from types import ModuleType
 
     class StringImporter(MetaPathFinder):
-        class StringLoader(Loader):
+        class StringLoader(ExecutionLoader):
             def __init__(self, modules: "dict[str, str | dict]") -> None:
                 self._modules: "dict[str, str | dict]" = modules
 
-            def is_package(self, module_name: str) -> bool:
-                return isinstance(self._modules[module_name], dict)
-
-            def get_code(self, module_name: str) -> CodeType:
-                return compile(self._modules[module_name], filename="<string>", mode="exec")
+            def is_package(self, fullname: str) -> bool:
+                try:
+                    return isinstance(self._modules[fullname], dict)
+                except LookupError:
+                    return super().is_package(fullname)
 
             def create_module(self, spec: ModuleSpec) -> "ModuleType | None":
                 return ModuleType(spec.name)
 
-            def exec_module(self, module: ModuleType) -> None:
-                if module.__name__ not in self._modules:
-                    raise ImportError(module.__name__)
+            def get_source(self, fullname: str) -> "str | None":
+                if isinstance((source := self._modules.get(fullname)), str):
+                    return source
+                return None
 
-                sys.modules[module.__name__] = module
-                if not self.is_package(module.__name__):
-                    exec(self._modules[module.__name__], module.__dict__)
+            def exec_module(self, module: ModuleType) -> None:
+                module_name: str = module.__name__
+                if module_name not in self._modules:
+                    super().exec_module(module)
+                    return
+
+                sys.modules[module_name] = module
+                substituted_module: "str | dict" = self._modules[module_name]
+                if not isinstance(substituted_module, dict):
+                    exec(substituted_module, module.__dict__)
                 else:
-                    for sub_module in self._modules[module.__name__]:
-                        self._modules[".".join((module.__name__, sub_module))] = self._modules[module.__name__][
-                            sub_module
-                        ]
-                    exec(self._modules[module.__name__].get("__init__", ""), module.__dict__)
+                    for sub_module in substituted_module:
+                        self._modules[".".join((module_name, sub_module))] = substituted_module[sub_module]
+                    exec(substituted_module.get("__init__", ""), module.__dict__)
+
+            def get_filename(self, fullname: str) -> str:
+                if fullname == __original_name__:
+                    return str(me)
+                if fullname.startswith(__original_name__ + "."):
+                    return str(my_parent / Path(*fullname.split(".")[1:]))
+                raise ImportError(fullname)
 
         def __init__(self, **modules: "str | dict") -> None:
             self._modules: "dict[str, str | dict]" = modules
@@ -53,11 +67,11 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
         def find_spec(
             self,
             fullname: str,
-            path: "str | None",
+            path: "Sequence[str] | None",
             target: "ModuleType | None" = None,
         ) -> "ModuleSpec | None":
             if fullname in self._modules:
-                spec: ModuleSpec | None = spec_from_file_location(fullname, loader=self._loader)
+                spec: "ModuleSpec | None" = spec_from_file_location(fullname, loader=self._loader)
                 if spec is not None:
                     spec.origin = "<string>"
                 return spec
@@ -65,6 +79,9 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
 
     def list_files(path: Path, *, suffix: "str | None" = None) -> "list[Path]":
         files: "list[Path]" = []
+        if path.name.startswith("."):
+            # ignore hidden files
+            return []
         if path.is_dir():
             for file in path.iterdir():
                 files.extend(list_files(file, suffix=suffix))
@@ -84,7 +101,6 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
             lines.insert(1, "from typing import Dict, List, Set, Tuple, TypeVar")
             new_text: str = (
                 "\n".join(lines)
-                .replace("ParamSpec", "TypeVar")
                 .replace("dict[", "Dict[")
                 .replace("list[", "List[")
                 .replace("set[", "Set[")
@@ -95,10 +111,8 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
             for part in parts[:-1]:
                 if part not in p:
                     p[part] = {}
-                elif not isinstance(p[part], dict):
-                    # it's almost impossible to enter the branch due to Python's import strategy
-                    continue
-                p = p[part]
+                elif isinstance((p_part := p[part]), dict):
+                    p = p_part
             p[parts[-1][: -len(me.suffix)]] = new_text
 
     if py38_modules:
