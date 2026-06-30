@@ -97,14 +97,20 @@ class CatalogData:
     def append(
         self,
         new_catalog: CatalogEntryType | CatalogJSONType | OldCatalogJSONType,
-        frequency_limits: Collection[tuple[float, float] | list[float] | Collection[tuple[float, float]]],
+        frequency_limits: Collection[tuple[float | None, float | None] | list[float | None]]
+        | tuple[float | None, float | None]
+        | list[float | None],
     ) -> None:
         if (
             isinstance(frequency_limits, (list, tuple))
             and len(frequency_limits) == 2
-            and all(isinstance(fl, float) or fl is None for fl in frequency_limits)
+            and all(not isinstance(fl, Iterable) for fl in frequency_limits)
         ):
             frequency_limits = (frequency_limits,)
+        frequency_limits = [
+            ((fl[0] if fl[0] is not None else -math.inf), (fl[1] if fl[1] is not None else math.inf))
+            for fl in frequency_limits
+        ]
         catalog: CatalogType
         if isinstance(new_catalog, list):
             catalog = dict((entry[SPECIES_TAG], CatalogEntryType(**entry)) for entry in new_catalog)
@@ -136,8 +142,8 @@ class CatalogData:
                     skip -= 1
                     continue
                 current_range: tuple[float, float] = (
-                    float(args[i][0]) if args[i][0] is not None else -math.inf,
-                    float(args[i][-1]) if args[i][-1] is not None else math.inf,
+                    float(args[i][0]),
+                    float(args[i][-1]),
                 )
                 current_min: float = min(current_range)
                 current_max: float = max(current_range)
@@ -290,8 +296,6 @@ class Catalog:
                 else:
                     try:
                         frequency_limits = json_catalog_data.get(FREQUENCY, ((0.0, math.inf),))
-                        if all(not isinstance(fl, Iterable) for fl in frequency_limits):
-                            frequency_limits = (frequency_limits,)
                         self._data.append(
                             new_catalog=json_catalog_data[CATALOG],
                             frequency_limits=frequency_limits,
