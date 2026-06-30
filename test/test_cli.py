@@ -21,11 +21,21 @@ def _third_party_modules() -> list[str]:
     return third_party_modules
 
 
+def _cleanup_qtapp() -> None:
+    import sys
+
+    for m in sys.modules:
+        if m.partition(".")[2] == "QtWidgets":
+            instance = sys.modules[m].QApplication.instance()
+            if instance is not None:
+                instance.shutdown()
+
+
 def test_cli():
     import sys
     from importlib.util import find_spec
 
-    from pycatsearch import main
+    from src.pycatsearch import main
 
     third_party_modules: list[str]
 
@@ -33,15 +43,20 @@ def test_cli():
     assert third_party_modules == [], third_party_modules
 
     assert main() != 0
+    _cleanup_qtapp()
+    third_party_modules_after_gui: list[str] = _third_party_modules()
 
     sys.argv.append("catalog.json.gz")
     assert main() != 0
+    _cleanup_qtapp()
 
     sys.argv.extend("--min-frequency 118749 --max-frequency 118751 -n oxygen".split())
     assert main() == 0
 
     third_party_modules = _third_party_modules()
-    assert third_party_modules == ["orjson"] * (find_spec("orjson") is not None), third_party_modules
+    assert frozenset(third_party_modules) == frozenset(
+        third_party_modules_after_gui + ["orjson"] * (find_spec("orjson") is not None)
+    ), third_party_modules
 
 
 if __name__ == "__main__":

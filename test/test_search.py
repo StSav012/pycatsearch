@@ -4,7 +4,7 @@
 def test_search():
     from tempfile import NamedTemporaryFile
 
-    from pycatsearch.catalog import Catalog
+    from src.pycatsearch.catalog import Catalog
 
     with NamedTemporaryFile("wb", suffix=".json") as f:
         f.write(
@@ -63,6 +63,6 @@ if __name__ == "__main__":
     import sys
     from os import path
 
-    sys.path = list(set(sys.path) | {path.abspath(path.join(__file__, path.pardir, path.pardir))})
+    sys.path = list(set(sys.path) | {path.abspath(path.join(__file__, path.pardir))})
 
     test_search()

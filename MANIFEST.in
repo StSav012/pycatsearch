@@ -3,6 +3,6 @@ global-exclude .*
 exclude *.sh
 exclude *.py
 exclude requirements.txt
-prune src/test/
+prune test/
 prune .*/
 include src/pycatsearch/species.json.gz
