@@ -11,7 +11,7 @@ from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from string import digits
-from typing import BinaryIO, Callable, Collection, IO, Iterable, Iterator, Mapping, NamedTuple, TextIO, cast
+from typing import IO, BinaryIO, Callable, Collection, Iterable, Iterator, Mapping, NamedTuple, TextIO, cast
 
 from .catalog_entry import CatalogEntry
 
