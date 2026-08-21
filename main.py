@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
+# ruff: noqa: UP037
 import sys
 from pathlib import Path
+
+__author__ = "StSav012"
+__original_name__ = "pycatsearch"
 
 if sys.version_info < (3, 10, 0) and __file__ != "<string>":
     from collections.abc import Sequence
@@ -40,7 +44,7 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
                     exec(substituted_module, module.__dict__)
                 else:
                     for sub_module in substituted_module:
-                        self._modules[".".join((module_name, sub_module))] = substituted_module[sub_module]
+                        self._modules[f"{module_name}.{sub_module}"] = substituted_module[sub_module]
                     exec(substituted_module.get("__init__", ""), module.__dict__)
 
             def get_filename(self, fullname: str) -> str:
@@ -153,9 +157,6 @@ if __name__ == "__main__":
         try:
             from src.pycatsearch import main_gui as main
         except (ModuleNotFoundError, ImportError):
-            __author__ = "StSav012"
-            __original_name__ = "pycatsearch"
-
             try:
                 from updater import update_with_pip
             except (ModuleNotFoundError, ImportError):

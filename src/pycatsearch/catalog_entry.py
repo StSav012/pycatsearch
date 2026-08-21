@@ -6,7 +6,7 @@ __all__ = ["CatalogEntry"]
 
 
 class CatalogEntry:
-    __slots__ = ["FREQ", "INT", "DR", "ELO"]
+    __slots__ = ["DR", "ELO", "FREQ", "INT"]
 
     FREQ: float  # frequency, MHz, mandatory
     INT: float  # intensity, log10(nm²×MHz), mandatory

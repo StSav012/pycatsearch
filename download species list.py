@@ -16,16 +16,17 @@ import json
 import logging
 import random
 import time
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from http import HTTPMethod, HTTPStatus
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from pathlib import Path
-from typing import Any, Literal, Mapping, TypedDict
+from typing import Any, Literal, TypedDict
 from urllib.parse import ParseResult, urlencode, urlparse
 
 SPECIES_TAG: Literal["speciestag"] = "speciestag"
 
-logger: logging.Logger = logging.getLogger(__file__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def session_for_url(scheme: str, location: str) -> HTTPConnection | HTTPSConnection:
@@ -47,7 +48,7 @@ def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = Non
                 method=HTTPMethod.POST,
                 url=parse_result.path,
                 body=urlencode(data),
-                headers=(headers or dict()),
+                headers=(headers or {}),
             )
             response = session.getresponse()
         except ConnectionResetError:

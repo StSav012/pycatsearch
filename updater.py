@@ -3,7 +3,7 @@ import subprocess
 import sys
 import urllib.request
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, timezone
 from http import HTTPStatus
 from http.client import HTTPResponse
 from pathlib import Path
@@ -32,9 +32,9 @@ def get_github_date(user: str, repo_name: str, branch: str = "master") -> dateti
     logger.debug(f"Requesting {url}")
     r: HTTPResponse
     with urllib.request.urlopen(url, timeout=1) as r:
-        logger.debug(f"Response code: {r.getcode()}")
-        if r.getcode() != HTTPStatus.OK:
-            logger.warning(f"Response code is not OK: {r.getcode()}")
+        logger.debug(f"Response code: {r.status}")
+        if r.status != HTTPStatus.OK:
+            logger.warning(f"Response code is not OK: {r.status}")
             return None
         content: bytes = r.read()
     if not content:
@@ -52,11 +52,11 @@ def get_github_date(user: str, repo_name: str, branch: str = "master") -> dateti
     if not isinstance(d, dict) or not d:
         logger.warning(f"Malformed JSON received: {d}")
         return None
-    commit: dict[str, int | str | dict[str, bool | str] | dict[str, str]] = d.get("commit", dict())
+    commit: dict[str, int | str | dict[str, bool | str] | dict[str, str]] = d.get("commit", {})
     if not isinstance(commit, dict):
         logger.warning(f"Malformed commit info received: {commit}")
         return None
-    committer: dict[str, str] = commit.get("committer", dict())
+    committer: dict[str, str] = commit.get("committer", {})
     if not isinstance(committer, dict) or "date" not in committer:
         logger.warning(f"Malformed commit committer info received: {committer}")
         return None
@@ -76,9 +76,9 @@ def upgrade_files(code_directory: Path, user: str, repo_name: str, branch: str =
     logger.debug(f"Requesting {url}")
     r: HTTPResponse
     with urllib.request.urlopen(url, timeout=1) as r:
-        logger.debug(f"Response code: {r.getcode()}")
-        if r.getcode() != HTTPStatus.OK:
-            logger.warning(f"Response code is not OK: {r.getcode()}")
+        logger.debug(f"Response code: {r.status}")
+        if r.status != HTTPStatus.OK:
+            logger.warning(f"Response code is not OK: {r.status}")
             return False
         content: bytes = r.read()
     if not content:
@@ -103,7 +103,7 @@ def update_with_git() -> bool:
     with suppress(Exception):
         code_directory: Path = Path(__file__).parent
         if (code_directory / ".git").exists():
-            return subprocess.run(args=["git", "pull"], capture_output=True).returncode == 0
+            return subprocess.run(args=["git", "pull"], capture_output=True, check=False).returncode == 0
     return False
 
 
@@ -116,7 +116,10 @@ def update_from_github(user: str, repo_name: str, branch: str = "master") -> boo
         if github_date is None:
             logger.warning("Failed to fetch the last commit date from GitHub")
             return False
-        if version_path.exists() and datetime.fromtimestamp(version_path.stat().st_mtime) >= github_date:
+        if (
+            version_path.exists()
+            and datetime.fromtimestamp(version_path.stat().st_mtime, tz=timezone.utc) >= github_date
+        ):
             logger.info("Current files are up-to-date")
             return False
 
@@ -144,7 +147,7 @@ def parse_table(table_text: str) -> list[dict[str, str]]:
         offset += col + 1
     data: list[dict[str, str]] = []
     for line_no in range(2, len(text_lines)):
-        data.append(dict())
+        data.append({})
         offset = 0
         for col, title in zip(cols, titles):
             data[-1][title] = text_lines[line_no][offset : (offset + col)].strip()
@@ -154,27 +157,25 @@ def parse_table(table_text: str) -> list[dict[str, str]]:
 
 def update_package(package_name: str) -> tuple[str, str, int | None]:
     p: subprocess.CompletedProcess = subprocess.run(
-        args=[sys.executable, "-m", "pip", "install", "-U", package_name], capture_output=True, text=True
+        args=[sys.executable, "-m", "pip", "install", "-U", package_name], capture_output=True, text=True, check=False
     )
     return p.stdout, p.stderr, p.returncode
 
 
 def update_packages() -> list[str]:
     priority_packages: list[str] = ["pip", "setuptools", "wheel"]
-    out: str
-    err: str
-    ret: int | None
     p: subprocess.CompletedProcess = subprocess.run(
-        args=[sys.executable, "-m", "pip", "list", "--outdated"], capture_output=True, text=True
+        args=[sys.executable, "-m", "pip", "list", "--outdated"], capture_output=True, text=True, check=False
     )
     if p.returncode:
         return []
     outdated_packages: list[str] = [item["Package"] for item in parse_table(p.stdout)]
     updated_packages: list[str] = []
-    try:
+    with suppress(Exception):
+        ret: int | None
         for pp in priority_packages:
             if pp in outdated_packages:
-                out, err, ret = update_package(pp)
+                _out, _err, ret = update_package(pp)
                 if ret:
                     return updated_packages
                 outdated_packages.remove(pp)
@@ -182,14 +183,13 @@ def update_packages() -> list[str]:
         for op in outdated_packages:
             update_package(op)
             updated_packages.append(op)
-    finally:
-        return updated_packages
+    return updated_packages
 
 
 def update_with_pip(package_name: str) -> bool:
     with suppress(Exception):
         if package_name not in update_packages():
-            out, err, ret = update_package(package_name)
+            _out, _err, ret = update_package(package_name)
             return not ret
     return False
 

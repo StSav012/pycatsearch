@@ -3,6 +3,7 @@ import copy
 import logging
 import random
 from collections import defaultdict
+from collections.abc import Mapping
 from contextlib import suppress
 from math import inf
 from pathlib import Path
@@ -10,7 +11,7 @@ from platform import system
 from queue import Empty, Queue
 from ssl import SSLCertVerificationError
 from threading import Event, Thread
-from typing import Any, Final, Mapping, cast
+from typing import Any, Final, cast
 from urllib.error import HTTPError
 from urllib.parse import urlencode, urlparse
 
@@ -33,7 +34,7 @@ from .utils import (
     within,
 )
 
-__all__ = ["Downloader", "get_catalog", "save_catalog", "download"]
+__all__ = ["Downloader", "download", "get_catalog", "save_catalog"]
 
 logger: logging.Logger = logging.getLogger("async_downloader")
 
@@ -49,7 +50,7 @@ class Downloader(Thread):
         super().__init__()
         self._state_queue: Queue[tuple[int, int]] | None = state_queue
         self._frequency_limits: tuple[float, float] = frequency_limits
-        self._catalog: CatalogType = dict()
+        self._catalog: CatalogType = {}
         self._existing_catalog: Catalog | None = existing_catalog
 
         self._clear_to_run: Event = Event()
@@ -118,7 +119,7 @@ class Downloader(Thread):
                                 logger.error(f"{url}: {ex!s}", exc_info=ex)
                             with suppress(asyncio.exceptions.CancelledError):
                                 await asyncio.sleep(random.random() * 20)
-                    return bytes()
+                    return b""
 
                 async def post(url: str, data: dict[str, Any], headers: Mapping[str, str] | None = None) -> bytes:
                     async with session.post(url, data=urlencode(data).encode(), headers=headers) as response:
@@ -129,13 +130,12 @@ class Downloader(Thread):
 
                 async def get_species() -> list[dict[str, int | str]]:
                     def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
-                        return dict((key, value) for key, value in entry.items() if value not in (None, "", "None"))
+                        return {key: value for key, value in entry.items() if value not in (None, "", "None")}
 
                     def trim_strings(entry: dict[str, None | int | str]) -> dict[str, None | int | str]:
-                        key: str
-                        for key in entry:
-                            if isinstance(entry[key], str):
-                                entry[key] = cast(str, entry[key]).strip()
+                        for key, value in entry.items():
+                            if isinstance(value, str):
+                                entry[key] = value.strip()
                         return entry
 
                     def ensure_unique_species_tags(entries: list[dict[str, int | str]]) -> list[dict[str, int | str]]:
@@ -237,7 +237,7 @@ class Downloader(Thread):
                     )
 
                 species: list[dict[str, int | str]] = await get_species()
-                catalog: CatalogType = dict()
+                catalog: CatalogType = {}
                 species_count: Final[int] = len(species)
                 skipped_count: int = 0
                 if self._state_queue is not None:

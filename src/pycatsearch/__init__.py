@@ -11,7 +11,7 @@ try:
 except ImportError:
     __version__ = ""
 
-if sys.version_info < (3, 10, 0) and __file__ != "<string>":
+if sys.version_info < (3, 10, 0) and __file__ != "<string>":  # noqa: UP036
     from collections.abc import Sequence
     from importlib import import_module
     from importlib.abc import ExecutionLoader, MetaPathFinder
@@ -22,7 +22,7 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
     class StringImporter(MetaPathFinder):
         class StringLoader(ExecutionLoader):
             def __init__(self, modules: "dict[str, str | dict]") -> None:
-                self._modules: "dict[str, str | dict]" = modules
+                self._modules: dict[str, str | dict] = modules
 
             def is_package(self, fullname: str) -> bool:
                 try:
@@ -45,12 +45,12 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
                     return
 
                 sys.modules[module_name] = module
-                substituted_module: "str | dict" = self._modules[module_name]
+                substituted_module: str | dict = self._modules[module_name]
                 if not isinstance(substituted_module, dict):
                     exec(substituted_module, module.__dict__)
                 else:
                     for sub_module in substituted_module:
-                        self._modules[".".join((module_name, sub_module))] = substituted_module[sub_module]
+                        self._modules[f"{module_name}.{sub_module}"] = substituted_module[sub_module]
                     exec(substituted_module.get("__init__", ""), module.__dict__)
 
             def get_filename(self, fullname: str) -> str:
@@ -61,7 +61,7 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
                 raise ImportError(fullname)
 
         def __init__(self, **modules: "str | dict") -> None:
-            self._modules: "dict[str, str | dict]" = modules
+            self._modules: dict[str, str | dict] = modules
             self._loader = StringImporter.StringLoader(modules)
 
         def find_spec(
@@ -71,14 +71,14 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
             target: "ModuleType | None" = None,
         ) -> "ModuleSpec | None":
             if fullname in self._modules:
-                spec: "ModuleSpec | None" = spec_from_file_location(fullname, loader=self._loader)
+                spec: ModuleSpec | None = spec_from_file_location(fullname, loader=self._loader)
                 if spec is not None:
                     spec.origin = "<string>"
                 return spec
             return None
 
     def list_files(path: Path, *, suffix: "str | None" = None) -> "list[Path]":
-        files: "list[Path]" = []
+        files: list[Path] = []
         if path.name.startswith("."):
             # ignore hidden files
             return []
@@ -117,9 +117,9 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":
 
     if py38_modules:
         for m in list(sys.modules):
-            if m.partition(".")[0] == __original_name__:
-                if m in sys.modules:  # check again in case the module's gone midway
-                    sys.modules.pop(m)
+            # check again in case the module's gone midway
+            if m.partition(".")[0] == __original_name__ and m in sys.modules:
+                sys.modules.pop(m)
 
         sys.meta_path.insert(0, StringImporter(**{__original_name__: py38_modules}))
         if __original_name__ not in sys.modules:
@@ -220,9 +220,9 @@ def main() -> int:
     ap: ArgumentParser = _cli_argument_parser()
     args: Namespace = ap.parse_intermixed_args()
 
-    search_args: dict[str, str | float | int] = dict(
-        (key, value) for key, value in args.__dict__.items() if key != "catalog" and value is not None
-    )
+    search_args: dict[str, str | float | int] = {
+        key: value for key, value in args.__dict__.items() if key != "catalog" and value is not None
+    }
     if any(value is not None for value in search_args.values()):
         from .catalog import Catalog
 
@@ -245,15 +245,14 @@ def _show_exception(ex: Exception) -> None:
         if ex.name is not None:
             if "from" in ex.msg.split():
                 error_message = (
-                    "Module %s lacks a part, or the latter cannot be loaded for a reason.\n"
-                    "Try to update the module." % repr(ex.name)
+                    f"Module {ex.name!r} lacks a part, or the latter cannot be loaded for a reason.\n"
+                    "Try to update the module."
                 )
             elif ex.path is None:
-                error_message = "Module %s cannot be found.\nTry to install it." % repr(ex.name)
+                error_message = f"Module {ex.name!r} cannot be found.\nTry to install it."
             else:
                 error_message = (
-                    "Module %s cannot be loaded for an unspecified reason.\n"
-                    "Try to install or reinstall it." % repr(ex.name)
+                    f"Module {ex.name!r} cannot be loaded for an unspecified reason.\nTry to install or reinstall it."
                 )
         else:
             error_message = str(ex)
@@ -371,6 +370,7 @@ def main_gui() -> int:
                 process: subprocess.CompletedProcess = subprocess.run(
                     args=args,
                     capture_output=True,
+                    check=False,
                 )
                 if process.stdout:
                     sys.stdout.write(decode(process.stdout))

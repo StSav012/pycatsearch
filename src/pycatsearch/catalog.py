@@ -5,13 +5,14 @@ import lzma
 import math
 import sys
 import tarfile
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import contextmanager, suppress
 from datetime import datetime, timezone
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from string import digits
-from typing import IO, BinaryIO, Callable, Collection, Iterable, Iterator, Mapping, NamedTuple, TextIO, cast
+from typing import IO, BinaryIO, ClassVar, NamedTuple, TextIO, cast
 
 from .catalog_entry import CatalogEntry
 
@@ -91,7 +92,7 @@ class CatalogSourceInfo(NamedTuple):
 
 class CatalogData:
     def __init__(self) -> None:
-        self.catalog: CatalogType = dict()
+        self.catalog: CatalogType = {}
         self.frequency_limits: tuple[tuple[float, float], ...] = ()
 
     def append(
@@ -113,12 +114,12 @@ class CatalogData:
         ]
         catalog: CatalogType
         if isinstance(new_catalog, list):
-            catalog = dict((entry[SPECIES_TAG], CatalogEntryType(**entry)) for entry in new_catalog)
+            catalog = {entry[SPECIES_TAG]: CatalogEntryType(**entry) for entry in new_catalog}
         elif isinstance(new_catalog, dict):
-            catalog = dict(
-                (int(species_tag_str), CatalogEntryType(**new_catalog[species_tag_str]))
+            catalog = {
+                int(species_tag_str): CatalogEntryType(**new_catalog[species_tag_str])
                 for species_tag_str in new_catalog
-            )
+            }
         elif isinstance(new_catalog, CatalogEntryType):
             catalog = {new_catalog.speciestag: new_catalog}
         else:
@@ -133,8 +134,8 @@ class CatalogData:
 
         def merge_frequency_tuples(*args: tuple[float, float] | list[float]) -> tuple[tuple[float, float], ...]:
             if not args:
-                return tuple()
-            ranges: tuple[tuple[float, float], ...] = tuple()
+                return ()
+            ranges: tuple[tuple[float, float], ...] = ()
             args = sorted((min(arg), max(arg)) for arg in args)
             skip: int = 0
             for i in range(len(args)):
@@ -170,7 +171,7 @@ class Catalog:
     DEFAULT_SUFFIX: str = ".json.gz"
 
     class Opener:
-        OPENERS_BY_SUFFIX: dict[str, Callable] = {
+        OPENERS_BY_SUFFIX: ClassVar[dict[str, Callable]] = {
             ".json": open,
             ".json.gz": gzip.open,
             ".json.bz2": bz2.open,
@@ -185,7 +186,7 @@ class Catalog:
             ".txz": tarfile.open,
         }
 
-        OPENERS_BY_SIGNATURE: dict[str, Callable] = {
+        OPENERS_BY_SIGNATURE: ClassVar[dict[bytes, Callable]] = {
             b"{": open,
             b"\x1f\x8b": gzip.open,
             b"BZh": bz2.open,
@@ -538,16 +539,16 @@ class Catalog:
         """
 
         if self.is_empty:
-            return dict()
+            return {}
 
         if min_frequency > max_frequency or min_frequency > self.max_frequency or max_frequency < self.min_frequency:
-            return dict()
+            return {}
 
         def check_str(pattern: str, *text: str) -> bool:
             return not pattern or any(pattern == t for t in text)
 
         st: int
-        selected_entries: CatalogType = dict()
+        selected_entries: CatalogType = {}
         entry: CatalogEntryType | None
         filtered_entry: CatalogEntryType
         if any(
@@ -675,13 +676,13 @@ class Catalog:
         """
 
         if self.is_empty:
-            return dict()
+            return {}
 
         if min_frequency > max_frequency or min_frequency > self.max_frequency or max_frequency < self.min_frequency:
-            return dict()
+            return {}
 
         species_tag: int
-        selected_entries: CatalogType = dict()
+        selected_entries: CatalogType = {}
         entry: CatalogEntryType | None
         filtered_entry: CatalogEntryType
         for species_tag in species_tags if species_tags is not None else self._data.catalog:
@@ -700,7 +701,7 @@ class Catalog:
                 selected_entries[species_tag] = filtered_entry
         return selected_entries
 
-    def print(self, **kwargs: None | int | float | str) -> None:
+    def print(self, **kwargs: None | float | str) -> None:
         """
         Print a table of the filtered catalog entries
 
@@ -754,11 +755,13 @@ class Catalog:
         frequency_limits: tuple[float, float] = (0.0, math.inf),
     ) -> "Catalog":
         catalog: Catalog = Catalog()
-        catalog._data.catalog = catalog_data
+        catalog._data.catalog = {int(k): v for k, v in catalog_data.items()}
         catalog._data.frequency_limits = (frequency_limits,)
         return catalog
 
-    def save(self, filename: str | PathLike[str], build_time: datetime = datetime.now(tz=timezone.utc)) -> None:
+    def save(self, filename: str | PathLike[str], build_time: datetime | None = None) -> None:
+        if build_time is None:
+            build_time = datetime.now(tz=timezone.utc)
         opener: Catalog.Opener
         try:
             opener = Catalog.Opener(filename)
@@ -777,31 +780,7 @@ class Catalog:
                 return "{" + ",".join(":".join((_repr(key), _repr(getattr(o, key)))) for key in o.__slots__) + "}"
             return repr(o)
 
-        if not opener.multiple_files:
-            f: TextIO
-            with opener.open("wt") as f:
-                f.write("{")
-                f.write(_repr(CATALOG))
-                f.write(":{")
-                is_not_first_item: bool = False
-                for species_tag in self._data.catalog:
-                    if is_not_first_item:
-                        f.write(",")
-                    else:
-                        is_not_first_item = True
-                    f.write(_repr(str(species_tag)))
-                    f.write(":")
-                    f.write(_repr(self._data.catalog[species_tag]))
-                f.write("},")
-                f.write(_repr(FREQUENCY))
-                f.write(":")
-                f.write(_repr(self._data.frequency_limits))
-                f.write(",")
-                f.write(_repr(BUILD_TIME))
-                f.write(":")
-                f.write(_repr(build_time.isoformat()))
-                f.write("}")
-        else:
+        if opener.multiple_files:
 
             def build_args(text: str | bytes, fn: str, ts: float | None = None) -> dict[str, tarfile.TarInfo | BytesIO]:
                 if isinstance(text, str):
@@ -810,7 +789,7 @@ class Catalog:
                 _ti.size = len(text)
                 if ts is not None:
                     _ti.mtime = ts
-                return dict(tarinfo=_ti, fileobj=BytesIO(text))
+                return {"tarinfo": _ti, "fileobj": BytesIO(text)}
 
             t: tarfile.TarFile
             with opener.open("w") as t:
@@ -854,3 +833,27 @@ class Catalog:
                             text=_repr(self._data.catalog[species_tag]),
                         )
                     )
+        else:
+            f: TextIO
+            with opener.open("wt") as f:
+                f.write("{")
+                f.write(_repr(CATALOG))
+                f.write(":{")
+                is_not_first_item: bool = False
+                for species_tag in self._data.catalog:
+                    if is_not_first_item:
+                        f.write(",")
+                    else:
+                        is_not_first_item = True
+                    f.write(_repr(str(species_tag)))
+                    f.write(":")
+                    f.write(_repr(self._data.catalog[species_tag]))
+                f.write("},")
+                f.write(_repr(FREQUENCY))
+                f.write(":")
+                f.write(_repr(self._data.frequency_limits))
+                f.write(",")
+                f.write(_repr(BUILD_TIME))
+                f.write(":")
+                f.write(_repr(build_time.isoformat()))
+                f.write("}")

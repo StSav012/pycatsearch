@@ -19,4 +19,4 @@ if __name__ == "__main__":
     sys.path = list(set(sys.path) | {path.abspath(path.join(__file__, path.pardir))})
 
     test_download(["-V"])
-    test_download("-fmin 110000 -fmax 184000 test_download_catalog.tar.gz".split())
+    test_download(["-fmin", "110000", "-fmax", "184000", "test_download_catalog.tar.gz"])

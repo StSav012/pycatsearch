@@ -48,7 +48,7 @@ In a code:
 ```python
 from pycatsearch.catalog import Catalog
 
-c = Catalog('catalog.json.gz')
+c = Catalog("catalog.json.gz")
 c.print(min_frequency=140141, max_frequency=140142)
 ```
 
@@ -145,7 +145,7 @@ In a code:
 ```python
 from pycatsearch import downloader
 
-downloader.save_catalog('catalog.json.gz', (115000, 178000))
+downloader.save_catalog("catalog.json.gz", (115000, 178000))
 ```
 
 ###### Functions:
@@ -188,7 +188,7 @@ In a code:
 ```python
 from pycatsearch import async_downloader
 
-async_downloader.save_catalog('catalog.json.gz', (115000, 178000))
+async_downloader.save_catalog("catalog.json.gz", (115000, 178000))
 ```
 
 ###### Functions:

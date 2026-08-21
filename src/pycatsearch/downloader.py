@@ -2,6 +2,7 @@ import copy
 import logging
 import random
 import time
+from collections.abc import Mapping
 from contextlib import suppress
 from http import HTTPMethod, HTTPStatus
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
@@ -9,7 +10,7 @@ from math import inf
 from pathlib import Path
 from queue import Empty, Queue
 from threading import Event, Thread
-from typing import Any, Final, Mapping, cast
+from typing import Any, Final, cast
 from urllib.error import HTTPError
 from urllib.parse import ParseResult, urlencode, urlparse
 
@@ -29,7 +30,7 @@ from .utils import (
     within,
 )
 
-__all__ = ["Downloader", "get_catalog", "save_catalog", "download"]
+__all__ = ["Downloader", "download", "get_catalog", "save_catalog"]
 
 logger: logging.Logger = logging.getLogger("downloader")
 
@@ -45,11 +46,11 @@ class Downloader(Thread):
         super().__init__()
         self._state_queue: Queue[tuple[int, int]] | None = state_queue
         self._frequency_limits: tuple[float, float] = frequency_limits
-        self._catalog: CatalogType = dict()
+        self._catalog: CatalogType = {}
         self._existing_catalog: Catalog | None = existing_catalog
 
         self._clear_to_run: Event = Event()
-        self._sessions: dict[tuple[str, str], HTTPConnection | HTTPSConnection] = dict()
+        self._sessions: dict[tuple[str, str], HTTPConnection | HTTPSConnection] = {}
 
     def __del__(self) -> None:
         self.stop()
@@ -90,7 +91,7 @@ class Downloader(Thread):
             response: HTTPResponse
             while self._clear_to_run.is_set():
                 try:
-                    session.request(method=HTTPMethod.GET, url=parse_result.path, headers=(headers or dict()))
+                    session.request(method=HTTPMethod.GET, url=parse_result.path, headers=(headers or {}))
                     response = session.getresponse()
                 except ConnectionResetError as ex:
                     logger.warning(ex)
@@ -112,7 +113,7 @@ class Downloader(Thread):
                         method=HTTPMethod.POST,
                         url=parse_result.path,
                         body=urlencode(data),
-                        headers=(headers or dict()),
+                        headers=(headers or {}),
                     )
                     response = session.getresponse()
                 except ConnectionResetError as ex:
@@ -134,13 +135,12 @@ class Downloader(Thread):
 
         def get_species() -> list[dict[str, int | str]]:
             def purge_null_data(entry: dict[str, None | int | str]) -> dict[str, int | str]:
-                return dict((key, value) for key, value in entry.items() if value not in (None, "", "None"))
+                return {key: value for key, value in entry.items() if value not in (None, "", "None")}
 
             def trim_strings(entry: dict[str, None | int | str]) -> dict[str, None | int | str]:
-                key: str
-                for key in entry:
-                    if isinstance(entry[key], str):
-                        entry[key] = cast(str, entry[key]).strip()
+                for key, value in entry.items():
+                    if isinstance(value, str):
+                        entry[key] = value.strip()
                 return entry
 
             def ensure_unique_species_tags(entries: list[dict[str, int | str]]) -> list[dict[str, int | str]]:
@@ -239,7 +239,7 @@ class Downloader(Thread):
             )
 
         species: list[dict[str, int | str]] = get_species()
-        catalog: CatalogType = dict()
+        catalog: CatalogType = {}
         species_count: Final[int] = len(species)
         skipped_count: int = 0
         if self._state_queue is not None:

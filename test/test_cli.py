@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-
 def _third_party_modules() -> list[str]:
     import site
     import sys
@@ -50,7 +47,7 @@ def test_cli():
     assert main() != 0
     _cleanup_qtapp()
 
-    sys.argv.extend("--min-frequency 118749 --max-frequency 118751 -n oxygen".split())
+    sys.argv.extend(["--min-frequency", "118749", "--max-frequency", "118751", "-n", "oxygen"])
     assert main() == 0
 
     third_party_modules = _third_party_modules()
