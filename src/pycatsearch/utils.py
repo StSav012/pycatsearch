@@ -131,7 +131,7 @@ HUMAN_READABLE: Final[dict[str, str]] = {
 
 
 class LineType:
-    __slots__ = [FREQUENCY, INTENSITY, LOWER_STATE_ENERGY]
+    __slots__ = ["frequency", "intensity", "lowerstateenergy"]
 
     def __init__(
         self,
@@ -150,23 +150,23 @@ LinesType = list[LineType]
 # noinspection PyShadowingBuiltins
 class CatalogEntryType:
     __slots__ = [
-        ID,
-        MOLECULE,
-        STRUCTURAL_FORMULA,
-        STOICHIOMETRIC_FORMULA,
-        MOLECULE_SYMBOL,
-        SPECIES_TAG,
-        NAME,
-        TRIVIAL_NAME,
-        ISOTOPOLOG,
-        STATE,
-        STATE_HTML,
-        INCHI_KEY,
-        CONTRIBUTOR,
-        VERSION,
-        DATE_OF_ENTRY,
-        DEGREES_OF_FREEDOM,
-        LINES,
+        "contributor",
+        "dateofentry",
+        "degreesoffreedom",
+        "id",
+        "inchikey",
+        "isotopolog",
+        "lines",
+        "molecule",
+        "moleculesymbol",
+        "name",
+        "speciestag",
+        "state",
+        "state_html",
+        "stoichiometricformula",
+        "structuralformula",
+        "trivialname",
+        "version",
     ]
 
     def __init__(
