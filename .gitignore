@@ -12,6 +12,8 @@
 *.tar.bz2
 *.tar.xz
 *.tar.lzma
+*.hdf5
+*.h5
 *.part
 
 # CDMS provides databases at https://cdms.astro.uni-koeln.de/cdms/portal/cdms_lite__official.db.gz

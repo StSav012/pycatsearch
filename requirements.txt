@@ -4,6 +4,9 @@ aiohttp>=3.3
 # for faster JSON loading
 orjson
 
+# for storing catalog data in HDF5 files
+h5py
+
 # to build a package and install it
 setuptools>=45
 packaging>=20

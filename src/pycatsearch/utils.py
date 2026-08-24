@@ -36,6 +36,7 @@ __all__ = [
     "CatalogJSONEntryType",
     "CatalogJSONType",
     "CatalogType",
+    "LineJSONType",
     "LineType",
     "LinesType",
     "OldCatalogJSONType",
@@ -187,7 +188,7 @@ class CatalogEntryType:
         version: str = "",
         dateofentry: str = "",
         degreesoffreedom: int = -1,
-        lines: Iterable[dict[str, float]] = (),
+        lines: Iterable[dict[str, float] | LineType] = (),
     ) -> None:
         self.id: int = id
         self.molecule: int = molecule
@@ -205,7 +206,7 @@ class CatalogEntryType:
         self.version: str = version
         self.dateofentry: str = dateofentry
         self.degreesoffreedom: int = degreesoffreedom
-        self.lines: LinesType = [LineType(**line) for line in lines]
+        self.lines: LinesType = [(line if isinstance(line, LineType) else LineType(**line)) for line in lines]
 
 
 class LineJSONType(TypedDict, total=False):

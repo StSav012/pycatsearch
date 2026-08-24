@@ -34,6 +34,7 @@ from .utils import (
     CatalogJSONEntryType,
     CatalogJSONType,
     CatalogType,
+    LineJSONType,
     LineType,
     OldCatalogJSONType,
     SpeciesJSONEntryType,
@@ -43,6 +44,11 @@ from .utils import (
     merge_sorted,
     search_sorted,
 )
+
+try:
+    import h5py
+except ImportError:
+    h5py = None
 
 __all__ = ["Catalog", "CatalogSourceInfo"]
 
@@ -185,6 +191,13 @@ class Catalog:
             ".tbz2": tarfile.open,
             ".txz": tarfile.open,
         }
+        if h5py is not None:
+            OPENERS_BY_SUFFIX.update(
+                {
+                    ".h5": h5py.File,
+                    ".hdf5": h5py.File,
+                }
+            )
 
         OPENERS_BY_SIGNATURE: ClassVar[dict[bytes, Callable]] = {
             b"{": open,
@@ -192,6 +205,12 @@ class Catalog:
             b"BZh": bz2.open,
             b"\xfd\x37\x7a\x58\x5a\x00": lzma.open,
         }
+        if h5py is not None:
+            OPENERS_BY_SIGNATURE.update(
+                {
+                    b"\x89HDF\x0d\x0a\x1a\x0a": h5py.File,
+                }
+            )
 
         def __init__(self, path: str | PathLike[str]) -> None:
             self._path: Path = Path(path)
@@ -235,9 +254,7 @@ class Catalog:
                 encoding = "utf-8"
             tmp_path: Path = self._path.with_name(self._path.name + ".part")
 
-            kwargs: dict[str, object] = dict(
-                encoding=encoding,
-            )
+            kwargs: dict[str, object] = {}
 
             if self._opener is tarfile.open:
                 if (
@@ -258,9 +275,13 @@ class Catalog:
                             break
                 if isinstance(errors, str):
                     kwargs["errors"] = errors
+                kwargs["encoding"] = encoding
+            elif h5py is not None and self._opener is h5py.File:
+                mode = mode.replace("b", "").replace("t", "")
             else:
                 kwargs["errors"] = errors
                 kwargs["newline"] = newline
+                kwargs["encoding"] = encoding
             kwargs["mode"] = mode
 
             # manually open and close the file here to close it before replacing if writing
@@ -278,6 +299,10 @@ class Catalog:
         @property
         def multiple_files(self) -> bool:
             return self._opener is tarfile.open
+
+        @property
+        def hdf5(self) -> bool:
+            return h5py is not None and self._opener is h5py.File
 
     def __init__(self, *catalog_file_names: str | PathLike[str]) -> None:
         self._data: CatalogData = CatalogData()
@@ -309,6 +334,38 @@ class Catalog:
                         print(f"{filename} is corrupted", file=sys.stderr)
                     else:
                         self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
+
+        def load_hdf5_file() -> None:
+            if h5py is None:
+                print("Missing h5py package", file=sys.stderr)
+                return
+
+            f_in: h5py.File
+            with opener.open("r") as f_in:
+                json_catalog_data: dict[str, CatalogJSONEntryType] = {}
+
+                species_ds: h5py.Dataset
+                for species_tag, species_ds in f_in.items():
+                    species_data: CatalogJSONEntryType = {}
+                    species_data.update(species_ds.attrs)
+                    species_data[LINES] = [LineType(*line) for line in species_ds]
+                    json_catalog_data[species_tag] = species_data
+
+                try:
+                    frequency_limits = tuple(f_in.attrs.get(FREQUENCY, ((0.0, math.inf),)))
+                    self._data.append(
+                        new_catalog=json_catalog_data,
+                        frequency_limits=frequency_limits,
+                    )
+                    build_datetime: datetime | None = None
+                    if BUILD_TIME in f_in.attrs:
+                        with suppress(TypeError, ValueError):
+                            build_datetime = datetime.fromisoformat(cast(str, f_in.attrs[BUILD_TIME]))
+                except (LookupError, TypeError, ValueError):
+                    print(f"{filename} is corrupted", file=sys.stderr)
+                    raise
+                else:
+                    self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
 
         def load_archive() -> None:
             f_in: IO[bytes] | None
@@ -437,6 +494,8 @@ class Catalog:
 
                 if opener.multiple_files:
                     load_archive()
+                elif opener.hdf5:
+                    load_hdf5_file()
                 else:
                     load_single_file()
 
@@ -833,6 +892,21 @@ class Catalog:
                             text=_repr(self._data.catalog[species_tag]),
                         )
                     )
+        elif opener.hdf5:
+            h5: h5py.File
+            with opener.open("w") as h5:
+                for species_tag, species_data in self._data.catalog.items():
+                    species_ds: h5py.Dataset = h5.create_dataset(
+                        str(species_tag),
+                        data=[[line.frequency, line.intensity, line.lowerstateenergy] for line in species_data.lines],
+                    )
+                    species_ds.attrs.update({k: getattr(species_data, k) for k in species_data.__slots__ if k != LINES})
+                h5.attrs.update(
+                    {
+                        FREQUENCY: self._data.frequency_limits,
+                        BUILD_TIME: build_time.isoformat(),
+                    }
+                )
         else:
             f: TextIO
             with opener.open("wt") as f:

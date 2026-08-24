@@ -26,7 +26,11 @@ classifiers = [
 ]
 dynamic = ['version']
 dependencies = []
-optional-dependencies = { aiohttp = ['aiohttp[speedups]'], orjson = ['orjson'] }
+
+[project.optional-dependencies]
+aiohttp = ['aiohttp[speedups]']
+orjson = ['orjson']
+hdf5 = ['h5py']
 
 [project.scripts]
 pycatsearch-cli = 'pycatsearch:main'
@@ -56,7 +60,7 @@ line-length = 120
 
 [tool.ruff.lint]
 extend-select = ["I", "NPY201"]
-extend-ignore = ["DTZ007"]
+extend-ignore = ["DTZ007", "FA102"]
 
 
 [tool.ruff.lint.isort]

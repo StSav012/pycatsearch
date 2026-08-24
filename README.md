@@ -304,3 +304,12 @@ or [LZMA2](https://en.wikipedia.org/wiki/LZMA#LZMA2_format).
 The filename is expected to be suffixed with `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, `.tbz2`, or `.txz`
 regardless of the files inside.
 An archive may contain both files in the initial CMDS/JPL format and per-substance JSON documents.
+
+### HDF5
+
+The data for each species is stored in a dataset of three columns:
+frequency, intensity, and lower-state energy.
+The properties of the species are in the attributes.
+The build time and the frequency range are in the attributes of the file.
+
+The file loads some 10 to 40 times slower than the previous formats.
