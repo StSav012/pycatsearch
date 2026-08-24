@@ -1,11 +1,12 @@
 import copy
 import logging
 import random
+import ssl
 import time
 from collections.abc import Mapping
 from contextlib import suppress
 from http import HTTPMethod, HTTPStatus
-from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
+from http.client import HTTPConnection, HTTPException, HTTPResponse, HTTPSConnection
 from math import inf
 from pathlib import Path
 from queue import Empty, Queue
@@ -96,10 +97,17 @@ class Downloader(Thread):
                 except ConnectionResetError as ex:
                     logger.warning(ex)
                     time.sleep(random.random())
+                except (ssl.SSLEOFError, HTTPException) as ex:
+                    logger.warning(ex)
+                    time.sleep(random.random())
+                    session.close()
+                    session.connect()
                 else:
                     if response.closed:
                         break
-                    with suppress(AttributeError):  # `response.fp` became `None` before the socket began closing
+                    with suppress(AttributeError, HTTPException):
+                        # `AttributeError`: `response.fp` became `None` before the socket began closing
+                        # `HTTPException`: incomplete response
                         return response.read().decode()
             return ""
 
@@ -119,18 +127,22 @@ class Downloader(Thread):
                 except ConnectionResetError as ex:
                     logger.warning(ex)
                     time.sleep(random.random())
+                except (ssl.SSLEOFError, HTTPException) as ex:
+                    logger.warning(ex)
+                    time.sleep(random.random())
+                    session.close()
+                    session.connect()
                 else:
                     if response.closed:
-                        logger.error(f"Stream closed before read the response from {url}")
+                        logger.error(f"Stream closed before reading the response from {url}")
                         break
                     if response.status != HTTPStatus.OK:
                         logger.error(f"Status {response.status} ({response.reason}) while posting to {url}")
                         break
-                    try:
+                    with suppress(AttributeError, HTTPException):
+                        # `AttributeError`: `response.fp` became `None` before the socket began closing
+                        # `HTTPException`: incomplete response
                         return response.read()
-                    except AttributeError:
-                        logger.warning("`response.fp` became `None` before the socket began closing")
-                        break
             return b""
 
         def get_species() -> list[dict[str, int | str]]:
