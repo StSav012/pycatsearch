@@ -449,9 +449,7 @@ class Catalog:
                                 self._data.append(
                                     new_catalog=[json_entry_data],
                                     frequency_limits=(
-                                        ((min(frequency_values), max(frequency_values)),)
-                                        if frequency_values
-                                        else ((math.nan, math.nan),)
+                                        ((min(frequency_values), max(frequency_values)),) if frequency_values else ()
                                     ),
                                 )
                             except (LookupError, TypeError, ValueError):
