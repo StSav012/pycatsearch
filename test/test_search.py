@@ -1,6 +1,7 @@
-def test_search():
-    from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile
 
+
+def test_search():
     from src.pycatsearch.catalog import Catalog
 
     with NamedTemporaryFile("wb", suffix=".json") as f:
@@ -8,6 +9,36 @@ def test_search():
             b"""\
 {
     "catalog": [
+        {
+            "id": 36,
+            "molecule": 36,
+            "structuralformula": "H2O",
+            "stoichiometricformula": "H2O",
+            "moleculesymbol": "H<sub>2</sub>O",
+            "speciestag": 18003,
+            "name": "H2O",
+            "trivialname": "Water",
+            "isotopolog": "H2O",
+            "state": "$v=0$",
+            "state_html": "v=0",
+            "inchikey": "XLYOFNOQVPJJNP-UHFFFAOYSA-N",
+            "contributor": "B. J. Drouin",
+            "version": "6",
+            "dateofentry": "2005-11-01",
+            "degreesoffreedom": 3,
+            "lines": [
+                {
+                    "frequency": 115542.5692,
+                    "intensity": -13.2595,
+                    "lowerstateenergy": 4606.1683
+                },
+                {
+                    "frequency": 139614.293,
+                    "intensity": -9.3636,
+                    "lowerstateenergy": 3080.1788
+                }
+            ]
+        },
         {
             "id": 31,
             "molecule": 29,
@@ -30,11 +61,6 @@ def test_search():
                     "frequency": 140141.8067,
                     "intensity": -5.0383,
                     "lowerstateenergy": 983.3773
-                },
-                {
-                    "frequency": 140142.0001,
-                    "intensity": -5.0383,
-                    "lowerstateenergy": 983.3773
                 }
             ]
         }
@@ -53,13 +79,8 @@ def test_search():
 
     assert len(c.filter(min_frequency=140141, max_frequency=140142)[17004].lines) == 1
     assert not c.filter(any_name_or_formula="oxygen")
-    assert len(c.filter_by_species_tags(species_tags=[17004])[17004].lines) == 2
+    assert len(c.filter_by_species_tags(species_tags=[18003])[18003].lines) == 2
 
 
 if __name__ == "__main__":
-    import sys
-    from os import path
-
-    sys.path = list(set(sys.path) | {path.abspath(path.join(__file__, path.pardir))})
-
     test_search()
