@@ -367,40 +367,59 @@ def main_gui() -> int:
                             root.destroy()
                     return 1
 
-                process: subprocess.CompletedProcess = subprocess.run(
-                    args=args,
-                    capture_output=True,
-                    check=False,
-                )
-                if process.stdout:
-                    sys.stdout.write(decode(process.stdout))
-                if process.stderr:
-                    sys.stderr.write(decode(process.stderr))
+                for _ in range(2):
+                    process: subprocess.CompletedProcess = subprocess.run(
+                        args=args,
+                        capture_output=True,
+                        check=False,
+                    )
+                    if process.stdout:
+                        sys.stdout.write(decode(process.stdout))
+                    if process.stderr:
+                        sys.stderr.write(decode(process.stderr))
 
-                try:
-                    # noinspection PyUnresolvedReferences,PyPackageRequirements
-                    from pycatsearch_qt import main
-                except (ModuleNotFoundError, ImportError):
                     try:
-                        import tkinter.messagebox
+                        # noinspection PyUnresolvedReferences,PyPackageRequirements
+                        from pycatsearch_qt import main
                     except (ModuleNotFoundError, ImportError):
-                        pass
-                    else:
                         try:
-                            root: tkinter.Tk = tkinter.Tk()
-                        except tkinter.TclError:
+                            import tkinter.messagebox
+                        except (ModuleNotFoundError, ImportError):
                             pass
                         else:
-                            root.withdraw()
-                            tkinter.messagebox.showerror(
-                                title="No GUI found",
-                                message="Failed to install GUI.",
-                                detail=decode(process.stderr),
-                            )
-                            root.destroy()
-                    return process.returncode or 1
-                else:
-                    return main()
+                            if b"--break-system-packages" in process.stderr:
+                                try:
+                                    root: tkinter.Tk = tkinter.Tk()
+                                except tkinter.TclError:
+                                    pass
+                                else:
+                                    root.withdraw()
+                                    decision: bool = tkinter.messagebox.askretrycancel(
+                                        title="No GUI found",
+                                        message="Failed to install GUI.",
+                                        detail="This environment is externally managed. "
+                                        "Should we try breaking into system packages?",
+                                    )
+                                    root.destroy()
+                                    if decision:
+                                        args.append("--break-system-packages")
+                                        continue
+                            else:
+                                try:
+                                    root: tkinter.Tk = tkinter.Tk()
+                                except tkinter.TclError:
+                                    pass
+                                else:
+                                    root.withdraw()
+                                    tkinter.messagebox.showerror(
+                                        title="No GUI found",
+                                        message="Failed to install GUI.",
+                                        detail=decode(process.stderr),
+                                    )
+                                    root.destroy()
+                        return process.returncode or 1
+                    else:
+                        return main()
             else:
                 return 1
         else:
