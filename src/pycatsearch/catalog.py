@@ -108,16 +108,6 @@ class CatalogData:
         | tuple[float | None, float | None]
         | list[float | None],
     ) -> None:
-        if (
-            isinstance(frequency_limits, (list, tuple))
-            and len(frequency_limits) == 2
-            and all(not isinstance(fl, Iterable) for fl in frequency_limits)
-        ):
-            frequency_limits = (frequency_limits,)
-        frequency_limits = [
-            ((fl[0] if fl[0] is not None else -math.inf), (fl[1] if fl[1] is not None else math.inf))
-            for fl in frequency_limits
-        ]
         catalog: CatalogType
         if isinstance(new_catalog, list):
             catalog = {entry[SPECIES_TAG]: CatalogEntryType(**entry) for entry in new_catalog}
@@ -131,12 +121,26 @@ class CatalogData:
         else:
             raise TypeError("Unsupported data type")
 
+        def line_to_tuple(line: LineType) -> tuple[float, ...]:
+            return line.frequency, line.intensity, line.lowerstateenergy
+
         def squash_same_species_tag_entries() -> None:
             self.catalog[species_tag].lines = merge_sorted(
                 self.catalog[species_tag].lines,
                 catalog[species_tag].lines,
-                key=lambda line: (line.frequency, line.intensity, line.lowerstateenergy),
+                key=line_to_tuple,
             )
+
+        if catalog:
+            if not self.catalog:
+                self.catalog = catalog
+            else:
+                species_tag: int
+                for species_tag in catalog:
+                    if species_tag not in self.catalog:
+                        self.catalog[species_tag] = catalog[species_tag]
+                    else:
+                        squash_same_species_tag_entries()
 
         def merge_frequency_tuples(*args: tuple[float, float] | list[float]) -> tuple[tuple[float, float], ...]:
             if not args:
@@ -161,16 +165,18 @@ class CatalogData:
                 ranges += ((current_min, current_max),)
             return ranges
 
-        if not self.catalog:
-            self.catalog = catalog
-        else:
-            species_tag: int
-            for species_tag in catalog:
-                if species_tag not in self.catalog:
-                    self.catalog[species_tag] = catalog[species_tag]
-                else:
-                    squash_same_species_tag_entries()
-        self.frequency_limits = merge_frequency_tuples(*self.frequency_limits, *frequency_limits)
+        if frequency_limits:
+            if (
+                isinstance(frequency_limits, (list, tuple))
+                and len(frequency_limits) == 2
+                and all(not isinstance(fl, Iterable) for fl in frequency_limits)
+            ):
+                frequency_limits = (frequency_limits,)
+            frequency_limits = [
+                ((fl[0] if fl[0] is not None else -math.inf), (fl[1] if fl[1] is not None else math.inf))
+                for fl in frequency_limits
+            ]
+            self.frequency_limits = merge_frequency_tuples(*self.frequency_limits, *frequency_limits)
 
 
 class Catalog:
