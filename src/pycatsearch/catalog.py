@@ -835,6 +835,8 @@ class Catalog:
             opener = Catalog.Opener(filename.with_name(filename.name + Catalog.DEFAULT_SUFFIX))
 
         def _repr(o: object) -> str:
+            if o in (None, ...):
+                return "null"
             if isinstance(o, float) and o in (math.nan, -math.inf, math.inf):
                 return "null"
             if isinstance(o, str):
