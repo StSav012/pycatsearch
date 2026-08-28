@@ -22,5 +22,7 @@ if __name__ == "__main__":
         "catalog.json.gz",
         "catalog.tar.gz",
         "catalog.hdf5",
+        "catalog.pickle",
+        "catalog.pickle.gz",
     ):
         test_loading(test_dir / filename)

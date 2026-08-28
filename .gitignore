@@ -14,6 +14,11 @@
 *.tar.lzma
 *.hdf5
 *.h5
+*.pickle
+*.pickle.gz
+*.pickle.bz2
+*.pickle.xz
+*.pickle.lzma
 *.part
 
 # CDMS provides databases at https://cdms.astro.uni-koeln.de/cdms/portal/cdms_lite__official.db.gz

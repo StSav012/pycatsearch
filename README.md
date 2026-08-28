@@ -313,3 +313,8 @@ The properties of the species are in the attributes.
 The build time and the frequency range are in the attributes of the file.
 
 The file loads some 10 to 40 times slower than the previous formats.
+
+### Python's [Pickle](https://docs.python.org/3/library/pickle.html), optionally compressed
+
+It's a bit faster than the first two formats.
+But the data is insecure. Load only the data you trust.

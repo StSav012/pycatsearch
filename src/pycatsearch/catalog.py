@@ -3,6 +3,7 @@ import copy
 import gzip
 import lzma
 import math
+import pickle
 import sys
 import tarfile
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
@@ -10,9 +11,9 @@ from contextlib import contextmanager, suppress
 from datetime import datetime, timezone
 from io import BytesIO
 from os import PathLike
-from pathlib import Path
+from pathlib import Path, PurePath
 from string import digits
-from typing import IO, BinaryIO, ClassVar, NamedTuple, TextIO, cast
+from typing import IO, BinaryIO, ClassVar, NamedTuple, Self, TextIO, TypeGuard, cast
 
 from .catalog_entry import CatalogEntry
 
@@ -34,7 +35,6 @@ from .utils import (
     CatalogJSONEntryType,
     CatalogJSONType,
     CatalogType,
-    LineJSONType,
     LineType,
     OldCatalogJSONType,
     SpeciesJSONEntryType,
@@ -191,6 +191,11 @@ class Catalog:
             ".json.bz2": bz2.open,
             ".json.xz": lzma.open,
             ".json.lzma": lzma.open,
+            ".pickle": open,
+            ".pickle.gz": gzip.open,
+            ".pickle.bz2": bz2.open,
+            ".pickle.xz": lzma.open,
+            ".pickle.lzma": lzma.open,
             ".tar": tarfile.open,
             ".tar.gz": tarfile.open,
             ".tar.bz2": tarfile.open,
@@ -209,6 +214,8 @@ class Catalog:
 
         OPENERS_BY_SIGNATURE: ClassVar[dict[bytes, Callable]] = {
             b"{": open,
+            b"ccopy_reg\n_reconstructor\n": open,
+            b"\x80": open,
             b"\x1f\x8b": gzip.open,
             b"BZh": bz2.open,
             b"\xfd\x37\x7a\x58\x5a\x00": lzma.open,
@@ -318,30 +325,42 @@ class Catalog:
 
         def load_single_file() -> None:
             f_in: BinaryIO
-            content: bytes
             with opener.open("rb") as f_in:
-                content = f_in.read()
-                try:
-                    json_catalog_data: dict[str, str | list[float | None] | CatalogJSONType | OldCatalogJSONType] = (
-                        json.loads(content)
-                    )
-                except (json.JSONDecodeError, UnicodeDecodeError):
-                    print(f"{filename} doesn't contain UTF-8 data or is corrupted", file=sys.stderr)
-                else:
+                content: bytes = f_in.read()
+                if content.startswith(b"{") and content.rstrip().endswith(b"}"):
                     try:
-                        frequency_limits = json_catalog_data.get(FREQUENCY, ((0.0, math.inf),))
-                        self._data.append(
-                            new_catalog=json_catalog_data[CATALOG],
-                            frequency_limits=frequency_limits,
-                        )
-                        build_datetime: datetime | None = None
-                        if BUILD_TIME in json_catalog_data:
-                            with suppress(TypeError, ValueError):
-                                build_datetime = datetime.fromisoformat(cast(str, json_catalog_data[BUILD_TIME]))
-                    except (LookupError, TypeError, ValueError):
-                        print(f"{filename} is corrupted", file=sys.stderr)
+                        json_catalog_data: dict[
+                            str, str | list[float | None] | CatalogJSONType | OldCatalogJSONType
+                        ] = json.loads(content)
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        print(f"{filename} doesn't contain UTF-8 data or is corrupted", file=sys.stderr)
                     else:
-                        self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
+                        try:
+                            frequency_limits = json_catalog_data.get(FREQUENCY, ((0.0, math.inf),))
+                            self._data.append(
+                                new_catalog=json_catalog_data[CATALOG],
+                                frequency_limits=frequency_limits,
+                            )
+                            build_datetime: datetime | None = None
+                            if BUILD_TIME in json_catalog_data:
+                                with suppress(TypeError, ValueError):
+                                    build_datetime = datetime.fromisoformat(cast(str, json_catalog_data[BUILD_TIME]))
+                        except (LookupError, TypeError, ValueError):
+                            print(f"{filename} is corrupted", file=sys.stderr)
+                        else:
+                            self._sources.append(CatalogSourceInfo(filename=filename, build_datetime=build_datetime))
+                elif content.startswith((b"ccopy_reg\n_reconstructor\n", b"\x80")):
+                    new_catalog: Catalog = pickle.loads(content)
+                    if Catalog.is_catalog(new_catalog):
+                        self._data.append(
+                            new_catalog=new_catalog._data.catalog,
+                            frequency_limits=new_catalog._data.frequency_limits,
+                        )
+                        self._sources.extend(new_catalog.sources_info)
+                    else:
+                        print(f"{filename} contains a corrupted catalog", file=sys.stderr)
+                else:
+                    print(f"{filename} has an unknown format", file=sys.stderr)
 
         def load_hdf5_file() -> None:
             if h5py is None:
@@ -507,6 +526,49 @@ class Catalog:
 
     def __bool__(self) -> bool:
         return bool(self._data.catalog)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Catalog):
+            return NotImplemented
+        if frozenset(self._data.catalog.keys()) != frozenset(other._data.catalog.keys()):
+            return False
+        for species_tag, data in self._data.catalog.items():
+            other_data: CatalogEntryType | None = other._data.catalog.get(species_tag)
+            if not isinstance(other_data, CatalogEntryType):
+                return False
+            if len(data.lines) != len(other_data.lines):
+                return False
+            for slot in CatalogEntryType.__slots__:
+                if slot != LINES and getattr(data, slot) != getattr(other_data, slot):
+                    return False
+            for line, other_line in zip(data.lines, other_data.lines, strict=True):
+                for slot in LineType.__slots__:
+                    if getattr(line, slot) != getattr(other_line, slot):
+                        return False
+        return True
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.entries_count} species from {self.sources})"
+
+    @classmethod
+    def is_catalog(cls, other: object) -> TypeGuard[Self]:
+        if not isinstance(other, cls):
+            return False
+        try:
+            if not isinstance((data := other._data), CatalogData):
+                return False
+            if not isinstance(data.frequency_limits, tuple) or not all(len(fl) == 2 for fl in data.frequency_limits):
+                return False
+            if (
+                not isinstance((catalog := data.catalog), dict)
+                or not catalog
+                or not all(isinstance(key, int) for key in catalog)
+                or not all(isinstance(value, CatalogEntryType) for value in catalog.values())
+            ):
+                return False
+        except AttributeError:
+            return False
+        return True
 
     @property
     def is_empty(self) -> bool:
@@ -917,6 +979,10 @@ class Catalog:
                         BUILD_TIME: build_time.isoformat(),
                     }
                 )
+        elif ".pickle" in PurePath(filename).suffixes:
+            f: BinaryIO
+            with opener.open("wb") as f:
+                pickle.dump(self, f)
         else:
             f: TextIO
             with opener.open("wt") as f:

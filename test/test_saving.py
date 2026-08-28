@@ -84,6 +84,8 @@ def test_saving():
     c.save(filename=test_dir / "catalog.json.gz")
     c.save(filename=test_dir / "catalog.tar.gz")
     c.save(filename=test_dir / "catalog.hdf5")
+    c.save(filename=test_dir / "catalog.pickle")
+    c.save(filename=test_dir / "catalog.pickle.gz")
 
 
 if __name__ == "__main__":
