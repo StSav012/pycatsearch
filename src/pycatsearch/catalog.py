@@ -103,7 +103,7 @@ class CatalogData:
 
     def append(
         self,
-        new_catalog: CatalogEntryType | CatalogJSONType | OldCatalogJSONType,
+        new_catalog: CatalogEntryType | CatalogJSONType | OldCatalogJSONType | CatalogType,
         frequency_limits: Collection[tuple[float | None, float | None] | list[float | None]]
         | tuple[float | None, float | None]
         | list[float | None],
@@ -111,13 +111,15 @@ class CatalogData:
         catalog: CatalogType
         if isinstance(new_catalog, list):
             catalog = {entry[SPECIES_TAG]: CatalogEntryType(**entry) for entry in new_catalog}
-        elif isinstance(new_catalog, dict):
-            catalog = {
-                int(species_tag_str): CatalogEntryType(**new_catalog[species_tag_str])
-                for species_tag_str in new_catalog
-            }
         elif isinstance(new_catalog, CatalogEntryType):
             catalog = {new_catalog.speciestag: new_catalog}
+        elif isinstance(new_catalog, (dict, CatalogType)):
+            catalog = {
+                (species_tag if isinstance(species_tag, int) else int(species_tag)): (
+                    species_data if isinstance(species_data, CatalogEntryType) else CatalogEntryType(**species_data)
+                )
+                for species_tag, species_data in new_catalog.items()
+            }
         else:
             raise TypeError("Unsupported data type")
 
