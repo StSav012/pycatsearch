@@ -917,23 +917,15 @@ class Catalog:
             f: TextIO
             with opener.open("wt") as f:
                 f.write("{")
-                f.write(_repr(CATALOG))
-                f.write(":{")
+                f.write(_repr(CATALOG) + ":{")
                 is_not_first_item: bool = False
-                for species_tag in self._data.catalog:
+                for species_tag, species_value in self._data.catalog.items():
                     if is_not_first_item:
                         f.write(",")
                     else:
                         is_not_first_item = True
-                    f.write(_repr(str(species_tag)))
-                    f.write(":")
-                    f.write(_repr(self._data.catalog[species_tag]))
+                    f.write(":".join((_repr(str(species_tag)), _repr(species_value))))
                 f.write("},")
-                f.write(_repr(FREQUENCY))
-                f.write(":")
-                f.write(_repr(self._data.frequency_limits))
-                f.write(",")
-                f.write(_repr(BUILD_TIME))
-                f.write(":")
-                f.write(_repr(build_time.isoformat()))
+                f.write(":".join((_repr(FREQUENCY), _repr(self._data.frequency_limits))) + ",")
+                f.write(":".join((_repr(BUILD_TIME), _repr(build_time.isoformat()))))
                 f.write("}")
