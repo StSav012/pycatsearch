@@ -424,6 +424,6 @@ def main_gui() -> int:
                 return 1
         else:
             return main()
-    except Exception as ex:
+    except Exception as ex:  # noqa: BLE001
         _show_exception(ex)
-        return -1
+    return -1
