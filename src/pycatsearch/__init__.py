@@ -12,6 +12,7 @@ except ImportError:
     __version__ = ""
 
 if sys.version_info < (3, 10, 0) and __file__ != "<string>":  # noqa: UP036
+    import re
     from collections.abc import Sequence
     from importlib import import_module
     from importlib.abc import ExecutionLoader, MetaPathFinder
@@ -106,6 +107,14 @@ if sys.version_info < (3, 10, 0) and __file__ != "<string>":  # noqa: UP036
                 .replace("set[", "Set[")
                 .replace("tuple[", "Tuple[")
             )
+            new_text = re.sub(r"from typing import TypeGuard$", "", new_text)
+            new_text = re.sub(r"(from typing import) TypeGuard,(.*)", r"\1\2", new_text)
+            new_text = re.sub(r"(from typing import\b.*?), TypeGuard\b(.*)", r"\1\2", new_text)
+            new_text = re.sub(r"TypeGuard\[\w+](?=:)", "bool", new_text)
+            new_text = re.sub(r"from typing import Self$", "", new_text)
+            new_text = re.sub(r"(from typing import) Self,(.*)", r"\1\2", new_text)
+            new_text = re.sub(r"(from typing import\b.*?), Self\b(.*)", r"\1\2", new_text)
+            new_text = re.sub(r"Self(?=:)", "object", new_text)
             parts: "tuple[str, ...]" = f.relative_to(my_parent).parts
             p: "dict[str, str | dict]" = py38_modules
             for part in parts[:-1]:
